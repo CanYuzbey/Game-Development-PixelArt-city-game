@@ -1,0 +1,8 @@
+# Normalise line endings to LF in the repo; checkout as-is on each OS.
+* text=auto
+
+# Always keep binary assets as-is — never mangle sprite sheets.
+*.png binary
+*.jpg binary
+*.gif binary
+*.bmp binary
