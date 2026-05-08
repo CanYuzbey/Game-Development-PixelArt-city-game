@@ -285,7 +285,7 @@ def _place_roundabouts(
         if tile_id.startswith('roundabout_'):
             continue                           # skip already-placed roundabouts
 
-        if bin(grid.road_bitmask(r, c)).count('1') < 3:
+        if bin(grid.road_bitmask(r, c, ROAD_CONNECTOR)).count('1') < 3:
             continue                           # must be T or X junction
 
         # 3×3 neighbourhood: all cells must be in-bounds and not water,
@@ -514,7 +514,7 @@ def generate_connectors(
         tile_id = cell.layers[LAYER_ROAD] or ''
         if tile_id.startswith('roundabout_'):
             continue
-        mask    = grid.road_bitmask(r, c)
+        mask    = grid.road_bitmask(r, c, ROAD_CONNECTOR)
         tile_id = REGISTRY.resolve_road_tile_id(mask, cell.road_category)
         cell.layers[LAYER_ROAD] = tile_id
 
@@ -565,7 +565,7 @@ def generate_connectors(
         tile_id = cell.layers[LAYER_ROAD] or ''
         if tile_id.startswith('roundabout_'):
             continue
-        popcount = bin(grid.road_bitmask(r, c)).count('1')
+        popcount = bin(grid.road_bitmask(r, c, ROAD_CONNECTOR)).count('1')
         if popcount == 4:                          # X-junction — always mark
             cell.set_decor(rng.choice(_X_MARKINGS))
             junctions_marked += 1

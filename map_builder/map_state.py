@@ -145,18 +145,22 @@ class MapGrid:
             for d, (dr, dc) in DIRECTION_OFFSETS.items()
         }
 
-    def road_bitmask(self, row: int, col: int) -> int:
+    def road_bitmask(self, row: int, col: int, category: str | None = None) -> int:
         """
         Compute 4-bit road-connectivity bitmask for cell (row, col).
         Bit set = that neighbour is also a road cell.
         N=8  E=4  S=2  W=1
+
+        If category is given, only count neighbours whose road_category matches.
+        If category is None, count all road neighbours (original behaviour).
         """
         from .constants import DIR_BIT, DIRECTION_OFFSETS
         mask = 0
         for d, (dr, dc) in DIRECTION_OFFSETS.items():
             nbr = self.cell(row + dr, col + dc)
             if nbr is not None and nbr.is_road:
-                mask |= DIR_BIT[d]
+                if category is None or nbr.road_category == category:
+                    mask |= DIR_BIT[d]
         return mask
 
     def road_adjacency_bitmask(self, row: int, col: int) -> int:

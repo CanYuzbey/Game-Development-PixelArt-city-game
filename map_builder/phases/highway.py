@@ -188,11 +188,11 @@ def _trace_highway_spine(
 # ── Tile resolver ─────────────────────────────────────────────────────────────
 
 def _resolve_road_tiles(grid: MapGrid) -> None:
-    """Bitmask pass: assign the correct tile_id to every road cell."""
+    """Bitmask pass: assign the correct tile_id to every highway road cell."""
     for r, c, cell in grid.all_cells():
-        if not cell.is_road:
+        if not cell.is_road or cell.road_category != ROAD_HIGHWAY:
             continue
-        mask    = grid.road_bitmask(r, c)
+        mask    = grid.road_bitmask(r, c, ROAD_HIGHWAY)
         tile_id = REGISTRY.resolve_road_tile_id(mask, cell.road_category)
         cell.layers[LAYER_ROAD] = tile_id
 
