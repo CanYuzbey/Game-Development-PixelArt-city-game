@@ -106,7 +106,7 @@ def _land_edge_points(
     step = max(1, len(candidates) // (n + 1))
     result: list[tuple[int, int]] = []
     for i in range(1, n + 1):
-        jitter = rng.randint(-max(1, step // 3), max(1, step // 3))
+        jitter = rng.randint(-max(1, step // 2), max(1, step // 2))
         idx    = max(0, min(len(candidates) - 1, i * step + jitter))
         result.append(candidates[idx])
     return result
@@ -249,8 +249,44 @@ def generate_highways(
     # along the north edge (different columns → different latitudes).
     ns_starts = _land_edge_points(grid, 'north', rng, ns_count) if ns_count > 0 else []
     ns_ends   = _land_edge_points(grid, 'south', rng, ns_count) if ns_count > 0 else []
+
+    # For coastal maps: prefer N-S highways closer to the waterfront
+    if config.coast_side == 'west' and ns_starts:
+        coast_threshold = int(grid.width * 0.65)
+        biased = [(r, c) for r, c in ns_starts if c < coast_threshold]
+        if len(biased) >= max(1, ns_count // 2):
+            ns_starts = biased[:ns_count]
+            filtered = [(r, c) for r, c in ns_ends if c < coast_threshold]
+            if filtered:
+                ns_ends = filtered[:ns_count]
+    elif config.coast_side == 'east' and ns_starts:
+        coast_threshold = int(grid.width * 0.35)
+        biased = [(r, c) for r, c in ns_starts if c > coast_threshold]
+        if len(biased) >= max(1, ns_count // 2):
+            ns_starts = biased[:ns_count]
+            filtered = [(r, c) for r, c in ns_ends if c > coast_threshold]
+            if filtered:
+                ns_ends = filtered[:ns_count]
+
     ew_starts = _land_edge_points(grid, 'west',  rng, ew_count) if ew_count > 0 else []
     ew_ends   = _land_edge_points(grid, 'east',  rng, ew_count) if ew_count > 0 else []
+
+    if config.coast_side == 'north' and ew_starts:
+        coast_threshold = int(grid.height * 0.65)
+        biased = [(r, c) for r, c in ew_starts if r < coast_threshold]
+        if len(biased) >= max(1, ew_count // 2):
+            ew_starts = biased[:ew_count]
+            filtered = [(r, c) for r, c in ew_ends if r < coast_threshold]
+            if filtered:
+                ew_ends = filtered[:ew_count]
+    elif config.coast_side == 'south' and ew_starts:
+        coast_threshold = int(grid.height * 0.35)
+        biased = [(r, c) for r, c in ew_starts if r > coast_threshold]
+        if len(biased) >= max(1, ew_count // 2):
+            ew_starts = biased[:ew_count]
+            filtered = [(r, c) for r, c in ew_ends if r > coast_threshold]
+            if filtered:
+                ew_ends = filtered[:ew_count]
 
     # ── N-S highways (north → south) ─────────────────────────────────────────
     for i in range(min(len(ns_starts), len(ns_ends))):
@@ -269,9 +305,10 @@ def generate_highways(
         )
 
     # ── E-W highways (west → east) ────────────────────────────────────────────
+    ew_organic = min(1.0, config.highway_organic + 0.10)
     for i in range(min(len(ew_starts), len(ew_ends))):
         start, end = ew_starts[i], ew_ends[i]
-        spine = _trace_highway_spine(grid, start, end, perm, rng, config.highway_organic)
+        spine = _trace_highway_spine(grid, start, end, perm, rng, ew_organic)
 
         for sr, sc in spine:
             if not grid[sr][sc].is_water:

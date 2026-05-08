@@ -156,3 +156,11 @@ SIDEWALK_BITMASK_TO_TILE: Final[dict] = {
 # ── Ground tile IDs ───────────────────────────────────────────────────────────
 TILE_GROUND_LAND:  Final[str] = 'ground_land'
 TILE_GROUND_WATER: Final[str] = 'ground_water'
+
+# ── City zone types ───────────────────────────────────────────────────────────
+ZONE_CBD:         Final[int] = 0   # Central Business District — dense grid
+ZONE_MIDTOWN:     Final[int] = 1   # Mixed-use — moderate density
+ZONE_RESIDENTIAL: Final[int] = 2   # Residential outskirts — sparse, cul-de-sacs
+
+# ── Phase name ────────────────────────────────────────────────────────────────
+PHASE_ZONES: Final[str] = 'zones'

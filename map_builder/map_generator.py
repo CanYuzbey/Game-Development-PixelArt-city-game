@@ -83,6 +83,7 @@ class MapGenerator:
         t_start = time.perf_counter()
 
         yield from self._run_phase_coastline()
+        yield from self._run_phase_zones()
         yield from self._run_phase_highways()
         yield from self._run_phase_connectors()
         yield from self._run_phase_sidewalks()
@@ -97,6 +98,7 @@ class MapGenerator:
             'roads':     self.grid.road_count(),
             'sidewalks': self.grid.sidewalk_count(),
             'elapsed_s': round(t_end - t_start, 3),
+            'zones':     self.grid.zone_count(),
         }
 
         yield GeneratorProgress(
@@ -125,6 +127,10 @@ class MapGenerator:
     def _run_phase_coastline(self) -> Generator[GeneratorProgress, None, None]:
         from .phases.coastline import generate_coastline
         yield from generate_coastline(self.grid, self.config)
+
+    def _run_phase_zones(self) -> Generator[GeneratorProgress, None, None]:
+        from .phases.zones import generate_zones
+        yield from generate_zones(self.grid, self.config)
 
     def _run_phase_highways(self) -> Generator[GeneratorProgress, None, None]:
         from .phases.highway import generate_highways

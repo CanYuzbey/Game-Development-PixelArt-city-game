@@ -19,8 +19,11 @@ from .constants      import (
     # Phases
     PHASE_COASTLINE, PHASE_HIGHWAY, PHASE_CONNECTOR,
     PHASE_SIDEWALK, PHASE_DECORATION, PHASE_COMPLETE,
+    PHASE_ZONES,
     # Directions
     N, E, S, W,
+    # Zone types
+    ZONE_CBD, ZONE_MIDTOWN, ZONE_RESIDENTIAL,
 )
 
 __all__ = [
@@ -31,5 +34,7 @@ __all__ = [
     'ROAD_HIGHWAY', 'ROAD_CONNECTOR',
     'PHASE_COASTLINE', 'PHASE_HIGHWAY', 'PHASE_CONNECTOR',
     'PHASE_SIDEWALK', 'PHASE_DECORATION', 'PHASE_COMPLETE',
+    'PHASE_ZONES',
     'N', 'E', 'S', 'W',
+    'ZONE_CBD', 'ZONE_MIDTOWN', 'ZONE_RESIDENTIAL',
 ]
