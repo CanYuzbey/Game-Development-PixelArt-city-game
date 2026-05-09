@@ -111,7 +111,17 @@ class MapGenerator:
             if b and self.grid[next(iter(b))[0]][next(iter(b))[1]].is_park
         )
         spawn_count = sum(1 for _, _, c in self.grid.all_cells() if c.is_spawn_point)
-        landmark_count = sum(1 for _, _, c in self.grid.all_cells() if c.landmark_type)
+        # Count distinct landmark buildings: each unique (landmark_type, lot_id) pair
+        # is one building; fallback counts unique landmark types if no lot_ids.
+        landmark_lots: set = set()
+        landmark_cells = 0
+        for _, _, c in self.grid.all_cells():
+            if c.landmark_type:
+                landmark_cells += 1
+                key = (c.landmark_type, c.lot_id) if c.lot_id >= 0 else (c.landmark_type, id(c))
+                landmark_lots.add(key)
+        # Distinct landmark buildings = unique (type, lot_id) pairs
+        landmark_count = len(set(k[0] for k in landmark_lots))  # unique types placed
         self.stats = {
             'seed':      self.config.master_seed,
             'width':     self.config.width,

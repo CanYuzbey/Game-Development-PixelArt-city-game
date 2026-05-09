@@ -171,7 +171,7 @@ def _inject_landmarks(
         )
         # Find the lot nearest to this junction
         sr, sc = station_cell_rc
-        nearest_lot = _nearest_lot_of_zone(grid, sr, sc, ZONE_MIDTOWN, radius=8)
+        nearest_lot = _nearest_lot_of_zone(grid, sr, sc, ZONE_MIDTOWN, radius=max(rows, cols))
         if nearest_lot is not None and not _landmarks_too_close(nearest_lot, placed_positions):
             target_lot_id = grid[nearest_lot[0]][nearest_lot[1]].lot_id
             if target_lot_id >= 0:
@@ -191,12 +191,15 @@ def _inject_landmarks(
     # ── Hospital: largest Midtown lot far from CBD center ─────────────────────
     # Hospital: pick a medium Midtown lot (8-20 cells) — large enough to notice,
     # small enough not to dominate the visual with civic colour.
+    # Fallback: use CBD lots if no Midtown lots exist (tiny maps).
     midtown_lots = _lots_by_zone(grid, lots, ZONE_MIDTOWN)
+    if not midtown_lots:
+        midtown_lots = _lots_by_zone(grid, lots, ZONE_CBD)
     if midtown_lots:
-        # Sort by size, prefer 8-20 cell lots (realistic hospital footprint)
+        # Sort by size, prefer 4-22 cell lots (relaxed for tiny maps)
         midtown_lots.sort(key=lambda cells: abs(len(cells) - 14))
         for lot_cells in midtown_lots[:8]:
-            if not (5 <= len(lot_cells) <= 22):
+            if not (4 <= len(lot_cells) <= 30):
                 continue
             r0, c0 = next(iter(lot_cells))
             cell0 = grid[r0][c0]
@@ -210,12 +213,15 @@ def _inject_landmarks(
                 break
 
     # ── Police station: small-medium Midtown lot near CBD boundary ────────────
+    # Fallback: use any CBD lot if no Midtown lots exist (tiny maps).
     boundary_lots = _lots_by_zone(grid, lots, ZONE_MIDTOWN, near_zone=ZONE_CBD, radius=5)
+    if not boundary_lots:
+        boundary_lots = _lots_by_zone(grid, lots, ZONE_CBD)
     if boundary_lots:
-        # Prefer compact police station (4-12 cells)
+        # Prefer compact police station (4-15 cells)
         boundary_lots.sort(key=lambda cells: abs(len(cells) - 8))
         for lot_cells in boundary_lots[:10]:
-            if len(lot_cells) > 15:
+            if len(lot_cells) > 20:
                 continue
             r0, c0 = next(iter(lot_cells))
             cell0 = grid[r0][c0]
@@ -225,6 +231,29 @@ def _inject_landmarks(
                     grid[r][c].building_type = BLDG_POLICE
                     grid[r][c].tile_role = ROLE_BUILDING_CIVIC
                 placed['police'] = (r0, c0)
+                placed_positions.append((r0, c0))
+                break
+
+    # ── School: medium Residential lot, ensures landmark spread to outer zone ──
+    resi_lots = _lots_by_zone(grid, lots, ZONE_RESIDENTIAL)
+    if not resi_lots:
+        resi_lots = _lots_by_zone(grid, lots, ZONE_MIDTOWN)
+    if not resi_lots:
+        resi_lots = _lots_by_zone(grid, lots, ZONE_CBD)
+    if resi_lots:
+        # Prefer 6-16 cell lots — realistic school footprint
+        resi_lots.sort(key=lambda cells: abs(len(cells) - 10))
+        for lot_cells in resi_lots[:12]:
+            if not (4 <= len(lot_cells) <= 30):
+                continue
+            r0, c0 = next(iter(lot_cells))
+            cell0 = grid[r0][c0]
+            if not cell0.landmark_type and not _landmarks_too_close((r0, c0), placed_positions):
+                for r, c in lot_cells:
+                    grid[r][c].landmark_type = 'school'
+                    grid[r][c].building_type = BLDG_SCHOOL
+                    grid[r][c].tile_role = ROLE_BUILDING_CIVIC
+                placed['school'] = (r0, c0)
                 placed_positions.append((r0, c0))
                 break
 
@@ -407,6 +436,13 @@ def generate_buildings(
         elif cell.lot_id >= 0:
             # Setback cells keep their sidewalk role; skip building assignment
             if getattr(cell, 'is_setback', False):
+                # Setback cells adjacent to a park get park-adjacent flag for
+                # visual rendering (use park colour instead of lawn).
+                for dr2, dc2 in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                    nbr2 = grid.cell(r + dr2, c + dc2)
+                    if nbr2 is not None and nbr2.is_park:
+                        cell.near_park = True
+                        break
                 cell.encounter_chance = 0.0
                 continue
             if cell.zone_id == ZONE_CBD:
@@ -478,10 +514,38 @@ def generate_buildings(
                 grid[r][c].is_spawn_point = True
                 spawn_count += 1
 
+    # ── Pass 5: Alley terminus encounter boost ────────────────────────────────
+    # Cells within Chebyshev distance 2 of an alley dead-end get a small
+    # encounter-chance boost (dark alleyway atmosphere spills onto nearby road).
+    ALLEY_BOOST = 0.07
+    alley_tips: list[tuple[int, int]] = [
+        (r, c)
+        for r, c, cell in grid.all_cells()
+        if cell.tile_role == ROLE_WALKABLE_ALLEY
+        and sum(
+            1
+            for dr2, dc2 in ((-1, 0), (1, 0), (0, -1), (0, 1))
+            if grid.in_bounds(r + dr2, c + dc2) and grid[r + dr2][c + dc2].is_road
+        ) == 1
+    ]
+    for ar, ac in alley_tips:
+        for dr2 in range(-2, 3):
+            for dc2 in range(-2, 3):
+                if max(abs(dr2), abs(dc2)) > 2:
+                    continue
+                nbr = grid.cell(ar + dr2, ac + dc2)
+                if nbr is not None and nbr.tile_role in (
+                    ROLE_WALKABLE_ROAD, ROLE_WALKABLE_HIGHWAY, ROLE_WALKABLE_SIDEWALK
+                ):
+                    nbr.encounter_chance = round(
+                        min(1.0, nbr.encounter_chance + ALLEY_BOOST), 3
+                    )
+
     yield GeneratorProgress(
         PHASE_BUILDINGS, 1.0,
         (
             f'Buildings phase complete — {len(lots)} lots typed, '
-            f'{len(landmarks)} landmarks, {spawn_count} spawn points.'
+            f'{len(landmarks)} landmarks, {spawn_count} spawn points, '
+            f'{len(alley_tips)} alley tips boosted.'
         ),
     )

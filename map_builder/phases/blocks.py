@@ -37,7 +37,7 @@ def generate_blocks(
     for start_r in range(rows):
         for start_c in range(cols):
             cell = grid[start_r][start_c]
-            if visited[start_r][start_c] or cell.is_road:
+            if visited[start_r][start_c] or cell.is_road or cell.is_water:
                 visited[start_r][start_c] = True
                 continue
 
@@ -54,7 +54,7 @@ def generate_blocks(
                 for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
                     nr, nc = r + dr, c + dc
                     if 0 <= nr < rows and 0 <= nc < cols:
-                        if not visited[nr][nc] and not grid[nr][nc].is_road:
+                        if not visited[nr][nc] and not grid[nr][nc].is_road and not grid[nr][nc].is_water:
                             visited[nr][nc] = True
                             queue.append((nr, nc))
 
@@ -72,7 +72,25 @@ def generate_blocks(
     if sink is not None:
         sink.extend(found_blocks)
 
+    # ── Zone coherence pass ───────────────────────────────────────────────────
+    # Each block should belong to one zone; zone boundaries running through a
+    # block cause split lot assignments and mismatched building tile_roles.
+    # Assign the majority zone of each block's cells to all cells in that block.
+    coherence_fixed = 0
+    for block_set in found_blocks:
+        votes: dict[int, int] = {}
+        for r, c in block_set:
+            z = grid[r][c].zone_id
+            votes[z] = votes.get(z, 0) + 1
+        if len(votes) > 1:
+            majority_zone = max(votes, key=votes.get)
+            for r, c in block_set:
+                if grid[r][c].zone_id != majority_zone:
+                    grid[r][c].zone_id = majority_zone
+                    coherence_fixed += 1
+
     yield GeneratorProgress(
         PHASE_BLOCKS, 1.0,
-        f'Block detection complete — {block_counter} interior blocks found.',
+        f'Block detection complete — {block_counter} interior blocks found'
+        + (f', {coherence_fixed} zone-split cells normalized.' if coherence_fixed else '.'),
     )

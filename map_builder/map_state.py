@@ -266,16 +266,16 @@ class MapConfig:
 
     # ── Phase 3 — Connectors (dense city grid) ───────────────────────────────
     # Block geometry at 10m/cell:
-    #   avenue_spacing=24  →  240m N-S corridor  (medium US city grid)
-    #   connector_spacing=12 →  120m E-W block
-    #   ratio 2.0:1 — moderate urban proportions (~35–40% road density target)
-    connector_density:    float = 0.70   # 0=sparse 1=dense
-    connector_spacing:    int   = 12     # E-W cross-street row spacing (cells)
-    avenue_spacing:       int   = 24     # N-S avenue column spacing (cells)
+    #   avenue_spacing=18  →  180m N-S corridor  (EU/Asian city block scale)
+    #   connector_spacing=8  →  80m E-W block depth  (realistic dense urban)
+    #   ratio 2.25:1 — moderate urban proportions (~18–25% road density target)
+    connector_density:    float = 0.85   # 0=sparse 1=dense
+    connector_spacing:    int   = 8      # E-W cross-street row spacing (cells)
+    avenue_spacing:       int   = 18     # N-S avenue column spacing (cells)
     min_block_depth:      int   = 2      # guaranteed clear cells between parallel roads
     connector_max_length: int   = 20     # legacy, unused by grid algorithm
-    connector_turn_bias:  float = 0.05   # Perlin drift amplitude (0=dead-straight)
-    roundabout_count:     int   = 10     # max circle junctions
+    connector_turn_bias:  float = 0.08   # Perlin drift amplitude (0=dead-straight)
+    roundabout_count:     int   = 8      # max circle junctions
     diagonal_streets:     int   = 2      # Broadway / Diagonal Ave style diagonals
 
     # ── Phase 4 — Sidewalks ───────────────────────────────────────────────────

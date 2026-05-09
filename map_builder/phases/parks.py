@@ -40,6 +40,20 @@ def _block_centroid(block: set) -> tuple[float, float]:
     return sum(rs) / len(rs), sum(cs) / len(cs)
 
 
+def _block_compactness(block: set) -> float:
+    """
+    Return fill ratio of block cells vs bounding box area (0..1).
+    1.0 = perfectly rectangular; lower = L-shaped / irregular.
+    Blocks below 0.55 are too irregular to be parks.
+    """
+    if not block:
+        return 0.0
+    rs = [r for r, _ in block]
+    cs = [c for _, c in block]
+    bbox = (max(rs) - min(rs) + 1) * (max(cs) - min(cs) + 1)
+    return len(block) / bbox if bbox > 0 else 0.0
+
+
 def _chebyshev(a: tuple[float, float], b: tuple[float, float]) -> float:
     return max(abs(a[0] - b[0]), abs(a[1] - b[1]))
 
@@ -93,6 +107,9 @@ def generate_parks(
         score = _park_score(area)
         if score <= 0.0:
             continue
+        # Reject highly irregular (L-shaped) blocks as parks
+        if _block_compactness(block) < 0.55:
+            continue
         sample_r, sample_c = next(iter(block))
         zone = grid[sample_r][sample_c].zone_id
         if zone in candidates:
@@ -114,12 +131,14 @@ def generate_parks(
         zone_parks = 0
         prob = zone_prob[zone]
 
-        for score, _, centroid, block in zone_list:
+        for i, (score, _, centroid, block) in enumerate(zone_list):
             if zone_parks >= dynamic_max:
                 break
 
-            # Probability gate (gives stochastic variety across seeds)
-            if rng.random() > prob:
+            # Guarantee the first (best-score) block per zone to prevent
+            # zero-park zones from pure bad luck on the probability gate.
+            # Apply probability gate only for subsequent parks.
+            if i > 0 and rng.random() > prob:
                 continue
 
             # Separation check — don't cluster parks
