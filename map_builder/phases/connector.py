@@ -487,13 +487,21 @@ def generate_connectors(
     ew_bases = sorted(jittered_ew)
 
     # Apply zone-aware density: CBD center is denser, residential edges sparser.
+    # Coastal maps have less land area — scale down density proportionally so
+    # road% stays within 15–35% regardless of how much land the coastline removed.
+    land_cells = sum(1 for _, _, cell in grid.all_cells() if cell.is_land)
+    total_cells_map = rows * cols
+    land_fraction = land_cells / total_cells_map if total_cells_map > 0 else 1.0
+    # coast_factor: 1.0 for fully inland maps; reduces toward ~0.75 for 50% coastal
+    coast_factor = min(1.0, land_fraction / 0.72)
+
     rng.shuffle(ns_bases)
     rng.shuffle(ew_bases)
 
     ns_bases_kept = []
     for base_col in ns_bases:
         zone = _zone_score(base_col, cols)
-        eff_density = config.connector_density * (1.0 - zone * 0.35)
+        eff_density = config.connector_density * (1.0 - zone * 0.35) * coast_factor
         if rng.random() < eff_density:
             ns_bases_kept.append(base_col)
     if not ns_bases_kept and ns_bases:
@@ -503,7 +511,7 @@ def generate_connectors(
     ew_bases_kept = []
     for base_row in ew_bases:
         zone = _zone_score(base_row, rows)
-        eff_density = config.connector_density * (1.0 - zone * 0.50)
+        eff_density = config.connector_density * (1.0 - zone * 0.50) * coast_factor
         if rng.random() < eff_density:
             ew_bases_kept.append(base_row)
     if not ew_bases_kept and ew_bases:
@@ -658,6 +666,67 @@ def generate_connectors(
                 PHASE_CONNECTOR, 0.68,
                 f'Connectivity repair: removed {isolated_removed} isolated road cells.'
             )
+
+    # ── Pass 3.6: Dead-end stub pruning ──────────────────────────────────────
+    # Walk every road dead-end (1 road neighbour); trace the linear stub.
+    # Stubs longer than _MAX_STUB_CELLS are pruned (reverted to land) —
+    # they block lot subdivision without providing useful connectivity.
+    # Deliberate cul-de-sacs (max 6 cells by design) are preserved.
+    _MAX_STUB_CELLS = 6
+    pruned_stubs = 0
+    pruned_cells = 0
+
+    # Iteratively prune: removing a stub tip may create a new dead end.
+    for _prune_pass in range(8):
+        tips = [
+            (r2, c2)
+            for r2, c2, cell2 in grid.all_cells()
+            if cell2.is_road
+            and sum(
+                1 for dr2, dc2 in ((-1, 0), (1, 0), (0, -1), (0, 1))
+                if grid.in_bounds(r2 + dr2, c2 + dc2) and grid[r2 + dr2][c2 + dc2].is_road
+            ) == 1
+        ]
+        if not tips:
+            break
+
+        found_long = False
+        for tip in tips:
+            # Trace stub from tip back to the junction
+            visited_s: list[tuple[int, int]] = [tip]
+            cur = tip
+            while True:
+                r2, c2 = cur
+                nexts = [
+                    (r2 + dr2, c2 + dc2)
+                    for dr2, dc2 in ((-1, 0), (1, 0), (0, -1), (0, 1))
+                    if grid.in_bounds(r2 + dr2, c2 + dc2)
+                    and grid[r2 + dr2][c2 + dc2].is_road
+                    and (r2 + dr2, c2 + dc2) not in visited_s
+                ]
+                if len(nexts) == 1:
+                    visited_s.append(nexts[0])
+                    cur = nexts[0]
+                else:
+                    break  # reached junction or isolated (stop)
+            if len(visited_s) > _MAX_STUB_CELLS:
+                # Prune the stub (keep the junction cell)
+                from ..constants import TILE_GROUND_LAND
+                for sr, sc in visited_s[:-1]:  # all except the junction endpoint
+                    cell2 = grid[sr][sc]
+                    cell2.clear_road()
+                    cell2.set_ground(TILE_GROUND_LAND)
+                    pruned_cells += 1
+                pruned_stubs += 1
+                found_long = True
+        if not found_long:
+            break
+
+    if pruned_stubs > 0:
+        yield GeneratorProgress(
+            PHASE_CONNECTOR, 0.69,
+            f'Stub pruning: removed {pruned_stubs} long dead-ends ({pruned_cells} cells).'
+        )
 
     # ── Pass 3: Diagonal streets (Broadway-style) ─────────────────────────────
     diag_count = config.diagonal_streets

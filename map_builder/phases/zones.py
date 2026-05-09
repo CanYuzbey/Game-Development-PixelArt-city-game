@@ -60,9 +60,9 @@ def generate_zones(
         dc   = abs(c - center_c) / half_c
         dist = max(dr, dc)          # Chebyshev: 0 = centre, 1 = corner
 
-        if dist < 0.35:
+        if dist < 0.45:
             cell.zone_id = ZONE_CBD
-        elif dist < 0.65:
+        elif dist < 0.72:
             cell.zone_id = ZONE_MIDTOWN
         else:
             cell.zone_id = ZONE_RESIDENTIAL

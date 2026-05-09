@@ -228,6 +228,25 @@ def _inject_landmarks(
                 placed_positions.append((r0, c0))
                 break
 
+    # ── School: medium Residential lot, ensures landmark spread to outer zone ──
+    resi_lots = _lots_by_zone(grid, lots, ZONE_RESIDENTIAL)
+    if resi_lots:
+        # Prefer 6-16 cell lots — realistic school footprint
+        resi_lots.sort(key=lambda cells: abs(len(cells) - 10))
+        for lot_cells in resi_lots[:12]:
+            if not (5 <= len(lot_cells) <= 20):
+                continue
+            r0, c0 = next(iter(lot_cells))
+            cell0 = grid[r0][c0]
+            if not cell0.landmark_type and not _landmarks_too_close((r0, c0), placed_positions):
+                for r, c in lot_cells:
+                    grid[r][c].landmark_type = 'school'
+                    grid[r][c].building_type = BLDG_SCHOOL
+                    grid[r][c].tile_role = ROLE_BUILDING_CIVIC
+                placed['school'] = (r0, c0)
+                placed_positions.append((r0, c0))
+                break
+
     return placed
 
 
