@@ -156,3 +156,143 @@ SIDEWALK_BITMASK_TO_TILE: Final[dict] = {
 # ── Ground tile IDs ───────────────────────────────────────────────────────────
 TILE_GROUND_LAND:  Final[str] = 'ground_land'
 TILE_GROUND_WATER: Final[str] = 'ground_water'
+
+# ── City zone types ───────────────────────────────────────────────────────────
+ZONE_CBD:         Final[int] = 0   # Central Business District — dense grid
+ZONE_MIDTOWN:     Final[int] = 1   # Mixed-use — moderate density
+ZONE_RESIDENTIAL: Final[int] = 2   # Residential outskirts — sparse, cul-de-sacs
+
+# ── Phase names ───────────────────────────────────────────────────────────────
+PHASE_ZONES: Final[str] = 'zones'
+PHASE_BLOCKS: Final[str] = 'blocks'
+PHASE_PARKS:  Final[str] = 'parks'
+PHASE_LOTS:   Final[str] = 'lots'
+PHASE_CIVIC:  Final[str] = 'civic'
+
+# ── Per-phase PRNG salts (XOR with master_seed) — new phases ─────────────────
+SALT_BLOCKS: Final[int] = 0x789ABC
+SALT_PARKS:  Final[int] = 0xA1B2C3
+SALT_LOTS:   Final[int] = 0xD4E5F6
+SALT_CIVIC:  Final[int] = 0xF1E2D3
+
+# ── Block detection constants ─────────────────────────────────────────────────
+BLOCK_EXTERIOR_ID: Final[int] = -1   # cells touching map edge (exterior region)
+
+# ── Park placement constants ──────────────────────────────────────────────────
+PARK_SMALL_BLOCK_MAX:         Final[int]   = 12    # legacy — kept for compat (unused in new parks.py)
+
+# New park placement thresholds — prefer LARGE blocks for visible neighborhood parks
+# Target: park should be at least 25 cells (50m×50m) to read as a real park on screen.
+PARK_MIN_AREA:                Final[int]   = 20    # minimum block size to qualify as park
+PARK_IDEAL_MIN:               Final[int]   = 25    # preferred minimum (will read clearly on screen)
+PARK_IDEAL_MAX:               Final[int]   = 120   # maximum (don't make entire districts parks)
+PARK_MAX_PER_ZONE:            Final[int]   = 2     # legacy default; parks.py computes dynamic cap at runtime
+PARK_CBD_PROBABILITY:         Final[float] = 0.45  # CBD: plazas/squares from mid-size blocks
+PARK_MIDTOWN_PROBABILITY:     Final[float] = 0.55  # Midtown: neighbourhood parks
+PARK_RESIDENTIAL_PROBABILITY: Final[float] = 0.45  # Residential: street parks + gardens
+
+# Legacy aliases kept for import compatibility
+PARK_RESIDENTIAL_MIN_AREA:    Final[int]   = PARK_MIN_AREA
+PARK_RESIDENTIAL_MAX_AREA:    Final[int]   = PARK_IDEAL_MAX
+
+# ── Lot subdivision constants ─────────────────────────────────────────────────
+LOT_MIN_WIDTH: Final[int] = 3   # minimum lot width in cells (30m at 10m/cell) — handles small blocks
+LOT_MIN_DEPTH: Final[int] = 3   # minimum lot depth in cells
+
+# ── Civic anchor constants ────────────────────────────────────────────────────
+CIVIC_ANCHOR_RADIUS: Final[int] = 3   # connector density boost radius around anchor
+
+# ── Tile roles (game layer) ────────────────────────────────────────────────────
+# Defines traversability and gameplay function of each cell.
+ROLE_WALKABLE_ROAD:      Final[str] = 'road'         # highway or connector — full encounter area
+ROLE_WALKABLE_HIGHWAY:   Final[str] = 'highway'      # arterial — lower encounter (fast traffic)
+ROLE_WALKABLE_ALLEY:     Final[str] = 'alley'        # dead-end connector — high danger
+ROLE_WALKABLE_SIDEWALK:  Final[str] = 'sidewalk'     # low encounter, safe movement
+ROLE_WALKABLE_PARK:      Final[str] = 'park'         # medium encounter, scenic
+ROLE_WALKABLE_PLAZA:     Final[str] = 'plaza'        # roundabout / market square — Type B only
+ROLE_BUILDING_CBD:       Final[str] = 'bldg_cbd'     # office / civic — obstacle
+ROLE_BUILDING_MIDTOWN:   Final[str] = 'bldg_mid'     # shop / apartment — obstacle
+ROLE_BUILDING_RESI:      Final[str] = 'bldg_resi'    # house — obstacle
+ROLE_BUILDING_CIVIC:     Final[str] = 'bldg_civic'   # landmark building — obstacle
+ROLE_WATER:              Final[str] = 'water'         # impassable
+ROLE_EXTERIOR:           Final[str] = 'exterior'      # outside any city block — obstacle/void
+
+# ── Building types (assigned to lots) ─────────────────────────────────────────
+BLDG_OFFICE:      Final[str] = 'office'
+BLDG_BANK:        Final[str] = 'bank'
+BLDG_MARKET:      Final[str] = 'market'
+BLDG_CIVIC_HALL:  Final[str] = 'civic_hall'      # at civic anchor
+BLDG_SHOP:        Final[str] = 'shop'
+BLDG_RESTAURANT:  Final[str] = 'restaurant'
+BLDG_APARTMENT:   Final[str] = 'apartment'
+BLDG_CLINIC:      Final[str] = 'clinic'
+BLDG_HOUSE:       Final[str] = 'house'
+BLDG_SCHOOL:      Final[str] = 'school'
+BLDG_PARK_FEATURE: Final[str] = 'park_feature'   # fountain / bench cluster in park
+BLDG_STATION:     Final[str] = 'station'          # train / transit station
+BLDG_HOSPITAL:    Final[str] = 'hospital'
+BLDG_POLICE:      Final[str] = 'police'
+BLDG_EMPTY_LOT:   Final[str] = 'empty_lot'        # vacant / undeveloped
+
+# CBD building type weights  [type, weight]
+CBD_BLDG_WEIGHTS: Final[list] = [
+    (BLDG_OFFICE,     40),
+    (BLDG_BANK,       20),
+    (BLDG_MARKET,     20),
+    (BLDG_APARTMENT,  10),
+    (BLDG_EMPTY_LOT,  10),
+]
+MIDTOWN_BLDG_WEIGHTS: Final[list] = [
+    (BLDG_SHOP,       30),
+    (BLDG_RESTAURANT, 25),
+    (BLDG_APARTMENT,  25),
+    (BLDG_CLINIC,     10),
+    (BLDG_EMPTY_LOT,  10),
+]
+RESI_BLDG_WEIGHTS: Final[list] = [
+    (BLDG_HOUSE,      50),
+    (BLDG_SCHOOL,     15),
+    (BLDG_SHOP,       15),
+    (BLDG_APARTMENT,  10),
+    (BLDG_EMPTY_LOT,  10),
+]
+
+# Waterfront building weights (blocks with direct water adjacency)
+WATERFRONT_BLDG_WEIGHTS: Final[list] = [
+    (BLDG_RESTAURANT,  35),
+    (BLDG_MARKET,      25),
+    (BLDG_APARTMENT,   20),
+    (BLDG_STATION,     10),   # ferry terminal
+    (BLDG_EMPTY_LOT,   10),
+]
+
+# ── Encounter probabilities per tile role ─────────────────────────────────────
+# Base probability (applied on each step onto this tile type).
+# Final chance = clamp((base + density_bonus) * zone_mult + zone_offset - civic_bonus, 0, 1)
+ENCOUNTER_BASE: Final[dict] = {
+    ROLE_WALKABLE_HIGHWAY:  0.08,   # arterials: fast traffic, lower exposure
+    ROLE_WALKABLE_ROAD:     0.12,   # connector roads: standard street danger
+    ROLE_WALKABLE_ALLEY:    0.30,   # dead-end alleys: most dangerous
+    ROLE_WALKABLE_SIDEWALK: 0.05,   # well-lit pavement: safe
+    ROLE_WALKABLE_PARK:     0.25,   # secluded green space: muggers, wildlife
+    ROLE_WALKABLE_PLAZA:    0.0,    # plazas: Type B/scripted only
+}
+# Zone modifiers: (multiplier, additive_offset)
+ENCOUNTER_ZONE_MOD: Final[dict] = {
+    0: (1.40,  0.05),   # CBD — crime dense
+    1: (1.00,  0.00),   # Midtown — baseline
+    2: (0.65, -0.03),   # Residential — quieter
+}
+# Civic anchor safety radius (Chebyshev cells): subtract this from encounter_chance
+ENCOUNTER_CIVIC_PENALTY: Final[float] = 0.06
+ENCOUNTER_CIVIC_RADIUS:  Final[int]   = 3
+# Density bonus coefficient: add (DENSITY_BONUS_K * density_score) to base
+ENCOUNTER_DENSITY_K: Final[float] = 0.08
+
+# Legacy alias kept for old code (removed from buildings.py pass 1)
+ENCOUNTER_BY_ROLE: Final[dict] = ENCOUNTER_BASE
+ENCOUNTER_ZONE_MULT: Final[dict] = {k: v[0] for k, v in ENCOUNTER_ZONE_MOD.items()}
+
+# ── Phase names (new) ─────────────────────────────────────────────────────────
+PHASE_BUILDINGS: Final[str] = 'buildings'
+SALT_BUILDINGS:  Final[int]  = 0xB1C2D3

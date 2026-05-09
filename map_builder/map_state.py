@@ -39,10 +39,23 @@ class MapCell:
         LAYER_SIDEWALK: None,
         LAYER_DECOR:    None,
     })
-    is_water:      bool = False
-    is_land:       bool = False
-    road_category: Optional[str] = None
-    variation:     dict = field(default_factory=lambda: {
+    is_water:        bool  = False
+    is_land:         bool  = False
+    road_category:   Optional[str] = None
+    zone_id:         int   = -1         # -1 = unassigned; updated by zones phase (ZONE_CBD=0, etc.)
+    block_id:        int   = -1         # -1 = exterior/road/unassigned; ≥0 = interior block
+    lot_id:          int   = -1         # -1 = no lot; ≥0 = subdivided lot id
+    density_score:   float = 0.0        # 0.0 (sparse edge) – 1.0 (dense CBD/highway)
+    is_park:         bool  = False      # True if this cell belongs to a park block
+    is_civic_anchor: bool  = False      # True for the single CBD civic centre cell
+    is_setback:      bool  = False      # True for residential lot perimeter (front-yard / lawn)
+    # ── RPG game layer ────────────────────────────────────────────────────────
+    tile_role:        str   = ''        # ROLE_* constant — gameplay traversability
+    building_type:    str   = ''        # BLDG_* constant — what kind of building
+    encounter_chance: float = 0.0       # 0.0–1.0 per-step random encounter probability
+    is_spawn_point:   bool  = False     # NPC/enemy spawn origin
+    landmark_type:    str   = ''        # 'station'|'hospital'|'police'|'' etc.
+    variation:       dict  = field(default_factory=lambda: {
         LAYER_GROUND:   0,
         LAYER_ROAD:     0,
         LAYER_SIDEWALK: 0,
@@ -186,6 +199,15 @@ class MapGrid:
     def sidewalk_count(self) -> int:
         return sum(1 for _, _, c in self.all_cells() if c.is_sidewalk)
 
+    def zone_count(self) -> dict:
+        """Return {zone_id: cell_count} for all land cells."""
+        counts: dict[int, int] = {}
+        for row in self._cells:
+            for cell in row:
+                if cell.is_land:
+                    counts[cell.zone_id] = counts.get(cell.zone_id, 0) + 1
+        return counts
+
 
 # ── GeneratorProgress ─────────────────────────────────────────────────────────
 
@@ -244,16 +266,16 @@ class MapConfig:
 
     # ── Phase 3 — Connectors (dense city grid) ───────────────────────────────
     # Block geometry at 10m/cell:
-    #   avenue_spacing=15  →  150m N-S corridor  (tight EU / city-centre grid)
-    #   connector_spacing=6 →   60m E-W block
-    #   ratio 2.5:1 — compact urban proportions
-    connector_density:    float = 0.85   # 0=sparse 1=dense
-    connector_spacing:    int   = 6      # E-W cross-street row spacing (cells)
-    avenue_spacing:       int   = 15     # N-S avenue column spacing (cells)
+    #   avenue_spacing=24  →  240m N-S corridor  (medium US city grid)
+    #   connector_spacing=12 →  120m E-W block
+    #   ratio 2.0:1 — moderate urban proportions (~35–40% road density target)
+    connector_density:    float = 0.70   # 0=sparse 1=dense
+    connector_spacing:    int   = 12     # E-W cross-street row spacing (cells)
+    avenue_spacing:       int   = 24     # N-S avenue column spacing (cells)
     min_block_depth:      int   = 2      # guaranteed clear cells between parallel roads
     connector_max_length: int   = 20     # legacy, unused by grid algorithm
     connector_turn_bias:  float = 0.05   # Perlin drift amplitude (0=dead-straight)
-    roundabout_count:     int   = 15     # max circle junctions
+    roundabout_count:     int   = 10     # max circle junctions
     diagonal_streets:     int   = 2      # Broadway / Diagonal Ave style diagonals
 
     # ── Phase 4 — Sidewalks ───────────────────────────────────────────────────

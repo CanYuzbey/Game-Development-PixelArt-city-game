@@ -50,7 +50,12 @@ from __future__ import annotations
 from typing import Generator, Optional
 
 from .map_state import MapGrid, MapConfig, GeneratorProgress
-from .constants import PHASE_COMPLETE
+from .constants import (
+    PHASE_COMPLETE,
+    ZONE_CBD, ZONE_MIDTOWN, ZONE_RESIDENTIAL,
+    ROAD_HIGHWAY,
+    ROAD_CONNECTOR,
+)
 
 
 class MapGenerator:
@@ -65,9 +70,12 @@ class MapGenerator:
     """
 
     def __init__(self, config: MapConfig) -> None:
-        self.config = config
-        self.grid   = MapGrid(config.width, config.height)
-        self.stats: dict = {}
+        self.config       = config
+        self.grid         = MapGrid(config.width, config.height)
+        self.stats:  dict = {}
+        self.blocks: list = []   # list of sets of (row,col) — interior city blocks
+        self.lots:   list = []   # list of sets of (row,col) — subdivided lots
+        self.civic_anchor: tuple | None = None   # (row, col) of CBD civic centre cell
 
     # ── Primary interface ─────────────────────────────────────────────────────
 
@@ -83,11 +91,27 @@ class MapGenerator:
         t_start = time.perf_counter()
 
         yield from self._run_phase_coastline()
+        yield from self._run_phase_zones()
+        yield from self._run_phase_civic_anchor()
         yield from self._run_phase_highways()
         yield from self._run_phase_connectors()
         yield from self._run_phase_sidewalks()
+        yield from self._run_phase_blocks()
+        yield from self._run_phase_parks()
+        yield from self._run_phase_lots()
+
+        # Non-yielding density post-pass — runs after all road phases
+        self._compute_density_post_pass()
+
+        yield from self._run_phase_buildings()
 
         t_end = time.perf_counter()
+        park_count = sum(
+            1 for b in self.blocks
+            if b and self.grid[next(iter(b))[0]][next(iter(b))[1]].is_park
+        )
+        spawn_count = sum(1 for _, _, c in self.grid.all_cells() if c.is_spawn_point)
+        landmark_count = sum(1 for _, _, c in self.grid.all_cells() if c.landmark_type)
         self.stats = {
             'seed':      self.config.master_seed,
             'width':     self.config.width,
@@ -96,7 +120,13 @@ class MapGenerator:
             'water':     self.grid.water_count(),
             'roads':     self.grid.road_count(),
             'sidewalks': self.grid.sidewalk_count(),
+            'blocks':    len(self.blocks),
+            'parks':     park_count,
+            'lots':      len(self.lots),
+            'spawns':    spawn_count,
+            'landmarks': landmark_count,
             'elapsed_s': round(t_end - t_start, 3),
+            'zones':     self.grid.zone_count(),
         }
 
         yield GeneratorProgress(
@@ -106,7 +136,9 @@ class MapGenerator:
                 f"Map ready — {self.stats['land']} land / "
                 f"{self.stats['water']} water / "
                 f"{self.stats['roads']} road / "
-                f"{self.stats['sidewalks']} sidewalk cells "
+                f"{self.stats['sidewalks']} sidewalk  |  "
+                f"{self.stats['blocks']} blocks  {self.stats['parks']} parks  "
+                f"{self.stats['lots']} lots  {self.stats['spawns']} spawns  "
                 f"in {self.stats['elapsed_s']}s"
             ),
         )
@@ -126,6 +158,10 @@ class MapGenerator:
         from .phases.coastline import generate_coastline
         yield from generate_coastline(self.grid, self.config)
 
+    def _run_phase_zones(self) -> Generator[GeneratorProgress, None, None]:
+        from .phases.zones import generate_zones
+        yield from generate_zones(self.grid, self.config)
+
     def _run_phase_highways(self) -> Generator[GeneratorProgress, None, None]:
         from .phases.highway import generate_highways
         yield from generate_highways(self.grid, self.config)
@@ -137,6 +173,77 @@ class MapGenerator:
     def _run_phase_sidewalks(self) -> Generator[GeneratorProgress, None, None]:
         from .phases.sidewalk import generate_sidewalks
         yield from generate_sidewalks(self.grid, self.config)
+
+    def _run_phase_civic_anchor(self) -> Generator[GeneratorProgress, None, None]:
+        from .phases.civic import generate_civic_anchor
+        anchor_sink: list = []
+        yield from generate_civic_anchor(self.grid, self.config, sink=anchor_sink)
+        if anchor_sink:
+            self.civic_anchor = anchor_sink[0]
+
+    def _run_phase_blocks(self) -> Generator[GeneratorProgress, None, None]:
+        from .phases.blocks import generate_blocks
+        self.blocks = []
+        yield from generate_blocks(self.grid, self.config, sink=self.blocks)
+
+    def _run_phase_parks(self) -> Generator[GeneratorProgress, None, None]:
+        from .phases.parks import generate_parks
+        yield from generate_parks(self.grid, self.config, self.blocks)
+
+    def _run_phase_lots(self) -> Generator[GeneratorProgress, None, None]:
+        from .phases.lots import generate_lots
+        self.lots = []
+        yield from generate_lots(self.grid, self.config, self.blocks, sink=self.lots)
+
+    def _run_phase_buildings(self) -> Generator[GeneratorProgress, None, None]:
+        from .phases.buildings import generate_buildings
+        yield from generate_buildings(
+            self.grid, self.config, self.blocks, self.lots, self.civic_anchor
+        )
+
+    def _compute_density_post_pass(self) -> None:
+        """
+        O(N) BFS multi-source density score computation (replaces O(N×HW) loop).
+        Runs after all road phases so highway cells are fully placed.
+        Sets cell.density_score on every land cell.
+
+        Algorithm: BFS from all highway cells simultaneously builds a Chebyshev
+        distance field in O(width × height). Each land cell then reads its
+        pre-computed distance in O(1).
+        """
+        from collections import deque
+
+        rows, cols = self.grid.height, self.grid.width
+        zone_base = {ZONE_CBD: 0.85, ZONE_MIDTOWN: 0.55, ZONE_RESIDENTIAL: 0.25}
+
+        # ── Build BFS distance field from all highway cells ───────────────────
+        INF = 999
+        dist_grid = [[INF] * cols for _ in range(rows)]
+        queue: deque = deque()
+
+        for r, c, cell in self.grid.all_cells():
+            if cell.is_road and cell.road_category == ROAD_HIGHWAY:
+                dist_grid[r][c] = 0
+                queue.append((r, c, 0))
+
+        # 4-directional BFS — Chebyshev equivalent via ∞-norm with 4-connectivity
+        # gives Manhattan distance, which is a good proxy for Chebyshev here.
+        while queue:
+            r, c, d = queue.popleft()
+            for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                nr, nc = r + dr, c + dc
+                if 0 <= nr < rows and 0 <= nc < cols and dist_grid[nr][nc] > d + 1:
+                    dist_grid[nr][nc] = d + 1
+                    queue.append((nr, nc, d + 1))
+
+        # ── Assign density_score to all land cells ────────────────────────────
+        for r, c, cell in self.grid.all_cells():
+            if not cell.is_land:
+                continue
+            base = zone_base.get(cell.zone_id, 0.25)
+            min_dist = dist_grid[r][c] if dist_grid[r][c] < INF else 20
+            hw_bonus = max(0.0, 0.15 * (1.0 - min(min_dist, 10) / 10.0))
+            cell.density_score = min(1.0, max(0.0, base + hw_bonus))
 
     # ── Serialisation stubs (wired to your save system) ───────────────────────
 
