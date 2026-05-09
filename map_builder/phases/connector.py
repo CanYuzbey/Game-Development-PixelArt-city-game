@@ -429,6 +429,30 @@ def generate_connectors(
         )
         return
 
+    # Unit 9 — Noise-offset jitter: shift each street position by up to ±25% of
+    # the block spacing so block widths vary naturally without breaking connectivity.
+    min_sep = max(config.min_block_depth + 1, 2)
+
+    jittered_ns: list[int] = []
+    seen_ns: set[int] = set()
+    for base_col in ns_bases:
+        jitter = int(noise2d(base_col / max(cols, 1) * 3.0, 0.5, perm) * av_block * 0.25)
+        jittered = max(2, min(cols - 2, base_col + jitter))
+        if jittered not in seen_ns:
+            jittered_ns.append(jittered)
+            seen_ns.add(jittered)
+    ns_bases = sorted(jittered_ns)
+
+    jittered_ew: list[int] = []
+    seen_ew: set[int] = set()
+    for base_row in ew_bases:
+        jitter = int(noise2d(base_row / max(rows, 1) * 3.0, 1.5, perm) * cs_block * 0.25)
+        jittered = max(2, min(rows - 2, base_row + jitter))
+        if jittered not in seen_ew:
+            jittered_ew.append(jittered)
+            seen_ew.add(jittered)
+    ew_bases = sorted(jittered_ew)
+
     # Apply zone-aware density: CBD center is denser, residential edges sparser.
     rng.shuffle(ns_bases)
     rng.shuffle(ew_bases)

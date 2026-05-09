@@ -40,7 +40,8 @@ from map_builder.constants   import (
     LAYER_DECOR,
     ROAD_HIGHWAY, ROAD_CONNECTOR,
     PHASE_COASTLINE, PHASE_HIGHWAY, PHASE_CONNECTOR,
-    PHASE_SIDEWALK,
+    PHASE_SIDEWALK, PHASE_ZONES,
+    ZONE_CBD, ZONE_MIDTOWN, ZONE_RESIDENTIAL,
 )
 
 
@@ -60,17 +61,38 @@ C_HUD_DIM     = (110, 110, 120)   # secondary / dim HUD text
 C_PROGRESS_BG = ( 38,  38,  48)   # progress bar background
 C_PROGRESS_FG = ( 60, 185, 115)   # progress bar fill (green)
 
+# Zone-tinted land colours (used when _zone_mode is True)
+C_LAND_CBD         = (196, 168, 130)   # warm tan — urban dry concrete
+C_LAND_MIDTOWN     = (150, 168, 123)   # grey-green — mixed vegetation
+C_LAND_RESIDENTIAL = (122, 158, 110)   # muted green — residential lawns
+C_PARK             = ( 72, 140,  72)   # park green
+C_CIVIC            = (255,  80,  80)   # civic anchor (bright red, single cell)
+
 # Phase accent colours for the progress bar
 C_PHASE = {
     PHASE_COASTLINE:  ( 38, 120, 210),
+    PHASE_ZONES:      (180, 130,  80),
     PHASE_HIGHWAY:    (235, 185,  45),
     PHASE_CONNECTOR:  ( 55, 195, 220),
     PHASE_SIDEWALK:   (155, 152, 142),
     PHASE_COMPLETE:   ( 60, 185, 115),
+    'blocks':         (100, 160, 200),
+    'parks':          ( 72, 140,  72),
+    'lots':           (180, 140, 100),
+    'civic':          (255,  80,  80),
 }
 
 # Coast cycle list (for H key)
 _COASTS = ['none', 'north', 'south', 'east', 'west', 'random']
+
+# Zone colour mode toggle (Z key)
+_zone_mode: bool = False
+
+_ZONE_COLORS = {
+    ZONE_CBD:         C_LAND_CBD,
+    ZONE_MIDTOWN:     C_LAND_MIDTOWN,
+    ZONE_RESIDENTIAL: C_LAND_RESIDENTIAL,
+}
 
 # ── Layout constants ───────────────────────────────────────────────────────────
 
@@ -96,6 +118,14 @@ def cell_color(cell) -> tuple[int, int, int]:
     if cell.is_sidewalk:
         return C_SIDEWALK
     if cell.is_land:
+        if getattr(cell, 'is_civic_anchor', False):
+            return C_CIVIC
+        if getattr(cell, 'is_park', False):
+            return C_PARK
+        if _zone_mode:
+            base = _ZONE_COLORS.get(cell.zone_id, C_LAND)
+            factor = 0.5 + 0.5 * getattr(cell, 'density_score', 0.5)
+            return tuple(int(ch * factor) for ch in base)
         return C_LAND
     return C_UNINIT
 
@@ -303,19 +333,32 @@ class MapApp:
             self.screen.blit(ts, (BAR_X, hud_y + 64))
 
         # ── Key hints (right side) ─────────────────────────────────────────────
-        hints = 'SPACE new  R redo  H coast  +/- zoom  arrows pan  1-9 seed  Q quit'
+        hints = 'SPACE new  R redo  H coast  Z zone  +/- zoom  arrows pan  1-9 seed  Q quit'
         hs = self.font_sm.render(hints, True, C_HUD_DIM)
         self.screen.blit(hs, (WIN_W - hs.get_width() - 14, hud_y + 64))
 
         # ── Legend swatches ───────────────────────────────────────────────────
-        swatches = [
-            (C_WATER,          'water'),
-            (C_LAND,           'land'),
-            (C_HIGHWAY,        'highway'),
-            (C_CONNECTOR,      'road'),
-            ((90, 215, 240),   'junction'),
-            (C_SIDEWALK,       'sidewalk'),
-        ]
+        if _zone_mode:
+            swatches = [
+                (C_WATER,            'water'),
+                (C_LAND_CBD,         'CBD'),
+                (C_LAND_MIDTOWN,     'midtown'),
+                (C_LAND_RESIDENTIAL, 'residential'),
+                (C_PARK,             'park'),
+                (C_CIVIC,            'civic'),
+                (C_HIGHWAY,          'highway'),
+                (C_CONNECTOR,        'road'),
+                (C_SIDEWALK,         'sidewalk'),
+            ]
+        else:
+            swatches = [
+                (C_WATER,          'water'),
+                (C_LAND,           'land'),
+                (C_HIGHWAY,        'highway'),
+                (C_CONNECTOR,      'road'),
+                ((90, 215, 240),   'junction'),
+                (C_SIDEWALK,       'sidewalk'),
+            ]
         lx = WIN_W - 14
         for colour, label in reversed(swatches):
             txt = self.font_sm.render(label, True, C_HUD_DIM)
@@ -355,6 +398,11 @@ class MapApp:
                 elif key == pygame.K_h:
                     self.coast_idx = (self.coast_idx + 1) % len(_COASTS)
                     self._start_generation()
+
+                elif key == pygame.K_z:
+                    global _zone_mode
+                    _zone_mode = not _zone_mode
+                    self._refresh_cell_surf()
 
                 elif key in (pygame.K_PLUS, pygame.K_EQUALS, pygame.K_KP_PLUS):
                     self.zoom = min(self.zoom * 1.25, 8.0)

@@ -162,5 +162,31 @@ ZONE_CBD:         Final[int] = 0   # Central Business District — dense grid
 ZONE_MIDTOWN:     Final[int] = 1   # Mixed-use — moderate density
 ZONE_RESIDENTIAL: Final[int] = 2   # Residential outskirts — sparse, cul-de-sacs
 
-# ── Phase name ────────────────────────────────────────────────────────────────
+# ── Phase names ───────────────────────────────────────────────────────────────
 PHASE_ZONES: Final[str] = 'zones'
+PHASE_BLOCKS: Final[str] = 'blocks'
+PHASE_PARKS:  Final[str] = 'parks'
+PHASE_LOTS:   Final[str] = 'lots'
+PHASE_CIVIC:  Final[str] = 'civic'
+
+# ── Per-phase PRNG salts (XOR with master_seed) — new phases ─────────────────
+SALT_BLOCKS: Final[int] = 0x789ABC
+SALT_PARKS:  Final[int] = 0xA1B2C3
+SALT_LOTS:   Final[int] = 0xD4E5F6
+SALT_CIVIC:  Final[int] = 0xF1E2D3
+
+# ── Block detection constants ─────────────────────────────────────────────────
+BLOCK_EXTERIOR_ID: Final[int] = -1   # cells touching map edge (exterior region)
+
+# ── Park placement constants ──────────────────────────────────────────────────
+PARK_SMALL_BLOCK_MAX:         Final[int]   = 12    # CBD/Midtown blocks < this become parks
+PARK_RESIDENTIAL_MIN_AREA:    Final[int]   = 15    # min cells for residential park block
+PARK_RESIDENTIAL_MAX_AREA:    Final[int]   = 40    # max cells for residential park block
+PARK_RESIDENTIAL_PROBABILITY: Final[float] = 0.25  # chance qualifying residential block → park
+
+# ── Lot subdivision constants ─────────────────────────────────────────────────
+LOT_MIN_WIDTH: Final[int] = 2   # minimum lot width in cells (20m at 10m/cell)
+LOT_MIN_DEPTH: Final[int] = 2   # minimum lot depth in cells
+
+# ── Civic anchor constants ────────────────────────────────────────────────────
+CIVIC_ANCHOR_RADIUS: Final[int] = 3   # connector density boost radius around anchor

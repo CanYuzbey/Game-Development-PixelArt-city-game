@@ -28,6 +28,7 @@ from map_builder.constants   import (
     LAYER_ROAD, LAYER_SIDEWALK,
     ROAD_HIGHWAY, ROAD_CONNECTOR,
     COAST_NONE,
+    ZONE_CBD, ZONE_MIDTOWN, ZONE_RESIDENTIAL,
 )
 
 
@@ -47,7 +48,7 @@ _ROAD_GLYPH = {
 _HW_GLYPH = {k: v for k, v in _ROAD_GLYPH.items()}
 
 
-def render_ascii(grid) -> str:
+def render_ascii(grid, zone_mode: bool = False) -> str:
     lines: list[str] = []
     for row in grid.rows():
         line: list[str] = []
@@ -57,21 +58,30 @@ def render_ascii(grid) -> str:
             elif cell.is_road:
                 tid   = cell.layers[LAYER_ROAD] or 'road_1010'
                 if tid.startswith('roundabout_'):
-                    # green circle block for roundabout tiles
                     line.append('\033[1;32m◉\033[0m')
                     continue
-                # strip _hw suffix for glyph lookup
                 base  = tid.replace('_hw', '')
                 glyph = _ROAD_GLYPH.get(base, '?')
                 if cell.road_category == ROAD_HIGHWAY:
-                    # ANSI bold yellow for highway
                     line.append(f'\033[1;33m{glyph}\033[0m')
                 else:
                     line.append(f'\033[0;36m{glyph}\033[0m')
             elif cell.is_sidewalk:
                 line.append('\033[0;37ms\033[0m')
             elif cell.is_land:
-                line.append('.')
+                if zone_mode:
+                    if getattr(cell, 'is_civic_anchor', False):
+                        line.append('\033[1;31m★\033[0m')
+                    elif getattr(cell, 'is_park', False):
+                        line.append('\033[0;32mp\033[0m')
+                    elif cell.zone_id == ZONE_CBD:
+                        line.append('\033[0;33m·\033[0m')
+                    elif cell.zone_id == ZONE_MIDTOWN:
+                        line.append('\033[0;32m,\033[0m')
+                    else:
+                        line.append('.')
+                else:
+                    line.append('.')
             else:
                 line.append(' ')
         lines.append(''.join(line))
@@ -88,6 +98,10 @@ def print_stats(gen: MapGenerator) -> None:
     print(f"  Water      {s.get('water')} cells")
     print(f"  Roads      {s.get('roads')} cells")
     print(f"  Sidewalks  {s.get('sidewalks')} cells")
+    if s.get('blocks') is not None:
+        print(f"  Blocks     {s.get('blocks')}")
+        print(f"  Parks      {s.get('parks')}")
+        print(f"  Lots       {s.get('lots')}")
     print(f"  Time       {s.get('elapsed_s')} s")
     print('─' * 50)
 
@@ -107,6 +121,7 @@ def parse_args():
     p.add_argument('--density',   type=float, default=0.85,  help='Connector density 0–1')
     p.add_argument('--quiet',     action='store_true',       help='Suppress phase messages')
     p.add_argument('--no-render', action='store_true',       help='Skip ASCII render')
+    p.add_argument('--zones',     action='store_true',       help='Show zone overlay in ASCII render')
     return p.parse_args()
 
 
@@ -162,11 +177,15 @@ def main() -> None:
 
     if not args.no_render:
         print()
-        print(render_ascii(generator.grid))
+        print(render_ascii(generator.grid, zone_mode=args.zones))
         print()
-        print('Legend:  ~ water   . land   \033[1;33m━ highway\033[0m   '
-              '\033[0;36m┼ connector\033[0m   \033[0;37ms sidewalk\033[0m   '
-              '\033[1;32m◉ roundabout\033[0m')
+        legend = ('Legend:  ~ water   . land   \033[1;33m━ highway\033[0m   '
+                  '\033[0;36m┼ connector\033[0m   \033[0;37ms sidewalk\033[0m   '
+                  '\033[1;32m◉ roundabout\033[0m')
+        if args.zones:
+            legend += ('   \033[0;33m· CBD\033[0m   \033[0;32m, Midtown\033[0m   '
+                       '. Residential   \033[0;32mp park\033[0m   \033[1;31m★ civic\033[0m')
+        print(legend)
         print()
 
 
