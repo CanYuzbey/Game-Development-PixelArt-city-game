@@ -14,7 +14,6 @@ from .constants import (
     LAYER_GROUND, LAYER_ROAD, LAYER_SIDEWALK, LAYER_DECOR,
     COAST_NONE, COAST_RANDOM,
     ROAD_CONNECTOR,
-    ZONE_CBD,
 )
 
 
@@ -43,12 +42,13 @@ class MapCell:
     is_water:        bool  = False
     is_land:         bool  = False
     road_category:   Optional[str] = None
-    zone_id:         int   = ZONE_CBD   # default = 0 (CBD); updated by zones phase
+    zone_id:         int   = -1         # -1 = unassigned; updated by zones phase (ZONE_CBD=0, etc.)
     block_id:        int   = -1         # -1 = exterior/road/unassigned; ≥0 = interior block
     lot_id:          int   = -1         # -1 = no lot; ≥0 = subdivided lot id
     density_score:   float = 0.0        # 0.0 (sparse edge) – 1.0 (dense CBD/highway)
     is_park:         bool  = False      # True if this cell belongs to a park block
     is_civic_anchor: bool  = False      # True for the single CBD civic centre cell
+    is_setback:      bool  = False      # True for residential lot perimeter (front-yard / lawn)
     # ── RPG game layer ────────────────────────────────────────────────────────
     tile_role:        str   = ''        # ROLE_* constant — gameplay traversability
     building_type:    str   = ''        # BLDG_* constant — what kind of building

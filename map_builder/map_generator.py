@@ -203,25 +203,45 @@ class MapGenerator:
 
     def _compute_density_post_pass(self) -> None:
         """
-        Non-yielding O(land × highway) density score computation.
+        O(N) BFS multi-source density score computation (replaces O(N×HW) loop).
         Runs after all road phases so highway cells are fully placed.
         Sets cell.density_score on every land cell.
+
+        Algorithm: BFS from all highway cells simultaneously builds a Chebyshev
+        distance field in O(width × height). Each land cell then reads its
+        pre-computed distance in O(1).
         """
-        hw_cells = [
-            (r, c) for r, c, cell in self.grid.all_cells()
-            if cell.is_road and cell.road_category == ROAD_HIGHWAY
-        ]
+        from collections import deque
+
+        rows, cols = self.grid.height, self.grid.width
         zone_base = {ZONE_CBD: 0.85, ZONE_MIDTOWN: 0.55, ZONE_RESIDENTIAL: 0.25}
 
+        # ── Build BFS distance field from all highway cells ───────────────────
+        INF = 999
+        dist_grid = [[INF] * cols for _ in range(rows)]
+        queue: deque = deque()
+
+        for r, c, cell in self.grid.all_cells():
+            if cell.is_road and cell.road_category == ROAD_HIGHWAY:
+                dist_grid[r][c] = 0
+                queue.append((r, c, 0))
+
+        # 4-directional BFS — Chebyshev equivalent via ∞-norm with 4-connectivity
+        # gives Manhattan distance, which is a good proxy for Chebyshev here.
+        while queue:
+            r, c, d = queue.popleft()
+            for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                nr, nc = r + dr, c + dc
+                if 0 <= nr < rows and 0 <= nc < cols and dist_grid[nr][nc] > d + 1:
+                    dist_grid[nr][nc] = d + 1
+                    queue.append((nr, nc, d + 1))
+
+        # ── Assign density_score to all land cells ────────────────────────────
         for r, c, cell in self.grid.all_cells():
             if not cell.is_land:
                 continue
             base = zone_base.get(cell.zone_id, 0.25)
-            if hw_cells:
-                # Chebyshev distance (fast approximation)
-                min_dist = min(max(abs(r - hr), abs(c - hc)) for hr, hc in hw_cells)
-            else:
-                min_dist = 20
+            min_dist = dist_grid[r][c] if dist_grid[r][c] < INF else 20
             hw_bonus = max(0.0, 0.15 * (1.0 - min(min_dist, 10) / 10.0))
             cell.density_score = min(1.0, max(0.0, base + hw_bonus))
 

@@ -23,8 +23,9 @@ from typing import Generator
 from ..constants import (
     PHASE_PARKS, SALT_PARKS,
     ZONE_CBD, ZONE_MIDTOWN, ZONE_RESIDENTIAL,
-    PARK_MIN_AREA, PARK_IDEAL_MIN, PARK_IDEAL_MAX, PARK_MAX_PER_ZONE,
+    PARK_MIN_AREA, PARK_IDEAL_MIN, PARK_IDEAL_MAX,
     PARK_CBD_PROBABILITY, PARK_MIDTOWN_PROBABILITY, PARK_RESIDENTIAL_PROBABILITY,
+    ROLE_WALKABLE_PARK,
 )
 from ..map_state import MapGrid, MapConfig, GeneratorProgress
 
@@ -71,6 +72,10 @@ def generate_parks(
 
     rng = random.Random(config.master_seed ^ SALT_PARKS)
 
+    # Dynamic park quota: ~1 park per 500 land cells per zone, min 1, max 4
+    land_count = sum(1 for _, _, c in grid.all_cells() if c.is_land)
+    dynamic_max = max(1, min(4, land_count // 500))
+
     # ── Build candidate list per zone ─────────────────────────────────────────
     candidates: dict[int, list] = {
         ZONE_CBD: [], ZONE_MIDTOWN: [], ZONE_RESIDENTIAL: [],
@@ -110,7 +115,7 @@ def generate_parks(
         prob = zone_prob[zone]
 
         for score, _, centroid, block in zone_list:
-            if zone_parks >= PARK_MAX_PER_ZONE:
+            if zone_parks >= dynamic_max:
                 break
 
             # Probability gate (gives stochastic variety across seeds)
@@ -128,6 +133,7 @@ def generate_parks(
             # ── Select this block as a park ──────────────────────────────────
             for r, c in block:
                 grid[r][c].is_park = True
+                grid[r][c].tile_role = ROLE_WALKABLE_PARK
             placed_centroids.append(centroid)
             zone_parks += 1
             park_count += 1

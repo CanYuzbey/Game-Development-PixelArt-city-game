@@ -2,7 +2,7 @@
 map_builder/tile_registry.py
 ─────────────────────────────
 Fully calibrated tile registry — all pixel_rect values are exact coordinates
-extracted by sheet_analyzer.py from the live sprite sheets.
+manually measured from the sprite sheets in assets/.
 
 Sprite sheet layout summary
 ────────────────────────────

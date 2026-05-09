@@ -43,7 +43,7 @@ from map_builder.constants   import (
     PHASE_SIDEWALK, PHASE_ZONES, PHASE_BUILDINGS,
     ZONE_CBD, ZONE_MIDTOWN, ZONE_RESIDENTIAL,
     ROLE_BUILDING_CBD, ROLE_BUILDING_MIDTOWN, ROLE_BUILDING_RESI, ROLE_BUILDING_CIVIC,
-    ROLE_WALKABLE_ALLEY, ROLE_WALKABLE_PLAZA, ROLE_WALKABLE_HIGHWAY,
+    ROLE_WALKABLE_ALLEY, ROLE_WALKABLE_PLAZA, ROLE_WALKABLE_HIGHWAY, ROLE_WALKABLE_PARK,
 )
 
 
@@ -208,6 +208,10 @@ def cell_color(cell) -> tuple[int, int, int]:
         if tile_role == ROLE_WALKABLE_PARK:
             return C_PARK
         return C_PARK   # fallback for sidewalk-overlapping park cells
+
+    # ── Residential setback / front yard ─────────────────────────────────────
+    if getattr(cell, 'is_setback', False):
+        return (188, 195, 160)   # warm light green — lawn / setback
 
     # ── Sidewalk ─────────────────────────────────────────────────────────────
     if cell.is_sidewalk:

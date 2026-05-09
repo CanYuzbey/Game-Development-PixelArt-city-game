@@ -14,8 +14,31 @@ from __future__ import annotations
 import random
 from typing import Generator
 
-from ..constants import PHASE_LOTS, SALT_LOTS, LOT_MIN_WIDTH, LOT_MIN_DEPTH
+from ..constants import (
+    PHASE_LOTS, SALT_LOTS, LOT_MIN_WIDTH, LOT_MIN_DEPTH,
+    ZONE_RESIDENTIAL, ROLE_WALKABLE_SIDEWALK,
+)
 from ..map_state import MapGrid, MapConfig, GeneratorProgress
+
+
+def _apply_residential_setback(grid: MapGrid, lot_cells: set) -> None:
+    """
+    Mark the outermost 1-cell perimeter of a residential lot as setback (front yard).
+    Only applies to lots with ≥ 9 cells (3×3 minimum footprint).
+    Setback cells get is_setback=True and tile_role=ROLE_WALKABLE_SIDEWALK.
+    """
+    if len(lot_cells) < 9:
+        return
+    rows_list = [r for r, _ in lot_cells]
+    cols_list = [c for _, c in lot_cells]
+    r_min, r_max = min(rows_list), max(rows_list)
+    c_min, c_max = min(cols_list), max(cols_list)
+    for r, c in lot_cells:
+        if r == r_min or r == r_max or c == c_min or c == c_max:
+            cell = grid[r][c]
+            if not cell.is_sidewalk:
+                cell.is_setback = True
+                cell.tile_role = ROLE_WALKABLE_SIDEWALK
 
 
 def _subdivide_block(
@@ -96,9 +119,12 @@ def generate_lots(
             continue
 
         lots = _subdivide_block(block, rng, lot_id_counter, LOT_MIN_WIDTH, LOT_MIN_DEPTH)
+        block_zone = grid[sample_r][sample_c].zone_id
         for lid, lot_cells in lots:
             for r, c in lot_cells:
                 grid[r][c].lot_id = lid
+            if block_zone == ZONE_RESIDENTIAL:
+                _apply_residential_setback(grid, lot_cells)
             all_lots.append(lot_cells)
 
         if i % 30 == 0:

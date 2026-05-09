@@ -616,6 +616,16 @@ def generate_connectors(
             if ok and len(branch) >= 3:
                 for sr, sc in branch:
                     grid[sr][sc].set_road('road_1010', ROAD_CONNECTOR, variation=0)
+                # Re-resolve bitmask for every new cul-de-sac cell and its
+                # immediate neighbour (the junction cell that spawned this branch).
+                for sr, sc in branch:
+                    mask = grid.road_bitmask(sr, sc)
+                    tid = REGISTRY.resolve_road_tile_id(mask, ROAD_CONNECTOR)
+                    grid[sr][sc].layers[LAYER_ROAD] = tid
+                # Re-resolve the junction cell that now has a new branch connection
+                mask = grid.road_bitmask(r, c)
+                tid = REGISTRY.resolve_road_tile_id(mask, cell.road_category)
+                cell.layers[LAYER_ROAD] = tid
                 cul_de_sac_count += 1
                 break
 

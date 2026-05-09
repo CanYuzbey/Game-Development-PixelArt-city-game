@@ -15,10 +15,11 @@ Runs AFTER coastline (so water cells are known) and BEFORE highway (so
 highway placement can optionally read zone data).
 """
 from __future__ import annotations
+import random
 from typing import Generator
 
 from ..constants import (
-    PHASE_ZONES,
+    PHASE_ZONES, SALT_BLOCKS,
     ZONE_CBD, ZONE_MIDTOWN, ZONE_RESIDENTIAL,
     COAST_WEST, COAST_EAST, COAST_NORTH, COAST_SOUTH,
 )
@@ -66,6 +67,33 @@ def generate_zones(
         else:
             cell.zone_id = ZONE_RESIDENTIAL
 
+    # ── Softening pass: noise-based boundary blending ─────────────────────────
+    # Boundary cells flip zone_id with seeded probability, creating organic
+    # 1–2 cell wide transition strips instead of hard geometric edges.
+    rng = random.Random(config.master_seed ^ 0xBEEF)
+
+    # Two passes: CBD→Midtown boundary (40%), then Midtown→Residential (35%)
+    boundary_rules = [
+        (ZONE_CBD,     ZONE_MIDTOWN,     0.40),
+        (ZONE_MIDTOWN, ZONE_RESIDENTIAL, 0.35),
+    ]
+    for source_zone, target_zone, flip_prob in boundary_rules:
+        for r, c, cell in grid.all_cells():
+            if not cell.is_land:
+                continue
+            if cell.zone_id != source_zone:
+                continue
+            if cell.is_civic_anchor:
+                continue
+            # Check if any 4-neighbour belongs to target_zone
+            has_target_neighbour = any(
+                grid.cell(r + dr, c + dc) is not None
+                and grid.cell(r + dr, c + dc).zone_id == target_zone
+                for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1))
+            )
+            if has_target_neighbour and rng.random() < flip_prob:
+                cell.zone_id = target_zone
+
     counts = grid.zone_count()
     cbd_n  = counts.get(ZONE_CBD,         0)
     mid_n  = counts.get(ZONE_MIDTOWN,     0)
@@ -73,5 +101,5 @@ def generate_zones(
 
     yield GeneratorProgress(
         PHASE_ZONES, 1.0,
-        f'Zones assigned — CBD: {cbd_n}, Midtown: {mid_n}, Residential: {res_n} land cells.',
+        f'Zones assigned (softened) — CBD: {cbd_n}, Midtown: {mid_n}, Residential: {res_n} land cells.',
     )

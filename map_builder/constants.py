@@ -186,7 +186,7 @@ PARK_SMALL_BLOCK_MAX:         Final[int]   = 12    # legacy — kept for compat 
 PARK_MIN_AREA:                Final[int]   = 20    # minimum block size to qualify as park
 PARK_IDEAL_MIN:               Final[int]   = 25    # preferred minimum (will read clearly on screen)
 PARK_IDEAL_MAX:               Final[int]   = 120   # maximum (don't make entire districts parks)
-PARK_MAX_PER_ZONE:            Final[int]   = 2     # max parks per zone (prevents clustering)
+PARK_MAX_PER_ZONE:            Final[int]   = 2     # legacy default; parks.py computes dynamic cap at runtime
 PARK_CBD_PROBABILITY:         Final[float] = 0.45  # CBD: plazas/squares from mid-size blocks
 PARK_MIDTOWN_PROBABILITY:     Final[float] = 0.55  # Midtown: neighbourhood parks
 PARK_RESIDENTIAL_PROBABILITY: Final[float] = 0.45  # Residential: street parks + gardens
@@ -255,6 +255,15 @@ RESI_BLDG_WEIGHTS: Final[list] = [
     (BLDG_SHOP,       15),
     (BLDG_APARTMENT,  10),
     (BLDG_EMPTY_LOT,  10),
+]
+
+# Waterfront building weights (blocks with direct water adjacency)
+WATERFRONT_BLDG_WEIGHTS: Final[list] = [
+    (BLDG_RESTAURANT,  35),
+    (BLDG_MARKET,      25),
+    (BLDG_APARTMENT,   20),
+    (BLDG_STATION,     10),   # ferry terminal
+    (BLDG_EMPTY_LOT,   10),
 ]
 
 # ── Encounter probabilities per tile role ─────────────────────────────────────

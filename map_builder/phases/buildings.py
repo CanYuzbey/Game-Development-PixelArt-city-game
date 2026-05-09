@@ -46,7 +46,7 @@ from ..constants import (
     BLDG_SHOP, BLDG_RESTAURANT, BLDG_APARTMENT, BLDG_CLINIC,
     BLDG_HOUSE, BLDG_SCHOOL, BLDG_PARK_FEATURE, BLDG_STATION,
     BLDG_HOSPITAL, BLDG_POLICE, BLDG_EMPTY_LOT,
-    CBD_BLDG_WEIGHTS, MIDTOWN_BLDG_WEIGHTS, RESI_BLDG_WEIGHTS,
+    CBD_BLDG_WEIGHTS, MIDTOWN_BLDG_WEIGHTS, RESI_BLDG_WEIGHTS, WATERFRONT_BLDG_WEIGHTS,
     ENCOUNTER_BASE, ENCOUNTER_ZONE_MOD,
     ENCOUNTER_DENSITY_K, ENCOUNTER_CIVIC_PENALTY, ENCOUNTER_CIVIC_RADIUS,
     BLOCK_EXTERIOR_ID,
@@ -98,6 +98,21 @@ def _weighted_choice(rng: random.Random, weights: list) -> str:
 
 # ── Landmark placement ────────────────────────────────────────────────────────
 
+_LANDMARK_MIN_SEPARATION = 6   # minimum Chebyshev distance between any two landmarks
+
+
+def _landmarks_too_close(
+    pos: tuple[int, int],
+    placed_positions: list[tuple[int, int]],
+    min_dist: int = _LANDMARK_MIN_SEPARATION,
+) -> bool:
+    """Return True if pos is within min_dist Chebyshev of any placed landmark."""
+    return any(
+        max(abs(pos[0] - p[0]), abs(pos[1] - p[1])) < min_dist
+        for p in placed_positions
+    )
+
+
 def _inject_landmarks(
     grid:    MapGrid,
     blocks:  list,
@@ -108,8 +123,10 @@ def _inject_landmarks(
     """
     Assign landmark_type to specific lots/cells. Returns info dict.
     Returns dict of landmark_type → (row, col) placed.
+    Landmarks are separated by at least _LANDMARK_MIN_SEPARATION Chebyshev cells.
     """
     placed: dict[str, tuple[int, int]] = {}
+    placed_positions: list[tuple[int, int]] = []
     rows, cols = grid.height, grid.width
 
     # ── Town Hall at civic anchor lot ─────────────────────────────────────────
@@ -137,6 +154,7 @@ def _inject_landmarks(
                         grid[r][c].tile_role = ROLE_BUILDING_CIVIC
                     break
         placed['town_hall'] = (cr, cc)
+        placed_positions.append((cr, cc))
 
     # ── Train station: highway × highway junction closest to CBD center ───────
     hw_junctions = [
@@ -154,7 +172,7 @@ def _inject_landmarks(
         # Find the lot nearest to this junction
         sr, sc = station_cell_rc
         nearest_lot = _nearest_lot_of_zone(grid, sr, sc, ZONE_MIDTOWN, radius=8)
-        if nearest_lot is not None:
+        if nearest_lot is not None and not _landmarks_too_close(nearest_lot, placed_positions):
             target_lot_id = grid[nearest_lot[0]][nearest_lot[1]].lot_id
             if target_lot_id >= 0:
                 for lot_cells in lots:
@@ -168,6 +186,7 @@ def _inject_landmarks(
                             grid[r][c].tile_role = ROLE_BUILDING_CIVIC
                         break
             placed['station'] = nearest_lot
+            placed_positions.append(nearest_lot)
 
     # ── Hospital: largest Midtown lot far from CBD center ─────────────────────
     # Hospital: pick a medium Midtown lot (8-20 cells) — large enough to notice,
@@ -181,12 +200,13 @@ def _inject_landmarks(
                 continue
             r0, c0 = next(iter(lot_cells))
             cell0 = grid[r0][c0]
-            if not cell0.landmark_type:
+            if not cell0.landmark_type and not _landmarks_too_close((r0, c0), placed_positions):
                 for r, c in lot_cells:
                     grid[r][c].landmark_type = 'hospital'
                     grid[r][c].building_type = BLDG_HOSPITAL
                     grid[r][c].tile_role = ROLE_BUILDING_CIVIC
                 placed['hospital'] = (r0, c0)
+                placed_positions.append((r0, c0))
                 break
 
     # ── Police station: small-medium Midtown lot near CBD boundary ────────────
@@ -199,12 +219,13 @@ def _inject_landmarks(
                 continue
             r0, c0 = next(iter(lot_cells))
             cell0 = grid[r0][c0]
-            if not cell0.landmark_type:
+            if not cell0.landmark_type and not _landmarks_too_close((r0, c0), placed_positions):
                 for r, c in lot_cells:
                     grid[r][c].landmark_type = 'police'
                     grid[r][c].building_type = BLDG_POLICE
                     grid[r][c].tile_role = ROLE_BUILDING_CIVIC
                 placed['police'] = (r0, c0)
+                placed_positions.append((r0, c0))
                 break
 
     return placed
@@ -255,6 +276,42 @@ def _lots_by_zone(
     return result
 
 
+# ── Waterfront detection ─────────────────────────────────────────────────────
+
+def _is_waterfront_lot(grid, lot_cells) -> bool:
+    """Return True if any cell in the lot is adjacent to a water cell."""
+    for r, c in lot_cells:
+        for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            nbr = grid.cell(r + dr, c + dc)
+            if nbr is not None and nbr.is_water:
+                return True
+    return False
+
+
+# ── Alley vs cul-de-sac length check ─────────────────────────────────────────
+
+def _dead_end_length(grid, r: int, c: int) -> int:
+    """BFS walk from dead-end cell; count connected single-width path length."""
+    visited = {(r, c)}
+    current = (r, c)
+    length = 1
+    while True:
+        nbrs = [
+            (r2, c2)
+            for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1))
+            for r2, c2 in [(current[0] + dr, current[1] + dc)]
+            if grid.in_bounds(r2, c2) and grid[r2][c2].is_road
+            and (r2, c2) not in visited
+        ]
+        if len(nbrs) == 1:
+            visited.add(nbrs[0])
+            current = nbrs[0]
+            length += 1
+        else:
+            break
+    return length
+
+
 # ── Main phase generator ──────────────────────────────────────────────────────
 
 def generate_buildings(
@@ -277,7 +334,8 @@ def generate_buildings(
     total_cells = rows * cols
 
     # ── Pre-compute alley cells: connectors with road-bitmask pop-count == 1 ──
-    # A dead-end connector (only one neighbour road) = alley terminus
+    # A dead-end connector (only one neighbour road) = potential alley/cul-de-sac.
+    # Short dead-ends (length ≤ 3) = service alley; longer = cul-de-sac (normal road).
     alley_cells: set[tuple[int, int]] = set()
     for r, c, cell in grid.all_cells():
         if cell.is_road and cell.road_category == ROAD_CONNECTOR:
@@ -285,7 +343,8 @@ def generate_buildings(
             if not tile_id.startswith('roundabout_'):
                 bitmask = grid.road_bitmask(r, c)
                 if bin(bitmask).count('1') == 1:
-                    alley_cells.add((r, c))
+                    if _dead_end_length(grid, r, c) <= 3:
+                        alley_cells.add((r, c))
 
     # ── Pre-compute plaza cells: roundabout tiles ─────────────────────────────
     plaza_cells: set[tuple[int, int]] = set()
@@ -346,6 +405,10 @@ def generate_buildings(
             )
 
         elif cell.lot_id >= 0:
+            # Setback cells keep their sidewalk role; skip building assignment
+            if getattr(cell, 'is_setback', False):
+                cell.encounter_chance = 0.0
+                continue
             if cell.zone_id == ZONE_CBD:
                 cell.tile_role = ROLE_BUILDING_CBD
             elif cell.zone_id == ZONE_MIDTOWN:
@@ -367,14 +430,21 @@ def generate_buildings(
             continue
         r0, c0 = next(iter(lot_cells))
         zone = grid[r0][c0].zone_id
-        if zone == ZONE_CBD:
+
+        # Waterfront lots override zone weights with coastal building mix
+        if _is_waterfront_lot(grid, lot_cells):
+            btype = _weighted_choice(rng, WATERFRONT_BLDG_WEIGHTS)
+        elif zone == ZONE_CBD:
             btype = _weighted_choice(rng, CBD_BLDG_WEIGHTS)
         elif zone == ZONE_MIDTOWN:
             btype = _weighted_choice(rng, MIDTOWN_BLDG_WEIGHTS)
         else:
             btype = _weighted_choice(rng, RESI_BLDG_WEIGHTS)
-        # Assign directly to cells in this lot
+
+        # Assign directly to cells in this lot; skip setback cells (they stay as sidewalk)
         for r, c in lot_cells:
+            if getattr(grid[r][c], 'is_setback', False):
+                continue
             grid[r][c].building_type = btype
 
     yield GeneratorProgress(PHASE_BUILDINGS, 0.50, 'Building types assigned. Injecting landmarks …')
