@@ -504,8 +504,10 @@ def generate_connectors(
         eff_density = config.connector_density * (1.0 - zone * 0.35) * coast_factor
         if rng.random() < eff_density:
             ns_bases_kept.append(base_col)
-    if not ns_bases_kept and ns_bases:
-        ns_bases_kept = [ns_bases[len(ns_bases) // 2]]
+    # Guarantee at least half the candidate streets are placed (prevents degenerate grids)
+    min_ns = max(1, (len(ns_bases) + 1) // 2)
+    if len(ns_bases_kept) < min_ns:
+        ns_bases_kept = list(ns_bases[:min_ns])
     ns_bases = sorted(ns_bases_kept)
 
     ew_bases_kept = []
@@ -514,8 +516,10 @@ def generate_connectors(
         eff_density = config.connector_density * (1.0 - zone * 0.50) * coast_factor
         if rng.random() < eff_density:
             ew_bases_kept.append(base_row)
-    if not ew_bases_kept and ew_bases:
-        ew_bases_kept = [ew_bases[len(ew_bases) // 2]]
+    # Guarantee at least half the candidate streets are placed
+    min_ew = max(1, (len(ew_bases) + 1) // 2)
+    if len(ew_bases_kept) < min_ew:
+        ew_bases_kept = list(ew_bases[:min_ew])
     ew_bases = sorted(ew_bases_kept)
 
     total_streets = len(ns_bases) + len(ew_bases)
@@ -591,8 +595,11 @@ def generate_connectors(
     # ── Pass 2.5: Gap-fill secondary streets ─────────────────────────────────
     # After the density filter drops some streets, fill any oversized gaps so no
     # block is more than ~1.5× the intended spacing.
-    sec_ns = _gap_fill_positions(ns_bases, 0, cols - 1, av_block, rng)
-    sec_ew = _gap_fill_positions(ew_bases, 0, rows - 1, cs_block, rng)
+    # Include perimeter streets so gap-fill doesn't double-fill areas near perimeter.
+    all_ns_for_gap = sorted(set(ns_bases) | set(perimeter_ns))
+    all_ew_for_gap = sorted(set(ew_bases) | set(perimeter_ew))
+    sec_ns = _gap_fill_positions(all_ns_for_gap, 0, cols - 1, av_block, rng, probability=0.45)
+    sec_ew = _gap_fill_positions(all_ew_for_gap, 0, rows - 1, cs_block, rng, probability=0.45)
 
     sec_cells = 0
     for base_col in sec_ns:
@@ -632,30 +639,40 @@ def generate_connectors(
         )
 
     # ── Pass 3.5: Connectivity repair ────────────────────────────────────────
-    # BFS from the first road cell; any road cell not reached belongs to an
-    # isolated fragment (caused by diagonal tracers near water or drift gaps).
-    # Remove isolated cells: revert them to bare land so the tile system is clean.
+    # Find all connected road components; keep the LARGEST one and remove the
+    # rest.  Starting BFS from all_road_cells[0] was a bug: on coastal maps the
+    # first road cell (by row-major scan) can be in a small peninsula fragment,
+    # causing the entire main road network to be wrongly classified as isolated.
     all_road_cells = [(r, c) for r, c, cell in grid.all_cells() if cell.is_road]
     if all_road_cells:
-        visited_conn: set[tuple[int, int]] = set()
-        queue_conn: list[tuple[int, int]] = [all_road_cells[0]]
-        visited_conn.add(all_road_cells[0])
-        while queue_conn:
-            r2, c2 = queue_conn.pop()
-            for dr2, dc2 in ((-1, 0), (1, 0), (0, -1), (0, 1)):
-                nr2, nc2 = r2 + dr2, c2 + dc2
-                if (
-                    grid.in_bounds(nr2, nc2)
-                    and grid[nr2][nc2].is_road
-                    and (nr2, nc2) not in visited_conn
-                ):
-                    visited_conn.add((nr2, nc2))
-                    queue_conn.append((nr2, nc2))
-
-        isolated_removed = 0
         from ..constants import TILE_GROUND_LAND
+        unvisited: set[tuple[int, int]] = set(all_road_cells)
+        components: list[set[tuple[int, int]]] = []
+
+        while unvisited:
+            start = next(iter(unvisited))
+            comp: set[tuple[int, int]] = set()
+            stack: list[tuple[int, int]] = [start]
+            while stack:
+                r2, c2 = stack.pop()
+                if (r2, c2) in comp:
+                    continue
+                comp.add((r2, c2))
+                for dr2, dc2 in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                    nr2, nc2 = r2 + dr2, c2 + dc2
+                    if (
+                        grid.in_bounds(nr2, nc2)
+                        and grid[nr2][nc2].is_road
+                        and (nr2, nc2) not in comp
+                    ):
+                        stack.append((nr2, nc2))
+            components.append(comp)
+            unvisited -= comp
+
+        largest = max(components, key=len)
+        isolated_removed = 0
         for r2, c2 in all_road_cells:
-            if (r2, c2) not in visited_conn:
+            if (r2, c2) not in largest:
                 cell2 = grid[r2][c2]
                 cell2.clear_road()
                 cell2.set_ground(TILE_GROUND_LAND)
@@ -664,7 +681,8 @@ def generate_connectors(
         if isolated_removed > 0:
             yield GeneratorProgress(
                 PHASE_CONNECTOR, 0.68,
-                f'Connectivity repair: removed {isolated_removed} isolated road cells.'
+                f'Connectivity repair: removed {isolated_removed} isolated road cells '
+                f'({len(components)} components → kept largest with {len(largest)} cells).'
             )
 
     # ── Pass 3.6: Dead-end stub pruning ──────────────────────────────────────
@@ -769,8 +787,7 @@ def generate_connectors(
 
         # Pass 4b: randomise surface variant per connector cell
         variants = REGISTRY.get_variants(tile_id)
-        if len(variants) > 1:
-            cell.variation[LAYER_ROAD] = rng.randrange(len(variants))
+        # (variation field removed in Sprint 5 — sprite renderer picks variants via tile_id)
 
         # Pass 4c: cul-de-sac sprouting — residential cells on through-roads only
         if cell.zone_id != ZONE_RESIDENTIAL:

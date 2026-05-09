@@ -57,7 +57,6 @@ from .constants import (
     ROAD_CONNECTOR,
 )
 
-
 class MapGenerator:
     """
     Orchestrates all four generation phases into a single yield-based pipeline.
@@ -91,6 +90,7 @@ class MapGenerator:
         t_start = time.perf_counter()
 
         yield from self._run_phase_coastline()
+        yield from self._run_phase_elevation()
         yield from self._run_phase_zones()
         yield from self._run_phase_civic_anchor()
         yield from self._run_phase_highways()
@@ -104,6 +104,8 @@ class MapGenerator:
         self._compute_density_post_pass()
 
         yield from self._run_phase_buildings()
+
+        self._generate_district_names()
 
         t_end = time.perf_counter()
         park_count = sum(
@@ -137,6 +139,7 @@ class MapGenerator:
             'landmarks': landmark_count,
             'elapsed_s': round(t_end - t_start, 3),
             'zones':     self.grid.zone_count(),
+            'districts': self.stats.get('districts', []),
         }
 
         yield GeneratorProgress(
@@ -167,6 +170,10 @@ class MapGenerator:
     def _run_phase_coastline(self) -> Generator[GeneratorProgress, None, None]:
         from .phases.coastline import generate_coastline
         yield from generate_coastline(self.grid, self.config)
+
+    def _run_phase_elevation(self) -> Generator[GeneratorProgress, None, None]:
+        from .phases.elevation import generate_elevation
+        yield from generate_elevation(self.grid, self.config)
 
     def _run_phase_zones(self) -> Generator[GeneratorProgress, None, None]:
         from .phases.zones import generate_zones
@@ -256,6 +263,143 @@ class MapGenerator:
             cell.density_score = min(1.0, max(0.0, base + hw_bonus))
 
     # ── Serialisation stubs (wired to your save system) ───────────────────────
+
+    def _generate_district_names(self) -> None:
+        """
+        Sprint 5 — Procedural District Naming.
+
+        Assigns human-readable names to map zones based on:
+          • Position relative to map centre (cardinal direction prefix)
+          • Zone type (CBD → Financial/Centre, Midtown → Arts/Midtown, Resi → Heights/Gardens)
+          • Coastal adjacency (Waterfront / Harbour prefix for coastal cells)
+          • Nearest landmark type (districts near landmarks bear that landmark's name)
+
+        Names stored in self.stats['districts'] and in cell.district_name on each
+        land cell for game-engine consumption.
+        """
+        import random as _rnd
+        rng = _rnd.Random(self.config.master_seed ^ 0xD15771C7)
+
+        rows, cols = self.grid.height, self.grid.width
+        coast = self.config.coast_side
+
+        # ── Name pools per zone ──────────────────────────────────────────────
+        CBD_NAMES = [
+            'Financial District', 'City Centre', 'Commerce Square',
+            'Exchange Quarter', 'Capital District', 'Civic Core',
+        ]
+        MIDTOWN_NAMES = [
+            'Midtown', 'Arts District', 'Theatre Quarter',
+            'Innovation Mile', 'Cultural Quarter', 'Gallery Row',
+        ]
+        RESI_NAMES = [
+            'Heights', 'Gardens', 'Park Quarter',
+            'Hillside', 'Green End', 'Meadows',
+        ]
+        WATERFRONT_PREFIXES = ['Waterfront', 'Harbour', 'Riverside', 'Marina']
+        LANDMARK_PREFIXES = {
+            'town_hall':  'Civic',
+            'station':    'Station',
+            'hospital':   'Hospital',
+            'police':     'Precinct',
+            'school':     'Academy',
+        }
+        CARDINAL = {
+            (True,  True):  'North-East',
+            (True,  False): 'North-West',
+            (False, True):  'South-East',
+            (False, False): 'South-West',
+        }
+
+        # ── Find zone centroids ───────────────────────────────────────────────
+        zone_cells: dict[int, list] = {
+            ZONE_CBD: [], ZONE_MIDTOWN: [], ZONE_RESIDENTIAL: [],
+        }
+        for r, c, cell in self.grid.all_cells():
+            if cell.is_land and cell.zone_id in zone_cells:
+                zone_cells[cell.zone_id].append((r, c))
+
+        def _centroid(cells):
+            if not cells:
+                return (rows / 2, cols / 2)
+            return (
+                sum(r for r, _ in cells) / len(cells),
+                sum(c for _, c in cells) / len(cells),
+            )
+
+        # ── Detect waterfront proximity ───────────────────────────────────────
+        def _has_coast_near(zone: int) -> bool:
+            if coast == 'none':
+                return False
+            for r, c in zone_cells.get(zone, []):
+                for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                    nbr = self.grid.cell(r + dr, c + dc)
+                    if nbr is not None and nbr.is_water:
+                        return True
+            return False
+
+        # ── Find nearest placed landmark for a zone centroid ─────────────────
+        placed_landmarks: list[tuple[str, int, int]] = []
+        for r, c, cell in self.grid.all_cells():
+            if cell.landmark_type and cell.lot_id >= 0 and not cell.is_park:
+                placed_landmarks.append((cell.landmark_type, r, c))
+
+        def _nearest_landmark(zone_cr: float, zone_cc: float) -> str:
+            if not placed_landmarks:
+                return ''
+            best = min(
+                placed_landmarks,
+                key=lambda lrc: (lrc[1] - zone_cr) ** 2 + (lrc[2] - zone_cc) ** 2,
+            )
+            return best[0]
+
+        # ── Build one name per zone ────────────────────────────────────────────
+        districts: list[dict] = []
+        zone_info = [
+            (ZONE_CBD,         CBD_NAMES,    'CBD'),
+            (ZONE_MIDTOWN,     MIDTOWN_NAMES,'Midtown'),
+            (ZONE_RESIDENTIAL, RESI_NAMES,   'Residential'),
+        ]
+
+        for zone_id, name_pool, zone_label in zone_info:
+            cells = zone_cells.get(zone_id, [])
+            if not cells:
+                continue
+
+            cr, cc = _centroid(cells)
+            is_north = cr < rows / 2.0
+            is_east  = cc > cols / 2.0
+
+            # Waterfront prefix overrides cardinal prefix if zone touches coast
+            if _has_coast_near(zone_id):
+                prefix = rng.choice(WATERFRONT_PREFIXES)
+                base   = rng.choice(name_pool)
+                name   = f'{prefix} {base}'
+            else:
+                lmk = _nearest_landmark(cr, cc)
+                if lmk and lmk in LANDMARK_PREFIXES:
+                    prefix = LANDMARK_PREFIXES[lmk]
+                    base   = rng.choice(name_pool)
+                    name   = f'{prefix} {base}'
+                else:
+                    card = CARDINAL[(is_north, is_east)]
+                    base = rng.choice(name_pool)
+                    name = f'{card} {base}'
+
+            district = {
+                'name':     name,
+                'zone':     zone_id,
+                'zone_label': zone_label,
+                'center_r': int(cr),
+                'center_c': int(cc),
+            }
+            districts.append(district)
+
+            # Tag every cell in this zone with the district name
+            for r, c in cells:
+                self.grid[r][c].district_name = name
+
+        self.stats['districts'] = districts
 
     def to_dict(self) -> dict:
         """

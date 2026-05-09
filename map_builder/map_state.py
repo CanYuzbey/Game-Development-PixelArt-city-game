@@ -29,9 +29,10 @@ class MapCell:
     is_water    : True if this cell is ocean/river — impassable, no roads.
     is_land     : True if this cell is dry ground (can receive road/sidewalk).
     road_category : ROAD_HIGHWAY | ROAD_CONNECTOR | None
-    variation   : variation index into TileRegistry.get_variants() — lets the
-                  renderer pick the same random variant every frame without
-                  re-rolling.
+    elevation   : Sprint 5 terrain height field (0.0 = sea level, 1.0 = hilltop).
+                  Used for visual colour variation only; roads ignore it.
+    footprint_style : Sprint 5 building footprint tag (''|'solid'|'courtyard'|'lshape').
+    district_name   : Sprint 5 human-readable district name for game UI.
     """
     layers:        dict = field(default_factory=lambda: {
         LAYER_GROUND:   None,
@@ -55,12 +56,12 @@ class MapCell:
     encounter_chance: float = 0.0       # 0.0–1.0 per-step random encounter probability
     is_spawn_point:   bool  = False     # NPC/enemy spawn origin
     landmark_type:    str   = ''        # 'station'|'hospital'|'police'|'' etc.
-    variation:       dict  = field(default_factory=lambda: {
-        LAYER_GROUND:   0,
-        LAYER_ROAD:     0,
-        LAYER_SIDEWALK: 0,
-        LAYER_DECOR:    0,
-    })
+    # ── Terrain layer (Sprint 5) ──────────────────────────────────────────────
+    elevation:        float = 0.0       # 0.0 (sea level / valley) – 1.0 (hilltop)
+    # ── Building footprint style (Sprint 5) ──────────────────────────────────
+    footprint_style:  str   = ''        # ''|'solid'|'courtyard'|'lshape'
+    # ── District naming (Sprint 5) ────────────────────────────────────────────
+    district_name:    str   = ''        # human-readable district name for this cell
 
     # ── Convenience accessors ─────────────────────────────────────────────────
 
@@ -75,19 +76,15 @@ class MapCell:
     def set_road(self, tile_id: str, category: str, variation: int = 0) -> None:
         self.layers[LAYER_ROAD] = tile_id
         self.road_category      = category
-        self.variation[LAYER_ROAD] = variation
 
     def set_sidewalk(self, tile_id: str, variation: int = 0) -> None:
         self.layers[LAYER_SIDEWALK] = tile_id
-        self.variation[LAYER_SIDEWALK] = variation
 
     def set_ground(self, tile_id: str, variation: int = 0) -> None:
         self.layers[LAYER_GROUND] = tile_id
-        self.variation[LAYER_GROUND] = variation
 
     def set_decor(self, tile_id: str, variation: int = 0) -> None:
         self.layers[LAYER_DECOR] = tile_id
-        self.variation[LAYER_DECOR] = variation
 
     def clear_road(self) -> None:
         self.layers[LAYER_ROAD] = None
@@ -269,7 +266,7 @@ class MapConfig:
     #   avenue_spacing=18  →  180m N-S corridor  (EU/Asian city block scale)
     #   connector_spacing=8  →  80m E-W block depth  (realistic dense urban)
     #   ratio 2.25:1 — moderate urban proportions (~18–25% road density target)
-    connector_density:    float = 0.85   # 0=sparse 1=dense
+    connector_density:    float = 0.65   # 0=sparse 1=dense
     connector_spacing:    int   = 8      # E-W cross-street row spacing (cells)
     avenue_spacing:       int   = 18     # N-S avenue column spacing (cells)
     min_block_depth:      int   = 2      # guaranteed clear cells between parallel roads
