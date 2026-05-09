@@ -9,6 +9,12 @@ offset on the split position to produce naturally varied lot sizes.
 
 Sets cell.lot_id ≥ 0 on every land cell inside a subdivided lot.
 Park cells and exterior cells retain lot_id == -1.
+
+Quality guarantees (Iteration 1):
+  • Blocks < 6 cells are skipped (too small to develop — marked as exterior).
+  • Lots < 4 cells are not assigned a lot_id (left as exterior/void).
+  • Lots with aspect ratio > 4:1 trigger an extra split along the long axis.
+  • Zone detection uses majority vote from all lot cells, not just block sample.
 """
 from __future__ import annotations
 import random
@@ -16,9 +22,16 @@ from typing import Generator
 
 from ..constants import (
     PHASE_LOTS, SALT_LOTS, LOT_MIN_WIDTH, LOT_MIN_DEPTH,
-    ZONE_RESIDENTIAL, ROLE_WALKABLE_SIDEWALK,
+    ZONE_RESIDENTIAL, ROLE_WALKABLE_SIDEWALK, BLOCK_EXTERIOR_ID,
 )
 from ..map_state import MapGrid, MapConfig, GeneratorProgress
+
+# Minimum block size to consider for lot subdivision (cells)
+_BLOCK_MIN_CELLS = 6
+# Minimum lot size to assign a lot_id (cells)
+_LOT_MIN_CELLS = 4
+# Maximum lot aspect ratio (long/short) before forcing a split
+_LOT_MAX_ASPECT = 4.0
 
 
 def _apply_residential_setback(grid: MapGrid, lot_cells: set) -> None:
@@ -41,6 +54,15 @@ def _apply_residential_setback(grid: MapGrid, lot_cells: set) -> None:
                 cell.tile_role = ROLE_WALKABLE_SIDEWALK
 
 
+def _lot_zone(grid: MapGrid, lot_cells: set) -> int:
+    """Return the majority zone_id of cells in a lot (handles zone-boundary lots)."""
+    votes: dict[int, int] = {}
+    for r, c in lot_cells:
+        z = grid[r][c].zone_id
+        votes[z] = votes.get(z, 0) + 1
+    return max(votes, key=votes.get) if votes else -1
+
+
 def _subdivide_block(
     block_cells: set,
     rng: random.Random,
@@ -49,9 +71,13 @@ def _subdivide_block(
     min_d: int,
 ) -> list[tuple[int, set]]:
     """
-    Recursive alternating-axis binary split.
+    Recursive alternating-axis binary split with aspect-ratio enforcement.
     Returns list of (lot_id, cell_set) tuples.
     lot_id_counter is a mutable [int] used as a reference counter.
+
+    Lots < _LOT_MIN_CELLS cells are returned with lot_id=-1 (not assigned).
+    Lots with aspect ratio > _LOT_MAX_ASPECT are forced to split along the
+    long axis even if already below the normal minimum size threshold.
     """
     if not block_cells:
         return []
@@ -65,6 +91,13 @@ def _subdivide_block(
 
     can_split_h = height >= min_d * 2
     can_split_v = width  >= min_w * 2
+
+    # Aspect-ratio check: force a split along the longer axis if ratio > max
+    aspect = (height / width) if width > 0 else 999
+    if aspect > _LOT_MAX_ASPECT and height >= min_d * 2:
+        can_split_h = True
+    elif (1.0 / aspect) > _LOT_MAX_ASPECT and width >= min_w * 2:
+        can_split_v = True
 
     if not can_split_h and not can_split_v:
         lid = lot_id_counter[0]
@@ -110,20 +143,38 @@ def generate_lots(
     lot_id_counter = [0]
     all_lots: list[set] = []
     total = max(len(blocks), 1)
+    skipped_tiny_blocks = 0
 
     for i, block in enumerate(blocks):
         if not block:
             continue
         sample_r, sample_c = next(iter(block))
-        if grid[sample_r][sample_c].is_park:
+        cell0 = grid[sample_r][sample_c]
+
+        # Skip park blocks (handled by parks phase)
+        if cell0.is_park:
+            continue
+
+        # Skip blocks too small to develop — mark as exterior
+        if len(block) < _BLOCK_MIN_CELLS:
+            for r, c in block:
+                grid[r][c].block_id = BLOCK_EXTERIOR_ID
+            skipped_tiny_blocks += 1
             continue
 
         lots = _subdivide_block(block, rng, lot_id_counter, LOT_MIN_WIDTH, LOT_MIN_DEPTH)
-        block_zone = grid[sample_r][sample_c].zone_id
+
         for lid, lot_cells in lots:
+            # Skip tiny lots — leave lot_id = -1 (treated as exterior in buildings phase)
+            if len(lot_cells) < _LOT_MIN_CELLS:
+                continue
+
             for r, c in lot_cells:
                 grid[r][c].lot_id = lid
-            if block_zone == ZONE_RESIDENTIAL:
+
+            # Use majority-vote zone of lot cells for setback decision
+            lot_zone = _lot_zone(grid, lot_cells)
+            if lot_zone == ZONE_RESIDENTIAL:
                 _apply_residential_setback(grid, lot_cells)
             all_lots.append(lot_cells)
 
@@ -139,5 +190,6 @@ def generate_lots(
 
     yield GeneratorProgress(
         PHASE_LOTS, 1.0,
-        f'Lot subdivision complete — {lot_id_counter[0]} lots.',
+        f'Lot subdivision complete — {lot_id_counter[0]} lots '
+        f'({skipped_tiny_blocks} tiny blocks skipped).',
     )

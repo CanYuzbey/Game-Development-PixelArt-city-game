@@ -97,11 +97,18 @@ def _trace_ns_street(
 
     At each row the actual column is shifted by a smooth noise value, giving
     the subtle curvature of a real city avenue rather than a perfect line.
-    drift_max = 1 → at most one cell deviation.  Water cells create gaps.
-    Existing road cells create intersections without overwriting categories.
+    drift_max = 1 → at most one cell deviation per step.  Water cells create
+    gaps.  Existing road cells create intersections without overwriting.
+
+    Connectivity guarantee: when the column shifts by 1 between consecutive
+    rows, a bridge cell is inserted so no two consecutive placed cells are
+    only diagonally adjacent (which the 4-bit bitmask system doesn't connect).
     """
     rows, cols = grid.height, grid.width
     path: list[tuple[int, int]] = []
+    prev_c = base_col
+    prev_r_placed: int | None = None
+    prev_c_placed: int | None = None
 
     for r in range(rows):
         noise_val = noise2d(
@@ -111,15 +118,27 @@ def _trace_ns_street(
         )
         c = base_col + int(round(noise_val * drift_max))
         c = max(1, min(cols - 2, c))
+        c = max(prev_c - 1, min(prev_c + 1, c))
+        prev_c = c
+
+        # Bridge cell: if previous placed cell at (prev_r, prev_c_placed) and
+        # current at (r, c) are only diagonally adjacent, add (r, prev_c_placed).
+        if prev_c_placed is not None and prev_r_placed is not None:
+            if abs(r - prev_r_placed) == 1 and abs(c - prev_c_placed) == 1:
+                bridge_c = prev_c_placed
+                bridge_r = r
+                bridge_cell = grid.cell(bridge_r, bridge_c)
+                if bridge_cell is not None and bridge_cell.is_land and not bridge_cell.is_road and not bridge_cell.is_water:
+                    bridge_cell.set_road('road_1010', ROAD_CONNECTOR, variation=0)
+                    path.append((bridge_r, bridge_c))
 
         cell = grid.cell(r, c)
-        if cell is None or cell.is_water:
-            continue
-        if cell.is_road:
-            continue
-
-        cell.set_road('road_1010', ROAD_CONNECTOR, variation=0)
-        path.append((r, c))
+        if cell is not None and cell.is_land and not cell.is_water:
+            if not cell.is_road:
+                cell.set_road('road_1010', ROAD_CONNECTOR, variation=0)
+                path.append((r, c))
+            prev_r_placed = r
+            prev_c_placed = c
 
     return path
 
@@ -132,10 +151,13 @@ def _trace_ew_street(
 ) -> list[tuple[int, int]]:
     """
     Trace an E-W cross-street along approximately row `base_row`.
-    Transposed mirror of _trace_ns_street.
+    Transposed mirror of _trace_ns_street with the same connectivity guarantee.
     """
     rows, cols = grid.height, grid.width
     path: list[tuple[int, int]] = []
+    prev_r = base_row
+    prev_r_placed: int | None = None
+    prev_c_placed: int | None = None
 
     for c in range(cols):
         noise_val = noise2d(
@@ -145,15 +167,26 @@ def _trace_ew_street(
         )
         r = base_row + int(round(noise_val * drift_max))
         r = max(1, min(rows - 2, r))
+        r = max(prev_r - 1, min(prev_r + 1, r))
+        prev_r = r
+
+        # Bridge cell: fill diagonal gap between consecutive placed cells
+        if prev_r_placed is not None and prev_c_placed is not None:
+            if abs(r - prev_r_placed) == 1 and abs(c - prev_c_placed) == 1:
+                bridge_r = prev_r_placed
+                bridge_c = c
+                bridge_cell = grid.cell(bridge_r, bridge_c)
+                if bridge_cell is not None and bridge_cell.is_land and not bridge_cell.is_road and not bridge_cell.is_water:
+                    bridge_cell.set_road('road_1010', ROAD_CONNECTOR, variation=0)
+                    path.append((bridge_r, bridge_c))
 
         cell = grid.cell(r, c)
-        if cell is None or cell.is_water:
-            continue
-        if cell.is_road:
-            continue
-
-        cell.set_road('road_1010', ROAD_CONNECTOR, variation=0)
-        path.append((r, c))
+        if cell is not None and cell.is_land and not cell.is_water:
+            if not cell.is_road:
+                cell.set_road('road_1010', ROAD_CONNECTOR, variation=0)
+                path.append((r, c))
+            prev_r_placed = r
+            prev_c_placed = c
 
     return path
 
@@ -487,6 +520,34 @@ def generate_connectors(
         f'+ {len(ew_bases)} cross-streets (±{cs_block}px), drift=±{drift_max}'
     )
 
+    # ── Perimeter streets (guaranteed, added after density filter) ────────────
+    # Run one guaranteed N-S avenue near each horizontal edge and one guaranteed
+    # E-W cross-street near each vertical edge.  These create enclosed
+    # residential blocks at the map periphery.
+    # Only placed on maps large enough to benefit (≥48 cells per axis).
+    # Coastal-side perimeter streets are skipped to avoid isolated fragments
+    # where water gaps prevent NS/EW connectivity.
+    min_sep_p = max(config.min_block_depth + 2, 4)
+    coast = config.coast_side
+
+    perimeter_ns: list[int] = []
+    if cols >= 48:
+        for perim_col, coast_skip in ((3, 'west'), (cols - 4, 'east')):
+            if coast == coast_skip:
+                continue           # skip the coastal side
+            if 2 <= perim_col <= cols - 3:
+                if all(abs(perim_col - b) >= min_sep_p for b in ns_bases):
+                    perimeter_ns.append(perim_col)
+
+    perimeter_ew: list[int] = []
+    if rows >= 48:
+        for perim_row, coast_skip in ((3, 'north'), (rows - 4, 'south')):
+            if coast == coast_skip:
+                continue           # skip the coastal side
+            if 2 <= perim_row <= rows - 3:
+                if all(abs(perim_row - b) >= min_sep_p for b in ew_bases):
+                    perimeter_ew.append(perim_row)
+
     # ── Pass 1: N-S avenues ───────────────────────────────────────────────────
     for base_col in ns_bases:
         zone          = _zone_score(base_col, cols)
@@ -541,6 +602,62 @@ def generate_connectors(
             f'Gap fill: +{len(sec_ns)} avenues, +{len(sec_ew)} cross-streets '
             f'({sec_cells} cells)'
         )
+
+    # ── Pass 2.6: Guaranteed perimeter streets ────────────────────────────────
+    # Placed with drift_max=0 (straight) at exactly the perimeter column/row to
+    # guarantee cardinal connectivity with all cross-streets.
+    perim_cells = 0
+    for base_col in perimeter_ns:
+        path = _trace_ns_street(grid, base_col, perm, 0)
+        perim_cells += len(path)
+        total_cells += len(path)
+    for base_row in perimeter_ew:
+        path = _trace_ew_street(grid, base_row, perm, 0)
+        perim_cells += len(path)
+        total_cells += len(path)
+
+    if perim_cells > 0:
+        yield GeneratorProgress(
+            PHASE_CONNECTOR, 0.67,
+            f'Perimeter streets: {len(perimeter_ns)} NS + {len(perimeter_ew)} EW '
+            f'({perim_cells} cells)'
+        )
+
+    # ── Pass 3.5: Connectivity repair ────────────────────────────────────────
+    # BFS from the first road cell; any road cell not reached belongs to an
+    # isolated fragment (caused by diagonal tracers near water or drift gaps).
+    # Remove isolated cells: revert them to bare land so the tile system is clean.
+    all_road_cells = [(r, c) for r, c, cell in grid.all_cells() if cell.is_road]
+    if all_road_cells:
+        visited_conn: set[tuple[int, int]] = set()
+        queue_conn: list[tuple[int, int]] = [all_road_cells[0]]
+        visited_conn.add(all_road_cells[0])
+        while queue_conn:
+            r2, c2 = queue_conn.pop()
+            for dr2, dc2 in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                nr2, nc2 = r2 + dr2, c2 + dc2
+                if (
+                    grid.in_bounds(nr2, nc2)
+                    and grid[nr2][nc2].is_road
+                    and (nr2, nc2) not in visited_conn
+                ):
+                    visited_conn.add((nr2, nc2))
+                    queue_conn.append((nr2, nc2))
+
+        isolated_removed = 0
+        from ..constants import TILE_GROUND_LAND
+        for r2, c2 in all_road_cells:
+            if (r2, c2) not in visited_conn:
+                cell2 = grid[r2][c2]
+                cell2.clear_road()
+                cell2.set_ground(TILE_GROUND_LAND)
+                isolated_removed += 1
+
+        if isolated_removed > 0:
+            yield GeneratorProgress(
+                PHASE_CONNECTOR, 0.68,
+                f'Connectivity repair: removed {isolated_removed} isolated road cells.'
+            )
 
     # ── Pass 3: Diagonal streets (Broadway-style) ─────────────────────────────
     diag_count = config.diagonal_streets

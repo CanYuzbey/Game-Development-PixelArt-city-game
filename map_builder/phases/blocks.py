@@ -37,7 +37,7 @@ def generate_blocks(
     for start_r in range(rows):
         for start_c in range(cols):
             cell = grid[start_r][start_c]
-            if visited[start_r][start_c] or cell.is_road:
+            if visited[start_r][start_c] or cell.is_road or cell.is_water:
                 visited[start_r][start_c] = True
                 continue
 
@@ -54,7 +54,7 @@ def generate_blocks(
                 for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
                     nr, nc = r + dr, c + dc
                     if 0 <= nr < rows and 0 <= nc < cols:
-                        if not visited[nr][nc] and not grid[nr][nc].is_road:
+                        if not visited[nr][nc] and not grid[nr][nc].is_road and not grid[nr][nc].is_water:
                             visited[nr][nc] = True
                             queue.append((nr, nc))
 
