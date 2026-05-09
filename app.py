@@ -45,6 +45,7 @@ from map_builder.constants   import (
     ROLE_BUILDING_CBD, ROLE_BUILDING_MIDTOWN, ROLE_BUILDING_RESI, ROLE_BUILDING_CIVIC,
     ROLE_WALKABLE_ALLEY, ROLE_WALKABLE_PLAZA, ROLE_WALKABLE_HIGHWAY, ROLE_WALKABLE_PARK,
 )
+from map_builder.phases.elevation import PHASE_ELEVATION
 
 
 # ── Colour palette ─────────────────────────────────────────────────────────────
@@ -133,17 +134,18 @@ def _lot_varied_color(base: tuple, lot_id: int, density: float = 0.5,
 
 # Phase accent colours for the progress bar
 C_PHASE = {
-    PHASE_COASTLINE:  ( 38, 120, 210),
-    PHASE_ZONES:      (180, 130,  80),
-    PHASE_HIGHWAY:    (235, 185,  45),
-    PHASE_CONNECTOR:  ( 55, 195, 220),
-    PHASE_SIDEWALK:   (155, 152, 142),
-    PHASE_BUILDINGS:  ( 78,  86, 105),
-    PHASE_COMPLETE:   ( 60, 185, 115),
-    'blocks':         (100, 160, 200),
-    'parks':          ( 72, 140,  72),
-    'lots':           (180, 140, 100),
-    'civic':          (255,  80,  80),
+    PHASE_COASTLINE:   ( 38, 120, 210),
+    PHASE_ELEVATION:   ( 80, 160,  80),
+    PHASE_ZONES:       (180, 130,  80),
+    PHASE_HIGHWAY:     (235, 185,  45),
+    PHASE_CONNECTOR:   ( 55, 195, 220),
+    PHASE_SIDEWALK:    (155, 152, 142),
+    PHASE_BUILDINGS:   ( 78,  86, 105),
+    PHASE_COMPLETE:    ( 60, 185, 115),
+    'blocks':          (100, 160, 200),
+    'parks':           ( 72, 140,  72),
+    'lots':            (180, 140, 100),
+    'civic':           (255,  80,  80),
 }
 
 # Coast cycle list (for H key)
@@ -240,12 +242,27 @@ def cell_color(cell) -> tuple[int, int, int]:
             return _lot_varied_color(C_BLDG_RESI, lot_id, density, ZONE_RESIDENTIAL)
         return C_BLDG_RESI
 
+    # ── Courtyard / L-shape interior plazas (land cells, not road cells) ─────
+    if tile_role == ROLE_WALKABLE_PLAZA and lot_id >= 0:
+        return C_PLAZA
+
     # ── Exterior land (unpaved, outside blocks) ──────────────────────────────
+    elevation = getattr(cell, 'elevation', 0.5)
     if _zone_mode:
         base = _ZONE_COLORS.get(cell.zone_id, C_LAND)
         factor = 0.6 + 0.4 * density
-        return tuple(min(255, int(ch * factor)) for ch in base)
-    return C_LAND
+        base_color = tuple(min(255, int(ch * factor)) for ch in base)
+    else:
+        base_color = C_LAND
+
+    # Subtle elevation tint: +8 brightness on hilltops, -6 in valleys
+    if elevation > 0.65:
+        elev_shift = int(8 * (elevation - 0.65) / 0.35)
+        return tuple(min(255, ch + elev_shift) for ch in base_color)
+    elif elevation < 0.35:
+        elev_shift = int(6 * (0.35 - elevation) / 0.35)
+        return tuple(max(10, ch - elev_shift) for ch in base_color)
+    return base_color
 
 
 
@@ -264,7 +281,7 @@ def build_config(seed: int, coast: str, width: int, height: int) -> MapConfig:
         # Sprint 3: wider spacing → realistic city block sizes
         #   connector_spacing=12 → 120m E-W block depth (Manhattan ~80m, Paris ~60m)
         #   avenue_spacing=24   → 240m N-S corridor  (real NYC avenue spacing ~270m)
-        connector_density  = 0.85,
+        connector_density  = 0.65,
         connector_spacing  = 8,    # Sprint 3: 80m E-W block depth — realistic dense urban
         avenue_spacing     = 18,   # 180m N-S corridor — EU/Asian city block scale
         min_block_depth    = 2,
@@ -483,6 +500,8 @@ class MapApp:
         # ── Stats (shown after completion) ────────────────────────────────────
         if self.done and self.stats:
             s = self.stats
+            districts = s.get('districts', [])
+            dist_str = '  '.join(d['name'] for d in districts) if districts else ''
             info = (
                 f"seed {s.get('seed')}  |  "
                 f"{s.get('width')}×{s.get('height')}  |  "
@@ -493,6 +512,9 @@ class MapApp:
             )
             ts = self.font_sm.render(info, True, C_HUD_TEXT)
             self.screen.blit(ts, (BAR_X, hud_y + 64))
+            if dist_str:
+                ds = self.font_sm.render(f'Districts: {dist_str}'[:100], True, C_HUD_DIM)
+                self.screen.blit(ds, (BAR_X + ts.get_width() + 20, hud_y + 64))
         else:
             info = (
                 f"seed {self.seed}  |  "

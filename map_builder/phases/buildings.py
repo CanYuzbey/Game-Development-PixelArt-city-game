@@ -52,6 +52,66 @@ from ..constants import (
     BLOCK_EXTERIOR_ID,
     LAYER_ROAD,
 )
+
+# Minimum lot size (cells) to consider for footprint variation
+_FOOTPRINT_MIN_CELLS = 16
+# Probability weights: (solid, courtyard, lshape) for CBD/Midtown large lots
+_FOOTPRINT_WEIGHTS = [('solid', 30), ('courtyard', 40), ('lshape', 30)]
+
+
+def _apply_footprint_style(
+    grid:  'MapGrid',
+    lot_cells: set,
+    style: str,
+    rng:   random.Random,
+) -> None:
+    """
+    Apply a building footprint style to a lot.
+    All cells get cell.footprint_style = style.
+    Courtyard/L-shape interiors become open plazas (ROLE_WALKABLE_PLAZA).
+    """
+    rows_list = sorted(set(r for r, _ in lot_cells))
+    cols_list = sorted(set(c for _, c in lot_cells))
+    if not rows_list or not cols_list:
+        return
+
+    r_min, r_max = rows_list[0], rows_list[-1]
+    c_min, c_max = cols_list[0], cols_list[-1]
+    height = r_max - r_min + 1
+    width  = c_max - c_min + 1
+
+    for r, c in lot_cells:
+        grid[r][c].footprint_style = style
+
+    if style == 'courtyard':
+        # Interior ring (inset by 1 cell) becomes open plaza
+        for r, c in lot_cells:
+            if r_min < r < r_max and c_min < c < c_max:
+                cell = grid[r][c]
+                if not getattr(cell, 'is_setback', False) and not cell.is_park:
+                    cell.tile_role    = ROLE_WALKABLE_PLAZA
+                    cell.building_type = ''
+                    cell.encounter_chance = 0.0
+
+    elif style == 'lshape':
+        # One corner quadrant (25% of bounding box) becomes open space
+        # Choose which corner to remove based on the rng
+        corner = rng.randint(0, 3)
+        cut_r_range = (
+            (r_min, r_min + height // 2) if corner in (0, 1)
+            else (r_min + height // 2, r_max)
+        )
+        cut_c_range = (
+            (c_min, c_min + width // 2) if corner in (0, 2)
+            else (c_min + width // 2, c_max)
+        )
+        for r, c in lot_cells:
+            if cut_r_range[0] <= r <= cut_r_range[1] and cut_c_range[0] <= c <= cut_c_range[1]:
+                cell = grid[r][c]
+                if not getattr(cell, 'is_setback', False) and not cell.is_park:
+                    cell.tile_role    = ROLE_WALKABLE_PLAZA
+                    cell.building_type = ''
+                    cell.encounter_chance = 0.0
 from ..map_state import MapGrid, MapConfig, GeneratorProgress
 
 
@@ -135,7 +195,9 @@ def _inject_landmarks(
         anchor_cell = grid[cr][cc]
         anchor_cell.landmark_type = 'town_hall'
         anchor_cell.building_type = BLDG_CIVIC_HALL
-        anchor_cell.tile_role = ROLE_BUILDING_CIVIC
+        # Don't override tile_role if the anchor cell is a park cell
+        if not anchor_cell.is_park:
+            anchor_cell.tile_role = ROLE_BUILDING_CIVIC
         # Spread the civic hall across the whole lot using lots list.
         # If the civic anchor lot is too large, only mark the anchor cell
         # itself plus adjacent cells (cap at 12 cells for visual clarity).
@@ -149,6 +211,8 @@ def _inject_landmarks(
                     # Cap lot coverage at 12 cells for large lots
                     cells_to_mark = list(lot_cells)[:12]
                     for r, c in cells_to_mark:
+                        if getattr(grid[r][c], 'is_setback', False) or grid[r][c].is_park:
+                            continue
                         grid[r][c].landmark_type = 'town_hall'
                         grid[r][c].building_type = BLDG_CIVIC_HALL
                         grid[r][c].tile_role = ROLE_BUILDING_CIVIC
@@ -181,6 +245,8 @@ def _inject_landmarks(
                     r0, c0 = next(iter(lot_cells))
                     if grid[r0][c0].lot_id == target_lot_id:
                         for r, c in lot_cells:
+                            if getattr(grid[r][c], 'is_setback', False) or grid[r][c].is_park:
+                                continue
                             grid[r][c].landmark_type = 'station'
                             grid[r][c].building_type = BLDG_STATION
                             grid[r][c].tile_role = ROLE_BUILDING_CIVIC
@@ -205,6 +271,8 @@ def _inject_landmarks(
             cell0 = grid[r0][c0]
             if not cell0.landmark_type and not _landmarks_too_close((r0, c0), placed_positions):
                 for r, c in lot_cells:
+                    if getattr(grid[r][c], 'is_setback', False) or grid[r][c].is_park:
+                        continue
                     grid[r][c].landmark_type = 'hospital'
                     grid[r][c].building_type = BLDG_HOSPITAL
                     grid[r][c].tile_role = ROLE_BUILDING_CIVIC
@@ -227,6 +295,8 @@ def _inject_landmarks(
             cell0 = grid[r0][c0]
             if not cell0.landmark_type and not _landmarks_too_close((r0, c0), placed_positions):
                 for r, c in lot_cells:
+                    if getattr(grid[r][c], 'is_setback', False) or grid[r][c].is_park:
+                        continue
                     grid[r][c].landmark_type = 'police'
                     grid[r][c].building_type = BLDG_POLICE
                     grid[r][c].tile_role = ROLE_BUILDING_CIVIC
@@ -250,6 +320,8 @@ def _inject_landmarks(
             cell0 = grid[r0][c0]
             if not cell0.landmark_type and not _landmarks_too_close((r0, c0), placed_positions):
                 for r, c in lot_cells:
+                    if getattr(grid[r][c], 'is_setback', False) or grid[r][c].is_park:
+                        continue
                     grid[r][c].landmark_type = 'school'
                     grid[r][c].building_type = BLDG_SCHOOL
                     grid[r][c].tile_role = ROLE_BUILDING_CIVIC
@@ -459,6 +531,45 @@ def generate_buildings(
 
     yield GeneratorProgress(PHASE_BUILDINGS, 0.25, 'Tile roles assigned. Assigning building types …')
 
+    # ── Pass 1.5: Waterfront CBD density boost ────────────────────────────────
+    # Prime waterfront CBD lots get density_score +0.25 so _lot_varied_color()
+    # produces darker / bluer glass-tower tones for these prestigious addresses.
+    for lot_cells in lots:
+        if not lot_cells:
+            continue
+        r0, c0 = next(iter(lot_cells))
+        cell0 = grid[r0][c0]
+        if cell0.zone_id == ZONE_CBD and _is_waterfront_lot(grid, lot_cells):
+            for r, c in lot_cells:
+                grid[r][c].density_score = min(1.0, grid[r][c].density_score + 0.25)
+
+    # ── Pass 1.6: Footprint style assignment (CBD / Midtown large lots) ───────
+    # Large lots (≥16 cells) in CBD or Midtown receive courtyard or L-shape
+    # footprints for visual variety.  Residential lots always stay solid.
+    for lot_cells in lots:
+        if not lot_cells:
+            continue
+        if len(lot_cells) < _FOOTPRINT_MIN_CELLS:
+            continue
+        r0, c0 = next(iter(lot_cells))
+        zone = grid[r0][c0].zone_id
+        if zone not in (ZONE_CBD, ZONE_MIDTOWN):
+            continue
+        # Weighted random choice of style
+        total = sum(w for _, w in _FOOTPRINT_WEIGHTS)
+        pick  = rng.uniform(0, total)
+        cumul = 0
+        chosen = 'solid'
+        for style_name, w in _FOOTPRINT_WEIGHTS:
+            cumul += w
+            if pick <= cumul:
+                chosen = style_name
+                break
+        if chosen != 'solid':
+            _apply_footprint_style(grid, lot_cells, chosen, rng)
+
+    yield GeneratorProgress(PHASE_BUILDINGS, 0.38, 'Footprints applied. Assigning building types …')
+
     # ── Pass 2: assign building types to lots ─────────────────────────────────
     # Use lot_cells lists directly — O(total_cells) total, not O(lots × cells)
     for lot_cells in lots:
@@ -478,10 +589,14 @@ def generate_buildings(
             btype = _weighted_choice(rng, RESI_BLDG_WEIGHTS)
 
         # Assign directly to cells in this lot; skip setback cells (they stay as sidewalk)
+        # and courtyard/lshape interior cells (already marked as plazas)
         for r, c in lot_cells:
-            if getattr(grid[r][c], 'is_setback', False):
+            cell = grid[r][c]
+            if getattr(cell, 'is_setback', False):
                 continue
-            grid[r][c].building_type = btype
+            if cell.tile_role == ROLE_WALKABLE_PLAZA:
+                continue
+            cell.building_type = btype
 
     yield GeneratorProgress(PHASE_BUILDINGS, 0.50, 'Building types assigned. Injecting landmarks …')
 

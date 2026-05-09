@@ -186,6 +186,52 @@ Final Team 5 checks across 7 configs (including max seed 2147483647):
 
 ---
 
+## Sprint 5 — Missing Parts (May 10, 2026)
+
+**Status:** ✅ ALL 60 CONFIGURATIONS PASSING — build GREEN
+
+### 7 Features Implemented
+
+| # | Feature | Files |
+|---|---------|-------|
+| 1 | Full 60-config test suite (`tests/full_suite.py` + `tests/diag.py`) | `tests/` |
+| 2 | Smooth highway curves (momentum-based tracer, `_ALPHA=0.18`) | `highway.py` |
+| 3 | Procedural district naming (position + zone + coastal + landmark) | `map_generator.py`, `app.py` |
+| 4 | Building footprint variation (courtyard 40%, L-shape 30%, solid 30%) | `buildings.py`, `map_state.py`, `app.py` |
+| 5 | Waterfront CBD density boost (+0.25 density_score) | `buildings.py` |
+| 6 | Dead code removal (MapCell `variation` dict removed, connector audit) | `map_state.py`, `connector.py` |
+| 7 | Elevation layer (FBM 3-octave, 0–1 range, brightness variation in app) | `elevation.py`, `map_generator.py`, `map_state.py`, `app.py` |
+
+### 3 Bugs Fixed by 60-Config Diagnostic
+
+| Bug | Root Cause | Fix |
+|-----|-----------|-----|
+| `seed=1 coast=north` — 2.9% roads, no parks, 1 landmark | BFS connectivity repair started from isolated peninsula fragment, nuked entire main road network | Multi-source BFS, keep only largest component |
+| `setback_bldg` / `park_no_role` across many configs | Landmark injection assigned `tile_role=ROLE_BUILDING_*` to `is_setback` / `is_park` cells | Guard check before any landmark tile_role assignment |
+| `seed=7 coast=east` — road%=36.6 (above 35% cap) | Gap-fill blind to perimeter streets; probability 0.65 too high for dense configs | Include perimeter in gap-fill input; probability 0.65→0.45 |
+
+### Final 60-Config Quality Gate Results
+
+```
+python tests/full_suite.py
+========================================================================
+  RESULT:  PASS 60/60   FAIL 0/60   (12.1s)
+========================================================================
+  ALL TESTS PASSED — build is GREEN
+```
+
+Road density range across all 60 configs: **22.3% – 34.0%** (target: 15–35%).
+
+### Remaining Areas for Future Work
+
+1. **Diagonal tile bitmask**: Broadway diagonals use cardinal staircase steps; true angular tile IDs would require a 3-bit bitmask extension.
+2. **Procedural floor-plan generator**: The system assigns `building_type` to lots but does not subdivide interiors into rooms — next vertical slice.
+3. **Visual regression testing**: Automated screenshot diff pipeline (pygame → PIL → pixel diff) for CI-based art-direction checks.
+4. **Street naming**: Procedural naming of individual streets (e.g., "5th Avenue", "Market St") based on position and zone type.
+5. **Mixed-use transition zones**: A formal mixed-use zone between CBD and Midtown with blended building weights.
+
+---
+
 ## 6. Final Git Log
 
 ```

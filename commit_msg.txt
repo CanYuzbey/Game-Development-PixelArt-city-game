@@ -1,0 +1,17 @@
+Sprint 5: district naming, building footprints, elevation layer, smooth highways, full 60-config test suite, waterfront CBD density, dead code cleanup
+
+Features:
+- Smooth highway curves via momentum-based organic tracer (alpha=0.18)
+- Procedural district naming by position/zone/coast stored in stats['districts']
+- Building footprint variation: courtyard (40%), L-shape (30%), solid (30%) for large CBD/Midtown lots
+- Waterfront CBD density boost (+0.25 density_score clamped to 1.0)
+- Dead code removal: MapCell.variation dict removed, connector.py audit
+- Elevation layer: FBM 3-octave noise, cell.elevation 0.0-1.0, brightness variation in app.py
+- Full 60-config test suite (tests/full_suite.py + tests/diag.py)
+
+Bugs fixed:
+- BFS connectivity repair started from isolated fragment, nuking main road network (seed=1 north)
+- Landmark injection overrode is_setback/is_park cells with building tile_roles
+- Gap-fill blind to perimeter streets causing road%=36.6 on seed=7 east; probability 0.65->0.45
+
+Result: 60/60 PASS, road density 22.3-34.0%, 0 render crashes, 0 orphan roads

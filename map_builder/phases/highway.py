@@ -125,8 +125,12 @@ def _trace_highway_spine(
     """
     Walk from `start` to `end` staying on land.
 
-    At each step the best cardinal direction is chosen by dot-scoring against a
-    goal vector slightly bent by low-frequency noise (organic feel).
+    Uses a momentum-based organic tracer: a `drift_momentum` value accumulates
+    gradually (low-pass filter, α=0.18) toward the current noise bias, producing
+    smooth S-curves over ~10 cells rather than staircase zigzag artifacts.
+
+    At each step the best cardinal direction is chosen by dot-scoring against
+    the goal vector bent by the accumulated drift momentum.
     Back-tracks one cell when fully stuck; breaks if still stuck.
     """
     r, c      = start
@@ -134,6 +138,11 @@ def _trace_highway_spine(
     path      = [(r, c)]
     visited   = {(r, c)}
     max_steps = (grid.height + grid.width) * 3
+
+    # Momentum accumulator — low-pass-filtered noise bias (smooth S-curves)
+    momentum_dr: float = 0.0
+    momentum_dc: float = 0.0
+    _ALPHA: float = 0.18   # smoothing coefficient; lower = smoother curves
 
     for _ in range(max_steps):
         if (r, c) == (er, ec):
@@ -148,11 +157,19 @@ def _trace_highway_spine(
         dr_norm = dr_goal / dist
         dc_norm = dc_goal / dist
 
+        # Sample noise and compute target drift bias
         nx          = (c / grid.width)  * 2.0
         ny          = (r / grid.height) * 2.0
         noise_angle = noise2d(nx, ny, perm) * math.pi
-        biased_dr   = dr_norm + math.sin(noise_angle) * organic
-        biased_dc   = dc_norm + math.cos(noise_angle) * organic
+        target_dr   = math.sin(noise_angle) * organic
+        target_dc   = math.cos(noise_angle) * organic
+
+        # Low-pass filter: momentum creeps toward target, creating smooth curves
+        momentum_dr += _ALPHA * (target_dr - momentum_dr)
+        momentum_dc += _ALPHA * (target_dc - momentum_dc)
+
+        biased_dr = dr_norm + momentum_dr
+        biased_dc = dc_norm + momentum_dc
 
         best_dir   = None
         best_score = -999.0
