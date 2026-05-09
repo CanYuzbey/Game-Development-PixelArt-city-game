@@ -48,6 +48,18 @@ _ROAD_GLYPH = {
 _HW_GLYPH = {k: v for k, v in _ROAD_GLYPH.items()}
 
 
+_TILE_ROLE_GLYPH = {
+    # RPG tile roles → (ansi_code, char) — shown in non-zone mode too
+    'park':      ('\033[0;32m', 'p'),    # green p
+    'alley':     ('\033[0;35m', 'a'),    # magenta a
+    'plaza':     ('\033[1;32m', '◉'),    # bright green roundabout
+    'bldg_cbd':  ('\033[0;90m', '█'),    # dark gray block
+    'bldg_mid':  ('\033[0;33m', '▓'),    # yellow-ish block
+    'bldg_resi': ('\033[0;37m', '░'),    # light block
+    'bldg_civic':('\033[1;36m', '▣'),    # bright cyan
+}
+
+
 def render_ascii(grid, zone_mode: bool = False) -> str:
     lines: list[str] = []
     for row in grid.rows():
@@ -55,26 +67,59 @@ def render_ascii(grid, zone_mode: bool = False) -> str:
         for cell in row:
             if cell.is_water:
                 line.append('~')
-            elif cell.is_road:
-                tid   = cell.layers[LAYER_ROAD] or 'road_1010'
+                continue
+
+            # ── Roads ─────────────────────────────────────────────────────────
+            if cell.is_road:
+                tid  = cell.layers[LAYER_ROAD] or 'road_1010'
                 if tid.startswith('roundabout_'):
                     line.append('\033[1;32m◉\033[0m')
                     continue
+                tile_role = getattr(cell, 'tile_role', '')
                 base  = tid.replace('_hw', '')
                 glyph = _ROAD_GLYPH.get(base, '?')
-                if cell.road_category == ROAD_HIGHWAY:
+                if tile_role == 'alley':
+                    line.append(f'\033[0;35m{glyph}\033[0m')
+                elif cell.road_category == ROAD_HIGHWAY:
                     line.append(f'\033[1;33m{glyph}\033[0m')
                 else:
                     line.append(f'\033[0;36m{glyph}\033[0m')
-            elif cell.is_sidewalk:
-                line.append('\033[0;37ms\033[0m')
-            elif cell.is_land:
+                continue
+
+            # ── Land ──────────────────────────────────────────────────────────
+            if cell.is_land:
+                tile_role = getattr(cell, 'tile_role', '')
+                lm_type   = getattr(cell, 'landmark_type', '')
+
+                # Landmark buildings (cyan ▣) — overrides building type
+                if lm_type and not getattr(cell, 'is_civic_anchor', False):
+                    line.append('\033[1;36m▣\033[0m')
+                    continue
+
+                # Civic anchor
+                if getattr(cell, 'is_civic_anchor', False):
+                    line.append('\033[1;31m★\033[0m')
+                    continue
+
+                # Park — always green (before sidewalk check)
+                if getattr(cell, 'is_park', False):
+                    line.append('\033[0;32mp\033[0m')
+                    continue
+
+                # RPG tile role glyph (buildings, alleys, plazas)
+                if tile_role in _TILE_ROLE_GLYPH:
+                    ansi, ch = _TILE_ROLE_GLYPH[tile_role]
+                    line.append(f'{ansi}{ch}\033[0m')
+                    continue
+
+                # Sidewalk
+                if cell.is_sidewalk:
+                    line.append('\033[0;37ms\033[0m')
+                    continue
+
+                # Bare exterior land
                 if zone_mode:
-                    if getattr(cell, 'is_civic_anchor', False):
-                        line.append('\033[1;31m★\033[0m')
-                    elif getattr(cell, 'is_park', False):
-                        line.append('\033[0;32mp\033[0m')
-                    elif cell.zone_id == ZONE_CBD:
+                    if cell.zone_id == ZONE_CBD:
                         line.append('\033[0;33m·\033[0m')
                     elif cell.zone_id == ZONE_MIDTOWN:
                         line.append('\033[0;32m,\033[0m')
@@ -82,8 +127,10 @@ def render_ascii(grid, zone_mode: bool = False) -> str:
                         line.append('.')
                 else:
                     line.append('.')
-            else:
-                line.append(' ')
+                continue
+
+            # ── Fallback ──────────────────────────────────────────────────────
+            line.append(' ')
         lines.append(''.join(line))
     return '\n'.join(lines)
 
@@ -102,6 +149,8 @@ def print_stats(gen: MapGenerator) -> None:
         print(f"  Blocks     {s.get('blocks')}")
         print(f"  Parks      {s.get('parks')}")
         print(f"  Lots       {s.get('lots')}")
+        print(f"  Spawns     {s.get('spawns', '?')}")
+        print(f"  Landmarks  {s.get('landmarks', '?')}")
     print(f"  Time       {s.get('elapsed_s')} s")
     print('─' * 50)
 

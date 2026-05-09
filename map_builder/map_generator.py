@@ -54,6 +54,7 @@ from .constants import (
     PHASE_COMPLETE,
     ZONE_CBD, ZONE_MIDTOWN, ZONE_RESIDENTIAL,
     ROAD_HIGHWAY,
+    ROAD_CONNECTOR,
 )
 
 
@@ -102,11 +103,15 @@ class MapGenerator:
         # Non-yielding density post-pass — runs after all road phases
         self._compute_density_post_pass()
 
+        yield from self._run_phase_buildings()
+
         t_end = time.perf_counter()
         park_count = sum(
             1 for b in self.blocks
             if b and self.grid[next(iter(b))[0]][next(iter(b))[1]].is_park
         )
+        spawn_count = sum(1 for _, _, c in self.grid.all_cells() if c.is_spawn_point)
+        landmark_count = sum(1 for _, _, c in self.grid.all_cells() if c.landmark_type)
         self.stats = {
             'seed':      self.config.master_seed,
             'width':     self.config.width,
@@ -118,6 +123,8 @@ class MapGenerator:
             'blocks':    len(self.blocks),
             'parks':     park_count,
             'lots':      len(self.lots),
+            'spawns':    spawn_count,
+            'landmarks': landmark_count,
             'elapsed_s': round(t_end - t_start, 3),
             'zones':     self.grid.zone_count(),
         }
@@ -131,7 +138,8 @@ class MapGenerator:
                 f"{self.stats['roads']} road / "
                 f"{self.stats['sidewalks']} sidewalk  |  "
                 f"{self.stats['blocks']} blocks  {self.stats['parks']} parks  "
-                f"{self.stats['lots']} lots  in {self.stats['elapsed_s']}s"
+                f"{self.stats['lots']} lots  {self.stats['spawns']} spawns  "
+                f"in {self.stats['elapsed_s']}s"
             ),
         )
 
@@ -186,6 +194,12 @@ class MapGenerator:
         from .phases.lots import generate_lots
         self.lots = []
         yield from generate_lots(self.grid, self.config, self.blocks, sink=self.lots)
+
+    def _run_phase_buildings(self) -> Generator[GeneratorProgress, None, None]:
+        from .phases.buildings import generate_buildings
+        yield from generate_buildings(
+            self.grid, self.config, self.blocks, self.lots, self.civic_anchor
+        )
 
     def _compute_density_post_pass(self) -> None:
         """

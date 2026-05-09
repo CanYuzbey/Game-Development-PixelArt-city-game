@@ -40,8 +40,10 @@ from map_builder.constants   import (
     LAYER_DECOR,
     ROAD_HIGHWAY, ROAD_CONNECTOR,
     PHASE_COASTLINE, PHASE_HIGHWAY, PHASE_CONNECTOR,
-    PHASE_SIDEWALK, PHASE_ZONES,
+    PHASE_SIDEWALK, PHASE_ZONES, PHASE_BUILDINGS,
     ZONE_CBD, ZONE_MIDTOWN, ZONE_RESIDENTIAL,
+    ROLE_BUILDING_CBD, ROLE_BUILDING_MIDTOWN, ROLE_BUILDING_RESI, ROLE_BUILDING_CIVIC,
+    ROLE_WALKABLE_ALLEY, ROLE_WALKABLE_PLAZA, ROLE_WALKABLE_HIGHWAY,
 )
 
 
@@ -68,6 +70,16 @@ C_LAND_RESIDENTIAL = (122, 158, 110)   # muted green — residential lawns
 C_PARK             = ( 72, 140,  72)   # park green
 C_CIVIC            = (255,  80,  80)   # civic anchor (bright red, single cell)
 
+# Building footprint colours — always visible, no toggle needed
+C_BLDG_CBD         = ( 78,  86, 105)   # dark slate — tall office / CBD
+C_BLDG_MIDTOWN     = (108, 100,  88)   # warm dark brown — brick mid-rise
+C_BLDG_RESI        = (140, 128, 108)   # light warm tan — suburban house
+C_BLDG_CIVIC       = ( 58,  72, 130)   # deep blue — civic/landmark building
+C_SPAWN_OVERLAY    = (255, 220,  50)   # golden yellow — spawn point dot
+C_LANDMARK         = ( 50, 200, 255)   # bright cyan — landmark overlay
+C_ALLEY            = ( 80,  60,  90)   # dark purple — high-danger alley
+C_PLAZA            = (200, 185, 150)   # warm stone — roundabout / plaza
+
 # Phase accent colours for the progress bar
 C_PHASE = {
     PHASE_COASTLINE:  ( 38, 120, 210),
@@ -75,6 +87,7 @@ C_PHASE = {
     PHASE_HIGHWAY:    (235, 185,  45),
     PHASE_CONNECTOR:  ( 55, 195, 220),
     PHASE_SIDEWALK:   (155, 152, 142),
+    PHASE_BUILDINGS:  ( 78,  86, 105),
     PHASE_COMPLETE:   ( 60, 185, 115),
     'blocks':         (100, 160, 200),
     'parks':          ( 72, 140,  72),
@@ -108,25 +121,63 @@ def cell_color(cell) -> tuple[int, int, int]:
     """Return the display colour for one MapCell."""
     if cell.is_water:
         return C_WATER
+
     if cell.is_road:
+        tile_role = getattr(cell, 'tile_role', '')
+        if tile_role == ROLE_WALKABLE_PLAZA:
+            return C_PLAZA
+        if tile_role == ROLE_WALKABLE_ALLEY:
+            return C_ALLEY
         if cell.road_category == ROAD_HIGHWAY:
             return C_HIGHWAY
-        # Marked junctions (crosswalk / yield) render slightly brighter
         if cell.layers.get(LAYER_DECOR) is not None:
             return (90, 215, 240)
         return C_CONNECTOR
-    if cell.is_sidewalk:
-        return C_SIDEWALK
+
     if cell.is_land:
+        # Landmark cells (station, hospital, etc.) — bright cyan
+        if getattr(cell, 'landmark_type', '') and not getattr(cell, 'is_civic_anchor', False):
+            return C_LANDMARK
+
+        # Civic anchor — always bright red
         if getattr(cell, 'is_civic_anchor', False):
             return C_CIVIC
+
+        # Park cells — BEFORE sidewalk check (small park blocks are fully sidewalk-covered)
         if getattr(cell, 'is_park', False):
+            # Spawn points in parks are slightly brighter
+            if getattr(cell, 'is_spawn_point', False) and _zone_mode:
+                return (100, 200, 100)
             return C_PARK
+
+        # Sidewalk — after park check
+        if cell.is_sidewalk:
+            if getattr(cell, 'is_spawn_point', False) and _zone_mode:
+                return (200, 190, 110)
+            return C_SIDEWALK
+
+        # Building lots — zone-specific building colour
+        tile_role = getattr(cell, 'tile_role', '')
+        if tile_role == ROLE_BUILDING_CIVIC:
+            return C_BLDG_CIVIC
+        if tile_role == ROLE_BUILDING_CBD:
+            # density_score brightens/darkens within zone
+            factor = 0.75 + 0.35 * getattr(cell, 'density_score', 0.5)
+            return tuple(min(255, int(ch * factor)) for ch in C_BLDG_CBD)
+        if tile_role == ROLE_BUILDING_MIDTOWN:
+            factor = 0.80 + 0.30 * getattr(cell, 'density_score', 0.5)
+            return tuple(min(255, int(ch * factor)) for ch in C_BLDG_MIDTOWN)
+        if tile_role == ROLE_BUILDING_RESI:
+            factor = 0.85 + 0.25 * getattr(cell, 'density_score', 0.5)
+            return tuple(min(255, int(ch * factor)) for ch in C_BLDG_RESI)
+
+        # Zone-mode toggle for non-building exterior land
         if _zone_mode:
             base = _ZONE_COLORS.get(cell.zone_id, C_LAND)
             factor = 0.5 + 0.5 * getattr(cell, 'density_score', 0.5)
             return tuple(int(ch * factor) for ch in base)
         return C_LAND
+
     return C_UNINIT
 
 
@@ -317,8 +368,9 @@ class MapApp:
             info = (
                 f"seed {s.get('seed')}  |  "
                 f"{s.get('width')}×{s.get('height')}  |  "
-                f"land {s.get('land')}  water {s.get('water')}  "
-                f"roads {s.get('roads')}  sidewalks {s.get('sidewalks')}  |  "
+                f"blocks {s.get('blocks','?')}  parks {s.get('parks','?')}  "
+                f"lots {s.get('lots','?')}  spawns {s.get('spawns','?')}  "
+                f"landmarks {s.get('landmarks','?')}  |  "
                 f"{s.get('elapsed_s')} s"
             )
             ts = self.font_sm.render(info, True, C_HUD_TEXT)
@@ -341,9 +393,12 @@ class MapApp:
         if _zone_mode:
             swatches = [
                 (C_WATER,            'water'),
-                (C_LAND_CBD,         'CBD'),
-                (C_LAND_MIDTOWN,     'midtown'),
-                (C_LAND_RESIDENTIAL, 'residential'),
+                (C_LAND_CBD,         'ext-CBD'),
+                (C_LAND_RESIDENTIAL, 'ext-res'),
+                (C_BLDG_CBD,         'bldg-CBD'),
+                (C_BLDG_MIDTOWN,     'bldg-mid'),
+                (C_BLDG_RESI,        'bldg-res'),
+                (C_BLDG_CIVIC,       'landmark'),
                 (C_PARK,             'park'),
                 (C_CIVIC,            'civic'),
                 (C_HIGHWAY,          'highway'),
@@ -353,10 +408,16 @@ class MapApp:
         else:
             swatches = [
                 (C_WATER,          'water'),
-                (C_LAND,           'land'),
+                (C_BLDG_CBD,       'CBD bldg'),
+                (C_BLDG_MIDTOWN,   'mid bldg'),
+                (C_BLDG_RESI,      'res bldg'),
+                (C_BLDG_CIVIC,     'landmark'),
+                (C_PARK,           'park'),
+                (C_CIVIC,          'civic'),
                 (C_HIGHWAY,        'highway'),
                 (C_CONNECTOR,      'road'),
-                ((90, 215, 240),   'junction'),
+                (C_ALLEY,          'alley'),
+                (C_PLAZA,          'plaza'),
                 (C_SIDEWALK,       'sidewalk'),
             ]
         lx = WIN_W - 14

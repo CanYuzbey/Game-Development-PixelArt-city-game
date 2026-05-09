@@ -40,16 +40,22 @@ class MapCell:
         LAYER_SIDEWALK: None,
         LAYER_DECOR:    None,
     })
-    is_water:       bool  = False
-    is_land:        bool  = False
-    road_category:  Optional[str] = None
-    zone_id:        int   = ZONE_CBD   # default = 0 (CBD); updated by zones phase
-    block_id:       int   = -1         # -1 = exterior/road/unassigned; ≥0 = interior block
-    lot_id:         int   = -1         # -1 = no lot; ≥0 = subdivided lot id
-    density_score:  float = 0.0        # 0.0 (sparse edge) – 1.0 (dense CBD/highway)
-    is_park:        bool  = False      # True if this cell belongs to a park block
-    is_civic_anchor: bool = False      # True for the single CBD civic centre cell
-    variation:      dict  = field(default_factory=lambda: {
+    is_water:        bool  = False
+    is_land:         bool  = False
+    road_category:   Optional[str] = None
+    zone_id:         int   = ZONE_CBD   # default = 0 (CBD); updated by zones phase
+    block_id:        int   = -1         # -1 = exterior/road/unassigned; ≥0 = interior block
+    lot_id:          int   = -1         # -1 = no lot; ≥0 = subdivided lot id
+    density_score:   float = 0.0        # 0.0 (sparse edge) – 1.0 (dense CBD/highway)
+    is_park:         bool  = False      # True if this cell belongs to a park block
+    is_civic_anchor: bool  = False      # True for the single CBD civic centre cell
+    # ── RPG game layer ────────────────────────────────────────────────────────
+    tile_role:        str   = ''        # ROLE_* constant — gameplay traversability
+    building_type:    str   = ''        # BLDG_* constant — what kind of building
+    encounter_chance: float = 0.0       # 0.0–1.0 per-step random encounter probability
+    is_spawn_point:   bool  = False     # NPC/enemy spawn origin
+    landmark_type:    str   = ''        # 'station'|'hospital'|'police'|'' etc.
+    variation:       dict  = field(default_factory=lambda: {
         LAYER_GROUND:   0,
         LAYER_ROAD:     0,
         LAYER_SIDEWALK: 0,

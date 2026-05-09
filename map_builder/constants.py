@@ -190,3 +190,89 @@ LOT_MIN_DEPTH: Final[int] = 2   # minimum lot depth in cells
 
 # ── Civic anchor constants ────────────────────────────────────────────────────
 CIVIC_ANCHOR_RADIUS: Final[int] = 3   # connector density boost radius around anchor
+
+# ── Tile roles (game layer) ────────────────────────────────────────────────────
+# Defines traversability and gameplay function of each cell.
+ROLE_WALKABLE_ROAD:      Final[str] = 'road'         # highway or connector — full encounter area
+ROLE_WALKABLE_HIGHWAY:   Final[str] = 'highway'      # arterial — lower encounter (fast traffic)
+ROLE_WALKABLE_ALLEY:     Final[str] = 'alley'        # dead-end connector — high danger
+ROLE_WALKABLE_SIDEWALK:  Final[str] = 'sidewalk'     # low encounter, safe movement
+ROLE_WALKABLE_PARK:      Final[str] = 'park'         # medium encounter, scenic
+ROLE_WALKABLE_PLAZA:     Final[str] = 'plaza'        # roundabout / market square — Type B only
+ROLE_BUILDING_CBD:       Final[str] = 'bldg_cbd'     # office / civic — obstacle
+ROLE_BUILDING_MIDTOWN:   Final[str] = 'bldg_mid'     # shop / apartment — obstacle
+ROLE_BUILDING_RESI:      Final[str] = 'bldg_resi'    # house — obstacle
+ROLE_BUILDING_CIVIC:     Final[str] = 'bldg_civic'   # landmark building — obstacle
+ROLE_WATER:              Final[str] = 'water'         # impassable
+ROLE_EXTERIOR:           Final[str] = 'exterior'      # outside any city block — obstacle/void
+
+# ── Building types (assigned to lots) ─────────────────────────────────────────
+BLDG_OFFICE:      Final[str] = 'office'
+BLDG_BANK:        Final[str] = 'bank'
+BLDG_MARKET:      Final[str] = 'market'
+BLDG_CIVIC_HALL:  Final[str] = 'civic_hall'      # at civic anchor
+BLDG_SHOP:        Final[str] = 'shop'
+BLDG_RESTAURANT:  Final[str] = 'restaurant'
+BLDG_APARTMENT:   Final[str] = 'apartment'
+BLDG_CLINIC:      Final[str] = 'clinic'
+BLDG_HOUSE:       Final[str] = 'house'
+BLDG_SCHOOL:      Final[str] = 'school'
+BLDG_PARK_FEATURE: Final[str] = 'park_feature'   # fountain / bench cluster in park
+BLDG_STATION:     Final[str] = 'station'          # train / transit station
+BLDG_HOSPITAL:    Final[str] = 'hospital'
+BLDG_POLICE:      Final[str] = 'police'
+BLDG_EMPTY_LOT:   Final[str] = 'empty_lot'        # vacant / undeveloped
+
+# CBD building type weights  [type, weight]
+CBD_BLDG_WEIGHTS: Final[list] = [
+    (BLDG_OFFICE,     40),
+    (BLDG_BANK,       20),
+    (BLDG_MARKET,     20),
+    (BLDG_APARTMENT,  10),
+    (BLDG_EMPTY_LOT,  10),
+]
+MIDTOWN_BLDG_WEIGHTS: Final[list] = [
+    (BLDG_SHOP,       30),
+    (BLDG_RESTAURANT, 25),
+    (BLDG_APARTMENT,  25),
+    (BLDG_CLINIC,     10),
+    (BLDG_EMPTY_LOT,  10),
+]
+RESI_BLDG_WEIGHTS: Final[list] = [
+    (BLDG_HOUSE,      50),
+    (BLDG_SCHOOL,     15),
+    (BLDG_SHOP,       15),
+    (BLDG_APARTMENT,  10),
+    (BLDG_EMPTY_LOT,  10),
+]
+
+# ── Encounter probabilities per tile role ─────────────────────────────────────
+# Base probability (applied on each step onto this tile type).
+# Final chance = clamp((base + density_bonus) * zone_mult + zone_offset - civic_bonus, 0, 1)
+ENCOUNTER_BASE: Final[dict] = {
+    ROLE_WALKABLE_HIGHWAY:  0.08,   # arterials: fast traffic, lower exposure
+    ROLE_WALKABLE_ROAD:     0.12,   # connector roads: standard street danger
+    ROLE_WALKABLE_ALLEY:    0.30,   # dead-end alleys: most dangerous
+    ROLE_WALKABLE_SIDEWALK: 0.05,   # well-lit pavement: safe
+    ROLE_WALKABLE_PARK:     0.25,   # secluded green space: muggers, wildlife
+    ROLE_WALKABLE_PLAZA:    0.0,    # plazas: Type B/scripted only
+}
+# Zone modifiers: (multiplier, additive_offset)
+ENCOUNTER_ZONE_MOD: Final[dict] = {
+    0: (1.40,  0.05),   # CBD — crime dense
+    1: (1.00,  0.00),   # Midtown — baseline
+    2: (0.65, -0.03),   # Residential — quieter
+}
+# Civic anchor safety radius (Chebyshev cells): subtract this from encounter_chance
+ENCOUNTER_CIVIC_PENALTY: Final[float] = 0.06
+ENCOUNTER_CIVIC_RADIUS:  Final[int]   = 3
+# Density bonus coefficient: add (DENSITY_BONUS_K * density_score) to base
+ENCOUNTER_DENSITY_K: Final[float] = 0.08
+
+# Legacy alias kept for old code (removed from buildings.py pass 1)
+ENCOUNTER_BY_ROLE: Final[dict] = ENCOUNTER_BASE
+ENCOUNTER_ZONE_MULT: Final[dict] = {k: v[0] for k, v in ENCOUNTER_ZONE_MOD.items()}
+
+# ── Phase names (new) ─────────────────────────────────────────────────────────
+PHASE_BUILDINGS: Final[str] = 'buildings'
+SALT_BUILDINGS:  Final[int]  = 0xB1C2D3
