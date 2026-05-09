@@ -179,14 +179,25 @@ SALT_CIVIC:  Final[int] = 0xF1E2D3
 BLOCK_EXTERIOR_ID: Final[int] = -1   # cells touching map edge (exterior region)
 
 # ── Park placement constants ──────────────────────────────────────────────────
-PARK_SMALL_BLOCK_MAX:         Final[int]   = 12    # CBD/Midtown blocks < this become parks
-PARK_RESIDENTIAL_MIN_AREA:    Final[int]   = 15    # min cells for residential park block
-PARK_RESIDENTIAL_MAX_AREA:    Final[int]   = 40    # max cells for residential park block
-PARK_RESIDENTIAL_PROBABILITY: Final[float] = 0.25  # chance qualifying residential block → park
+PARK_SMALL_BLOCK_MAX:         Final[int]   = 12    # legacy — kept for compat (unused in new parks.py)
+
+# New park placement thresholds — prefer LARGE blocks for visible neighborhood parks
+# Target: park should be at least 25 cells (50m×50m) to read as a real park on screen.
+PARK_MIN_AREA:                Final[int]   = 20    # minimum block size to qualify as park
+PARK_IDEAL_MIN:               Final[int]   = 25    # preferred minimum (will read clearly on screen)
+PARK_IDEAL_MAX:               Final[int]   = 120   # maximum (don't make entire districts parks)
+PARK_MAX_PER_ZONE:            Final[int]   = 2     # max parks per zone (prevents clustering)
+PARK_CBD_PROBABILITY:         Final[float] = 0.45  # CBD: plazas/squares from mid-size blocks
+PARK_MIDTOWN_PROBABILITY:     Final[float] = 0.55  # Midtown: neighbourhood parks
+PARK_RESIDENTIAL_PROBABILITY: Final[float] = 0.45  # Residential: street parks + gardens
+
+# Legacy aliases kept for import compatibility
+PARK_RESIDENTIAL_MIN_AREA:    Final[int]   = PARK_MIN_AREA
+PARK_RESIDENTIAL_MAX_AREA:    Final[int]   = PARK_IDEAL_MAX
 
 # ── Lot subdivision constants ─────────────────────────────────────────────────
-LOT_MIN_WIDTH: Final[int] = 2   # minimum lot width in cells (20m at 10m/cell)
-LOT_MIN_DEPTH: Final[int] = 2   # minimum lot depth in cells
+LOT_MIN_WIDTH: Final[int] = 3   # minimum lot width in cells (30m at 10m/cell) — handles small blocks
+LOT_MIN_DEPTH: Final[int] = 3   # minimum lot depth in cells
 
 # ── Civic anchor constants ────────────────────────────────────────────────────
 CIVIC_ANCHOR_RADIUS: Final[int] = 3   # connector density boost radius around anchor

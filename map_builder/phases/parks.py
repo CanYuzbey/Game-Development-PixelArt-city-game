@@ -1,14 +1,20 @@
 """
 map_builder/phases/parks.py
 ────────────────────────────
-Phase 7 — Park Placement
+Phase 7 — Park Placement  (Sprint 3 rewrite)
 
-Converts qualifying city blocks to park cells based on zone and size:
-  • CBD / Midtown : small residual blocks (< PARK_SMALL_BLOCK_MAX) become pocket parks
-  • Residential   : medium blocks (PARK_RESIDENTIAL_MIN_AREA–MAX_AREA) have a
-                    PARK_RESIDENTIAL_PROBABILITY chance of becoming a neighbourhood park
+Design goals:
+  • Parks should be LARGE ENOUGH to read visually — min 20 cells (200m²)
+  • At most PARK_MAX_PER_ZONE parks per zone to avoid city feeling like a forest
+  • Prefer mid-size blocks (25-120 cells) — big enough to look like a real park,
+    small enough not to dominate the zone
+  • Use a priority score: blocks closest to ideal size win; blocks too close to an
+    existing park are penalised (minimum separation = 8 cells Chebyshev)
+  • Mark every cell in selected blocks with is_park = True
 
-Sets cell.is_park = True on every cell in selected blocks.
+Sprint 2 bug fixed: the old algorithm chose tiny blocks (1-9 cells) as parks
+because connector_spacing=6 created many small blocks.  Those appeared as green
+specks invisible at normal zoom.  This version requires PARK_MIN_AREA cells.
 """
 from __future__ import annotations
 import random
@@ -17,11 +23,37 @@ from typing import Generator
 from ..constants import (
     PHASE_PARKS, SALT_PARKS,
     ZONE_CBD, ZONE_MIDTOWN, ZONE_RESIDENTIAL,
-    PARK_SMALL_BLOCK_MAX,
-    PARK_RESIDENTIAL_MIN_AREA, PARK_RESIDENTIAL_MAX_AREA,
-    PARK_RESIDENTIAL_PROBABILITY,
+    PARK_MIN_AREA, PARK_IDEAL_MIN, PARK_IDEAL_MAX, PARK_MAX_PER_ZONE,
+    PARK_CBD_PROBABILITY, PARK_MIDTOWN_PROBABILITY, PARK_RESIDENTIAL_PROBABILITY,
 )
 from ..map_state import MapGrid, MapConfig, GeneratorProgress
+
+
+# Minimum Chebyshev distance between any two park block centres.
+_PARK_MIN_SEPARATION: int = 10
+
+
+def _block_centroid(block: set) -> tuple[float, float]:
+    rs = [r for r, _ in block]
+    cs = [c for _, c in block]
+    return sum(rs) / len(rs), sum(cs) / len(cs)
+
+
+def _chebyshev(a: tuple[float, float], b: tuple[float, float]) -> float:
+    return max(abs(a[0] - b[0]), abs(a[1] - b[1]))
+
+
+def _park_score(area: int) -> float:
+    """
+    Score ∈ [0, 1]: peaks at PARK_IDEAL_MIN–PARK_IDEAL_MAX cells.
+    Blocks outside [PARK_MIN_AREA, PARK_IDEAL_MAX] score 0.
+    """
+    if area < PARK_MIN_AREA or area > PARK_IDEAL_MAX:
+        return 0.0
+    ideal_mid = (PARK_IDEAL_MIN + PARK_IDEAL_MAX) / 2
+    # triangle score: 1.0 at ideal_mid, 0 at the edges
+    dist = abs(area - ideal_mid) / (ideal_mid - PARK_MIN_AREA + 1)
+    return max(0.0, 1.0 - dist)
 
 
 def generate_parks(
@@ -33,43 +65,75 @@ def generate_parks(
     Phase 7 generator — Park Placement.
 
     `blocks` is the list of interior block cell-sets produced by the blocks phase.
-    Modifies grid cells in-place (sets is_park).
+    Modifies grid cells in-place (sets is_park = True).
     """
-    yield GeneratorProgress(PHASE_PARKS, 0.0, 'Placing parks …')
+    yield GeneratorProgress(PHASE_PARKS, 0.0, 'Placing parks (priority scoring) …')
 
     rng = random.Random(config.master_seed ^ SALT_PARKS)
-    park_count = 0
-    total = max(len(blocks), 1)
 
-    for i, block in enumerate(blocks):
+    # ── Build candidate list per zone ─────────────────────────────────────────
+    candidates: dict[int, list] = {
+        ZONE_CBD: [], ZONE_MIDTOWN: [], ZONE_RESIDENTIAL: [],
+    }
+    zone_prob: dict[int, float] = {
+        ZONE_CBD:          PARK_CBD_PROBABILITY,
+        ZONE_MIDTOWN:      PARK_MIDTOWN_PROBABILITY,
+        ZONE_RESIDENTIAL:  PARK_RESIDENTIAL_PROBABILITY,
+    }
+
+    for block in blocks:
         if not block:
             continue
         area = len(block)
+        score = _park_score(area)
+        if score <= 0.0:
+            continue
         sample_r, sample_c = next(iter(block))
         zone = grid[sample_r][sample_c].zone_id
-        make_park = False
+        if zone in candidates:
+            centroid = _block_centroid(block)
+            candidates[zone].append((score, rng.random(), centroid, block))
 
-        if zone in (ZONE_CBD, ZONE_MIDTOWN):
-            if area < PARK_SMALL_BLOCK_MAX:
-                make_park = True
-        elif zone == ZONE_RESIDENTIAL:
-            if PARK_RESIDENTIAL_MIN_AREA <= area <= PARK_RESIDENTIAL_MAX_AREA:
-                if rng.random() < PARK_RESIDENTIAL_PROBABILITY:
-                    make_park = True
+    # ── Per-zone greedy selection ──────────────────────────────────────────────
+    park_count = 0
+    placed_centroids: list[tuple[float, float]] = []
 
-        if make_park:
+    for zone in (ZONE_CBD, ZONE_MIDTOWN, ZONE_RESIDENTIAL):
+        zone_list = candidates[zone]
+        if not zone_list:
+            continue
+
+        # Sort: highest score first; random second-key for tie-breaking
+        zone_list.sort(key=lambda x: (-x[0], x[1]))
+
+        zone_parks = 0
+        prob = zone_prob[zone]
+
+        for score, _, centroid, block in zone_list:
+            if zone_parks >= PARK_MAX_PER_ZONE:
+                break
+
+            # Probability gate (gives stochastic variety across seeds)
+            if rng.random() > prob:
+                continue
+
+            # Separation check — don't cluster parks
+            too_close = any(
+                _chebyshev(centroid, pc) < _PARK_MIN_SEPARATION
+                for pc in placed_centroids
+            )
+            if too_close:
+                continue
+
+            # ── Select this block as a park ──────────────────────────────────
             for r, c in block:
                 grid[r][c].is_park = True
+            placed_centroids.append(centroid)
+            zone_parks += 1
             park_count += 1
-
-        if i % 50 == 0:
-            yield GeneratorProgress(
-                PHASE_PARKS,
-                i / total,
-                f'Parks: {park_count} placed so far …',
-            )
 
     yield GeneratorProgress(
         PHASE_PARKS, 1.0,
-        f'Park placement complete — {park_count} parks placed.',
+        f'Park placement complete — {park_count} parks placed '
+        f'(min area: {PARK_MIN_AREA}, ideal: {PARK_IDEAL_MIN}–{PARK_IDEAL_MAX} cells).',
     )

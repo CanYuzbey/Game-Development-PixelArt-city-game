@@ -184,17 +184,17 @@ def main() -> None:
         height             = args.height,
         master_seed        = args.seed,
         coast_side         = args.coast,
-        coast_coverage     = args.coverage,
+        coast_coverage     = min(0.28, args.coverage),   # cap at 0.28 for city density
         highway_ns_min     = 2,
         highway_ns_max     = getattr(args, 'hw_ns_max', 4),
         highway_ew_min     = 0,
         highway_ew_max     = getattr(args, 'hw_ew_max', 2),
         connector_density  = args.density,
-        connector_spacing  = 6,
-        avenue_spacing     = 15,
+        connector_spacing  = 8,    # Sprint 3: 80m E-W block depth (EU/Asian city scale)
+        avenue_spacing     = 18,   # Sprint 3: 180m N-S corridor — realistic dense urban
         min_block_depth    = 2,
-        connector_turn_bias  = 0.05,
-        roundabout_count     = 15,
+        connector_turn_bias  = 0.08,   # slightly more organic streets
+        roundabout_count     = 8,      # fewer roundabouts for cleaner grid feel
         diagonal_streets     = 2,
         sidewalk_damage_rate = 0.15,
     )

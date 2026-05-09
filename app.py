@@ -28,7 +28,7 @@ Visual legend (bottom HUD):
     ■ red dot   decor overlay (crack / puddle)
 """
 from __future__ import annotations
-import sys, io, time, argparse
+import sys, io, time, argparse, random as _random
 
 if sys.platform == 'win32':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
@@ -49,36 +49,87 @@ from map_builder.constants   import (
 
 # ── Colour palette ─────────────────────────────────────────────────────────────
 
-C_BG          = ( 18,  18,  22)   # window background (near-black)
-C_UNINIT      = ( 30,  30,  38)   # un-generated cell
-C_WATER       = ( 38,  92, 180)   # ocean / river
-C_LAND        = (112,  97,  72)   # dry earth (warm brown)
-C_HIGHWAY     = (240, 195,  50)   # highway (gold)
-C_CONNECTOR   = ( 55, 195, 220)   # connector road (cyan)
-C_SIDEWALK    = (155, 152, 142)   # concrete sidewalk
-C_GRID        = ( 28,  28,  35)   # inter-cell grid line
-C_HUD_BG      = ( 14,  14,  20)   # HUD background strip
+C_BG          = ( 14,  16,  20)   # window background (deep navy)
+C_UNINIT      = ( 25,  27,  33)   # un-generated cell
+
+# ── Master palette (Team 6 research, §2 — OSM/Google Maps calibrated) ─────────
+C_WATER       = (106, 159, 191)   # OSM ocean — muted steel blue (was too dark)
+C_LAND        = (175, 162, 138)   # vacant lot / exterior — dusty tan
+C_HIGHWAY     = (220, 194, 120)   # OSM motorway gold-yellow (was too saturated)
+C_CONNECTOR   = (195, 187, 172)   # local connector — warm light grey
+C_SIDEWALK    = (200, 196, 188)   # pavement — slightly lighter than connector
+C_GRID        = ( 22,  24,  30)   # inter-cell grid line
+C_HUD_BG      = ( 10,  12,  18)   # HUD background strip
 C_HUD_TEXT    = (215, 215, 215)   # primary HUD text
 C_HUD_DIM     = (110, 110, 120)   # secondary / dim HUD text
-C_PROGRESS_BG = ( 38,  38,  48)   # progress bar background
-C_PROGRESS_FG = ( 60, 185, 115)   # progress bar fill (green)
+C_PROGRESS_BG = ( 35,  37,  48)   # progress bar background
+C_PROGRESS_FG = ( 55, 185, 110)   # progress bar fill (green)
 
-# Zone-tinted land colours (used when _zone_mode is True)
-C_LAND_CBD         = (196, 168, 130)   # warm tan — urban dry concrete
-C_LAND_MIDTOWN     = (150, 168, 123)   # grey-green — mixed vegetation
-C_LAND_RESIDENTIAL = (122, 158, 110)   # muted green — residential lawns
-C_PARK             = ( 72, 140,  72)   # park green
-C_CIVIC            = (255,  80,  80)   # civic anchor (bright red, single cell)
+# Zone-tinted exterior land colours (zone mode)
+C_LAND_CBD         = (185, 175, 152)   # urban hardscape concrete
+C_LAND_MIDTOWN     = (172, 178, 150)   # grey-green transitional
+C_LAND_RESIDENTIAL = (152, 175, 130)   # residential setback / lawn
 
-# Building footprint colours — always visible, no toggle needed
-C_BLDG_CBD         = ( 78,  86, 105)   # dark slate — tall office / CBD
-C_BLDG_MIDTOWN     = (108, 100,  88)   # warm dark brown — brick mid-rise
-C_BLDG_RESI        = (140, 128, 108)   # light warm tan — suburban house
-C_BLDG_CIVIC       = ( 58,  72, 130)   # deep blue — civic/landmark building
-C_SPAWN_OVERLAY    = (255, 220,  50)   # golden yellow — spawn point dot
-C_LANDMARK         = ( 50, 200, 255)   # bright cyan — landmark overlay
-C_ALLEY            = ( 80,  60,  90)   # dark purple — high-danger alley
-C_PLAZA            = (200, 185, 150)   # warm stone — roundabout / plaza
+# Park — saturated green so it reads as park even in a grey urban field
+C_PARK             = (106, 158,  74)   # Team 6 §2: primary park grass (OSM-matched)
+C_PARK_LIGHT       = (130, 175,  96)   # sunlit / interior park variant
+C_CIVIC            = (195,  65,  55)   # civic anchor — strong warm red
+
+# Buildings — Team 6 §2 calibrated to real map references
+C_BLDG_CBD         = ( 82,  90, 100)   # dark blue-grey glass tower (OSM building dark)
+C_BLDG_MIDTOWN     = (148, 108,  88)   # brick red-brown — EU mid-rise
+C_BLDG_RESI        = (210, 185, 155)   # cream/tan suburban house — light and warm
+C_BLDG_CIVIC       = (195, 185, 155)   # pale limestone — classical civic (not blue!)
+C_LANDMARK         = (158, 148, 115)   # darker stone landmark accent
+C_ALLEY            = (162, 155, 145)   # service alley — darker than sidewalk, not purple
+C_PLAZA            = (210, 205, 192)   # open plaza/market — light stone pavement
+
+# ── Per-lot deterministic color variation (Team 7 research, §1) ───────────────
+# Uses a 3-tap LCG so R/G/B channels are independently varied.
+# Same lot_id always produces the same color — deterministic across seeds.
+_LCG_PRIMES = (1_664_525, 22_695_477, 214_013)
+_LCG_ADDS   = (1_013_904_223, 1_664_525, 6_364_136_223)
+_LCG_MASK   = 0xFFFF_FFFF
+
+# Per-zone variation range (max delta per channel, 0–255)
+_LOT_ZONE_VAR = {
+    ZONE_CBD:          20,   # tight — density does the work
+    ZONE_MIDTOWN:      28,   # moderate brick/concrete variety
+    ZONE_RESIDENTIAL:  34,   # warm variation — age, materials
+}
+
+
+def _lot_varied_color(base: tuple, lot_id: int, density: float = 0.5,
+                      zone_id: int = ZONE_MIDTOWN) -> tuple:
+    """
+    Deterministic per-lot color variation using a fast 3-tap LCG.
+    CBD buildings darken/blue-shift under high density.
+    Residential buildings warm up at low density.
+    """
+    # Three independent noise values in [-1, 1]
+    seeds = [((lot_id * _LCG_PRIMES[i] + _LCG_ADDS[i]) & _LCG_MASK) for i in range(3)]
+    noise = [(s / _LCG_MASK) * 2.0 - 1.0 for s in seeds]
+
+    var = _LOT_ZONE_VAR.get(zone_id, 25)
+    r, g, b = base
+    dr = noise[0] * var
+    dg = noise[1] * var
+    db = noise[2] * var
+
+    if zone_id == ZONE_CBD:
+        # Denser CBD blocks → darker + slightly bluer (glass towers)
+        dark = density * 28
+        dr -= dark;  dg -= dark;  db += density * 15
+    elif zone_id == ZONE_RESIDENTIAL:
+        # Sparser residential → warmer (house materials, painted brick)
+        warmth = (1.0 - density) * 22
+        dr += warmth;  dg += warmth * 0.4;  db -= warmth * 0.3
+
+    return (
+        max(18, min(255, int(r + dr))),
+        max(18, min(255, int(g + dg))),
+        max(18, min(255, int(b + db))),
+    )
 
 # Phase accent colours for the progress bar
 C_PHASE = {
@@ -118,10 +169,16 @@ GRID_H = WIN_H - HUD_H
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 def cell_color(cell) -> tuple[int, int, int]:
-    """Return the display colour for one MapCell."""
+    """
+    Return the display colour for one MapCell.
+
+    Priority order (highest first):
+      water → road → landmark → civic → park → sidewalk → building → exterior land
+    """
     if cell.is_water:
         return C_WATER
 
+    # ── Roads ────────────────────────────────────────────────────────────────
     if cell.is_road:
         tile_role = getattr(cell, 'tile_role', '')
         if tile_role == ROLE_WALKABLE_PLAZA:
@@ -130,55 +187,59 @@ def cell_color(cell) -> tuple[int, int, int]:
             return C_ALLEY
         if cell.road_category == ROAD_HIGHWAY:
             return C_HIGHWAY
-        if cell.layers.get(LAYER_DECOR) is not None:
-            return (90, 215, 240)
         return C_CONNECTOR
 
-    if cell.is_land:
-        # Landmark cells (station, hospital, etc.) — bright cyan
-        if getattr(cell, 'landmark_type', '') and not getattr(cell, 'is_civic_anchor', False):
-            return C_LANDMARK
+    if not cell.is_land:
+        return C_UNINIT
 
-        # Civic anchor — always bright red
-        if getattr(cell, 'is_civic_anchor', False):
-            return C_CIVIC
+    tile_role = getattr(cell, 'tile_role', '')
+    lot_id    = getattr(cell, 'lot_id', -1)
+    density   = getattr(cell, 'density_score', 0.5)
 
-        # Park cells — BEFORE sidewalk check (small park blocks are fully sidewalk-covered)
-        if getattr(cell, 'is_park', False):
-            # Spawn points in parks are slightly brighter
-            if getattr(cell, 'is_spawn_point', False) and _zone_mode:
-                return (100, 200, 100)
+    # ── Civic anchor (the single central red marker) ────────────────────────
+    if getattr(cell, 'is_civic_anchor', False):
+        return C_CIVIC
+
+    # ── Landmarks use the tile_role=bldg_civic pathway below ─────────────────
+    # (landmark_type is set but the colour comes from _lot_varied_color(C_BLDG_CIVIC))
+
+    # ── Parks — always green (checked BEFORE sidewalk) ───────────────────────
+    if getattr(cell, 'is_park', False):
+        if tile_role == ROLE_WALKABLE_PARK:
             return C_PARK
+        return C_PARK   # fallback for sidewalk-overlapping park cells
 
-        # Sidewalk — after park check
-        if cell.is_sidewalk:
-            if getattr(cell, 'is_spawn_point', False) and _zone_mode:
-                return (200, 190, 110)
-            return C_SIDEWALK
+    # ── Sidewalk ─────────────────────────────────────────────────────────────
+    if cell.is_sidewalk:
+        return C_SIDEWALK
 
-        # Building lots — zone-specific building colour
-        tile_role = getattr(cell, 'tile_role', '')
-        if tile_role == ROLE_BUILDING_CIVIC:
-            return C_BLDG_CIVIC
-        if tile_role == ROLE_BUILDING_CBD:
-            # density_score brightens/darkens within zone
-            factor = 0.75 + 0.35 * getattr(cell, 'density_score', 0.5)
-            return tuple(min(255, int(ch * factor)) for ch in C_BLDG_CBD)
-        if tile_role == ROLE_BUILDING_MIDTOWN:
-            factor = 0.80 + 0.30 * getattr(cell, 'density_score', 0.5)
-            return tuple(min(255, int(ch * factor)) for ch in C_BLDG_MIDTOWN)
-        if tile_role == ROLE_BUILDING_RESI:
-            factor = 0.85 + 0.25 * getattr(cell, 'density_score', 0.5)
-            return tuple(min(255, int(ch * factor)) for ch in C_BLDG_RESI)
+    # ── Building lots — per-lot colour variation ─────────────────────────────
+    if tile_role == ROLE_BUILDING_CIVIC:
+        if lot_id >= 0:
+            return _lot_varied_color(C_BLDG_CIVIC, lot_id, density, ZONE_CBD)
+        return C_BLDG_CIVIC
 
-        # Zone-mode toggle for non-building exterior land
-        if _zone_mode:
-            base = _ZONE_COLORS.get(cell.zone_id, C_LAND)
-            factor = 0.5 + 0.5 * getattr(cell, 'density_score', 0.5)
-            return tuple(int(ch * factor) for ch in base)
-        return C_LAND
+    if tile_role == ROLE_BUILDING_CBD:
+        if lot_id >= 0:
+            return _lot_varied_color(C_BLDG_CBD, lot_id, density, ZONE_CBD)
+        return C_BLDG_CBD
 
-    return C_UNINIT
+    if tile_role == ROLE_BUILDING_MIDTOWN:
+        if lot_id >= 0:
+            return _lot_varied_color(C_BLDG_MIDTOWN, lot_id, density, ZONE_MIDTOWN)
+        return C_BLDG_MIDTOWN
+
+    if tile_role == ROLE_BUILDING_RESI:
+        if lot_id >= 0:
+            return _lot_varied_color(C_BLDG_RESI, lot_id, density, ZONE_RESIDENTIAL)
+        return C_BLDG_RESI
+
+    # ── Exterior land (unpaved, outside blocks) ──────────────────────────────
+    if _zone_mode:
+        base = _ZONE_COLORS.get(cell.zone_id, C_LAND)
+        factor = 0.6 + 0.4 * density
+        return tuple(min(255, int(ch * factor)) for ch in base)
+    return C_LAND
 
 
 
@@ -188,23 +249,21 @@ def build_config(seed: int, coast: str, width: int, height: int) -> MapConfig:
         height             = height,
         master_seed        = seed,
         coast_side         = coast,
-        coast_coverage     = 0.30,
-        # Highways — yellow, tie city to other lands; kept sparse
+        coast_coverage     = 0.28,
         highway_ns_min     = 2,
         highway_ns_max     = 4,
         highway_ew_min     = 0,
         highway_ew_max     = 2,
         highway_organic    = 0.25,
-        # Connector grid — blue main city roads, dense urban proportions at 10m/cell
-        #   avenue_spacing=15  → 150m N-S corridor  (tight EU/city-centre grid)
-        #   connector_spacing=6 →  60m E-W block
-        #   ratio 2.5:1
+        # Sprint 3: wider spacing → realistic city block sizes
+        #   connector_spacing=12 → 120m E-W block depth (Manhattan ~80m, Paris ~60m)
+        #   avenue_spacing=24   → 240m N-S corridor  (real NYC avenue spacing ~270m)
         connector_density  = 0.85,
-        connector_spacing  = 6,    # E-W cross-streets every ~60m
-        avenue_spacing     = 15,   # N-S avenues every ~150m
+        connector_spacing  = 8,    # Sprint 3: 80m E-W block depth — realistic dense urban
+        avenue_spacing     = 18,   # 180m N-S corridor — EU/Asian city block scale
         min_block_depth    = 2,
-        connector_turn_bias  = 0.05,
-        roundabout_count     = 15,
+        connector_turn_bias  = 0.08,
+        roundabout_count     = 8,
         diagonal_streets     = 2,
         sidewalk_damage_rate = 0.15,
     )
@@ -319,14 +378,67 @@ class MapApp:
         scaled = pygame.transform.scale(self.cell_surf, (sw, sh))
         self.screen.blit(scaled, (ox, oy))
 
-        # Draw grid lines only when large enough to be useful
-        if cell_sz >= 6:
-            for c in range(self.width + 1):
-                x = ox + c * cell_sz
-                pygame.draw.line(self.screen, C_GRID, (x, oy), (x, oy + sh))
-            for r in range(self.height + 1):
-                y = oy + r * cell_sz
-                pygame.draw.line(self.screen, C_GRID, (ox, y), (ox + sw, y))
+        if cell_sz < 3:
+            return
+
+        grid = self.generator.grid if self.generator else None
+
+        # ── Lot / building boundary lines ──────────────────────────────────
+        # Draw a 1px dark edge wherever two adjacent cells belong to different lots.
+        # This makes each building footprint read as a solid shape rather than a grid.
+        # Threshold: cell_sz ≥ 3 (even small zoom benefits from visible building edges).
+        if grid and cell_sz >= 3:
+            C_EDGE = (15, 15, 20)     # near-black building edge
+            C_ROAD_EDGE = (10, 10, 15)  # slightly different for road/sidewalk seams
+            for r in range(self.height):
+                for c in range(self.width):
+                    cell    = grid[r][c]
+                    lot_id  = getattr(cell, 'lot_id', -1)
+                    is_bldg = lot_id >= 0
+
+                    # Right edge
+                    if c + 1 < self.width:
+                        right = grid[r][c + 1]
+                        r_lot = getattr(right, 'lot_id', -1)
+                        if is_bldg and (r_lot != lot_id):
+                            px = ox + (c + 1) * cell_sz
+                            pygame.draw.line(
+                                self.screen, C_EDGE,
+                                (px, oy + r * cell_sz),
+                                (px, oy + (r + 1) * cell_sz - 1),
+                            )
+
+                    # Bottom edge
+                    if r + 1 < self.height:
+                        below = grid[r + 1][c]
+                        b_lot = getattr(below, 'lot_id', -1)
+                        if is_bldg and (b_lot != lot_id):
+                            py = oy + (r + 1) * cell_sz
+                            pygame.draw.line(
+                                self.screen, C_EDGE,
+                                (ox + c * cell_sz,       py),
+                                (ox + (c + 1) * cell_sz - 1, py),
+                            )
+
+        # ── Option A: 1px inset darker border on each building cell ───────
+        # Draws a 65%-brightness frame around each cell's fill color so that
+        # individual cells within a lot read as distinct facade panels.
+        if grid and 5 <= cell_sz < 16:
+            BLDG_ROLES = {
+                ROLE_BUILDING_CBD, ROLE_BUILDING_MIDTOWN,
+                ROLE_BUILDING_RESI, ROLE_BUILDING_CIVIC,
+            }
+            for r in range(self.height):
+                for c in range(self.width):
+                    cell = grid[r][c]
+                    if getattr(cell, 'tile_role', '') not in BLDG_ROLES:
+                        continue
+                    cx   = ox + c * cell_sz
+                    cy   = oy + r * cell_sz
+                    fill = cell_color(cell)
+                    bord = tuple(max(10, int(ch * 0.65)) for ch in fill)
+                    pygame.draw.rect(self.screen, bord, (cx, cy, cell_sz, cell_sz))
+                    pygame.draw.rect(self.screen, fill, (cx+1, cy+1, cell_sz-2, cell_sz-2))
 
     def _draw_hud(self) -> None:
         hud_y = GRID_H
@@ -390,36 +502,21 @@ class MapApp:
         self.screen.blit(hs, (WIN_W - hs.get_width() - 14, hud_y + 64))
 
         # ── Legend swatches ───────────────────────────────────────────────────
-        if _zone_mode:
-            swatches = [
-                (C_WATER,            'water'),
-                (C_LAND_CBD,         'ext-CBD'),
-                (C_LAND_RESIDENTIAL, 'ext-res'),
-                (C_BLDG_CBD,         'bldg-CBD'),
-                (C_BLDG_MIDTOWN,     'bldg-mid'),
-                (C_BLDG_RESI,        'bldg-res'),
-                (C_BLDG_CIVIC,       'landmark'),
-                (C_PARK,             'park'),
-                (C_CIVIC,            'civic'),
-                (C_HIGHWAY,          'highway'),
-                (C_CONNECTOR,        'road'),
-                (C_SIDEWALK,         'sidewalk'),
-            ]
-        else:
-            swatches = [
-                (C_WATER,          'water'),
-                (C_BLDG_CBD,       'CBD bldg'),
-                (C_BLDG_MIDTOWN,   'mid bldg'),
-                (C_BLDG_RESI,      'res bldg'),
-                (C_BLDG_CIVIC,     'landmark'),
-                (C_PARK,           'park'),
-                (C_CIVIC,          'civic'),
-                (C_HIGHWAY,        'highway'),
-                (C_CONNECTOR,      'road'),
-                (C_ALLEY,          'alley'),
-                (C_PLAZA,          'plaza'),
-                (C_SIDEWALK,       'sidewalk'),
-            ]
+        swatches = [
+            (C_WATER,          'water'),
+            (C_HIGHWAY,        'highway'),
+            (C_CONNECTOR,      'road'),
+            (C_ALLEY,          'alley'),
+            (C_PLAZA,          'plaza'),
+            (C_SIDEWALK,       'sidewalk'),
+            (C_BLDG_CBD,       'CBD'),
+            (C_BLDG_MIDTOWN,   'midtown'),
+            (C_BLDG_RESI,      'resi'),
+            (C_BLDG_CIVIC,     'civic bldg'),
+            (C_CIVIC,          'town hall'),
+            (C_PARK,           'park'),
+            (C_LAND,           'exterior'),
+        ]
         lx = WIN_W - 14
         for colour, label in reversed(swatches):
             txt = self.font_sm.render(label, True, C_HUD_DIM)

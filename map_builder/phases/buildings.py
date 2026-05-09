@@ -119,7 +119,9 @@ def _inject_landmarks(
         anchor_cell.landmark_type = 'town_hall'
         anchor_cell.building_type = BLDG_CIVIC_HALL
         anchor_cell.tile_role = ROLE_BUILDING_CIVIC
-        # Spread the civic hall across the whole lot using lots list
+        # Spread the civic hall across the whole lot using lots list.
+        # If the civic anchor lot is too large, only mark the anchor cell
+        # itself plus adjacent cells (cap at 12 cells for visual clarity).
         anchor_lot_id = anchor_cell.lot_id
         if anchor_lot_id >= 0:
             for lot_cells in lots:
@@ -127,7 +129,9 @@ def _inject_landmarks(
                     continue
                 r0, c0 = next(iter(lot_cells))
                 if grid[r0][c0].lot_id == anchor_lot_id:
-                    for r, c in lot_cells:
+                    # Cap lot coverage at 12 cells for large lots
+                    cells_to_mark = list(lot_cells)[:12]
+                    for r, c in cells_to_mark:
                         grid[r][c].landmark_type = 'town_hall'
                         grid[r][c].building_type = BLDG_CIVIC_HALL
                         grid[r][c].tile_role = ROLE_BUILDING_CIVIC
@@ -166,10 +170,15 @@ def _inject_landmarks(
             placed['station'] = nearest_lot
 
     # ── Hospital: largest Midtown lot far from CBD center ─────────────────────
+    # Hospital: pick a medium Midtown lot (8-20 cells) — large enough to notice,
+    # small enough not to dominate the visual with civic colour.
     midtown_lots = _lots_by_zone(grid, lots, ZONE_MIDTOWN)
     if midtown_lots:
-        midtown_lots.sort(key=lambda cells: len(cells), reverse=True)
-        for lot_cells in midtown_lots[:5]:
+        # Sort by size, prefer 8-20 cell lots (realistic hospital footprint)
+        midtown_lots.sort(key=lambda cells: abs(len(cells) - 14))
+        for lot_cells in midtown_lots[:8]:
+            if not (5 <= len(lot_cells) <= 22):
+                continue
             r0, c0 = next(iter(lot_cells))
             cell0 = grid[r0][c0]
             if not cell0.landmark_type:
@@ -180,11 +189,14 @@ def _inject_landmarks(
                 placed['hospital'] = (r0, c0)
                 break
 
-    # ── Police station: Midtown lot near CBD/Midtown boundary ─────────────────
+    # ── Police station: small-medium Midtown lot near CBD boundary ────────────
     boundary_lots = _lots_by_zone(grid, lots, ZONE_MIDTOWN, near_zone=ZONE_CBD, radius=5)
     if boundary_lots:
-        rng.shuffle(boundary_lots)
-        for lot_cells in boundary_lots[:8]:
+        # Prefer compact police station (4-12 cells)
+        boundary_lots.sort(key=lambda cells: abs(len(cells) - 8))
+        for lot_cells in boundary_lots[:10]:
+            if len(lot_cells) > 15:
+                continue
             r0, c0 = next(iter(lot_cells))
             cell0 = grid[r0][c0]
             if not cell0.landmark_type:

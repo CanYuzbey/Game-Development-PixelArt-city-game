@@ -1,0 +1,23 @@
+Sprint 3: visual realism overhaul — real parks, per-lot variation, OSM palette
+
+Manager-coordinated 5-team sprint addressing user feedback: city still looks fake.
+
+Team 1 (research): reports/team6_visual_realism.md — OSM/Google Maps calibrated
+palette, block/lot sizing standards, park minimum size requirements.
+Team 2 (research): reports/team7_rendering_techniques.md — LCG per-lot variation,
+Option A/B building edge rendering, connector_spacing optimization.
+Team 3 (analysis): reports/team8_sprint3_gap_analysis.md — full before/after audit.
+Team 4 (implementation):
+  - connector_spacing 6 to 8, avenue_spacing 15 to 18 (real city block scale)
+  - LOT_MIN_WIDTH/DEPTH 2 to 3 for realistic minimum building footprints
+  - parks.py rewritten: PARK_MIN_AREA=20, PARK_IDEAL 25-120 cells, max 2 per zone,
+    priority-score picks large blocks; parks now 53-86 cells (was 1-9 cells)
+  - app.py: OSM-calibrated palette (muted water, OSM highway gold, connector warm
+    grey, civic limestone not cobalt, alley grey not purple, saturated park green)
+  - Per-lot LCG color variation: CBD +/-20+density bias, Midtown +/-28, Resi +/-34
+  - Lot-boundary dark lines at render time (Option B) — buildings read as distinct
+  - Option A 1px inner border at cell_sz 5-15 for facade depth cue
+  - buildings.py: landmark lot size capped (hospital <=22, police <=15, hall <=12)
+Team 5 (testing): all 10 regression tests pass; parks now 316+ visible cells.
+
+Result: 64 blocks / 149 lots / 6 real parks / 15% exterior on 96x72 (was 39%).
