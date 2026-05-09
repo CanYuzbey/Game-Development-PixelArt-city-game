@@ -191,12 +191,15 @@ def _inject_landmarks(
     # ── Hospital: largest Midtown lot far from CBD center ─────────────────────
     # Hospital: pick a medium Midtown lot (8-20 cells) — large enough to notice,
     # small enough not to dominate the visual with civic colour.
+    # Fallback: use CBD lots if no Midtown lots exist (tiny maps).
     midtown_lots = _lots_by_zone(grid, lots, ZONE_MIDTOWN)
+    if not midtown_lots:
+        midtown_lots = _lots_by_zone(grid, lots, ZONE_CBD)
     if midtown_lots:
-        # Sort by size, prefer 8-20 cell lots (realistic hospital footprint)
+        # Sort by size, prefer 4-22 cell lots (relaxed for tiny maps)
         midtown_lots.sort(key=lambda cells: abs(len(cells) - 14))
         for lot_cells in midtown_lots[:8]:
-            if not (5 <= len(lot_cells) <= 22):
+            if not (4 <= len(lot_cells) <= 30):
                 continue
             r0, c0 = next(iter(lot_cells))
             cell0 = grid[r0][c0]
@@ -210,12 +213,15 @@ def _inject_landmarks(
                 break
 
     # ── Police station: small-medium Midtown lot near CBD boundary ────────────
+    # Fallback: use any CBD lot if no Midtown lots exist (tiny maps).
     boundary_lots = _lots_by_zone(grid, lots, ZONE_MIDTOWN, near_zone=ZONE_CBD, radius=5)
+    if not boundary_lots:
+        boundary_lots = _lots_by_zone(grid, lots, ZONE_CBD)
     if boundary_lots:
-        # Prefer compact police station (4-12 cells)
+        # Prefer compact police station (4-15 cells)
         boundary_lots.sort(key=lambda cells: abs(len(cells) - 8))
         for lot_cells in boundary_lots[:10]:
-            if len(lot_cells) > 15:
+            if len(lot_cells) > 20:
                 continue
             r0, c0 = next(iter(lot_cells))
             cell0 = grid[r0][c0]
@@ -230,11 +236,15 @@ def _inject_landmarks(
 
     # ── School: medium Residential lot, ensures landmark spread to outer zone ──
     resi_lots = _lots_by_zone(grid, lots, ZONE_RESIDENTIAL)
+    if not resi_lots:
+        resi_lots = _lots_by_zone(grid, lots, ZONE_MIDTOWN)
+    if not resi_lots:
+        resi_lots = _lots_by_zone(grid, lots, ZONE_CBD)
     if resi_lots:
         # Prefer 6-16 cell lots — realistic school footprint
         resi_lots.sort(key=lambda cells: abs(len(cells) - 10))
         for lot_cells in resi_lots[:12]:
-            if not (5 <= len(lot_cells) <= 20):
+            if not (4 <= len(lot_cells) <= 30):
                 continue
             r0, c0 = next(iter(lot_cells))
             cell0 = grid[r0][c0]

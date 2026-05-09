@@ -131,12 +131,14 @@ def generate_parks(
         zone_parks = 0
         prob = zone_prob[zone]
 
-        for score, _, centroid, block in zone_list:
+        for i, (score, _, centroid, block) in enumerate(zone_list):
             if zone_parks >= dynamic_max:
                 break
 
-            # Probability gate (gives stochastic variety across seeds)
-            if rng.random() > prob:
+            # Guarantee the first (best-score) block per zone to prevent
+            # zero-park zones from pure bad luck on the probability gate.
+            # Apply probability gate only for subsequent parks.
+            if i > 0 and rng.random() > prob:
                 continue
 
             # Separation check — don't cluster parks

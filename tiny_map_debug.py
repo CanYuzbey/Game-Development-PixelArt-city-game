@@ -3,31 +3,67 @@ sys.path.insert(0, '.')
 from map_builder import MapGenerator, MapConfig
 from map_builder.constants import *
 
-config = MapConfig(width=160, height=120, master_seed=7, coast_side='west')
-gen = MapGenerator(config)
-gen.generate_blocking()
-grid = gen.grid
+configs = [
+    (1, 'none', 80, 60),
+    (7, 'west', 80, 60),
+    (42, 'east', 80, 60),
+    (99, 'north', 80, 60),
+    (13, 'south', 80, 60),
+    (2147483647, 'none', 80, 60),
+    (1, 'none', 32, 32),
+]
 
-lmk_cells = set()
-for r, c, cell in grid.all_cells():
-    if cell.landmark_type:
-        lmk_cells.add(cell.landmark_type)
-print(f'Landmarks placed: {lmk_cells}')
-print(f'Count: {len(lmk_cells)}')
+all_pass = True
+for seed, coast, w, h in configs:
+    config = MapConfig(width=w, height=h, master_seed=seed, coast_side=coast)
+    gen = MapGenerator(config)
+    gen.generate_blocking()
+    grid = gen.grid
 
-# Check highway cells in CBD/Midtown
-hw_cbd_mid = [(r, c, cell.zone_id) for r, c, cell in grid.all_cells()
-              if cell.is_road and cell.road_category == ROAD_HIGHWAY
-              and cell.zone_id in (ZONE_CBD, ZONE_MIDTOWN)]
-print(f'Highway cells in CBD/Midtown: {len(hw_cbd_mid)}')
+    # Tiny parks
+    park_sizes = {}
+    for r, c, cell in grid.all_cells():
+        if cell.is_park:
+            bid = cell.block_id
+            park_sizes[bid] = park_sizes.get(bid, 0) + 1
+    tiny_parks = sum(1 for sz in park_sizes.values() if sz < 3)
 
-# Find station location
-from map_builder.phases.buildings import _nearest_lot_of_zone
-if hw_cbd_mid:
-    rows, cols = grid.height, grid.width
-    cr_c, cc_c = rows / 2.0, cols / 2.0
-    station_cell = min(hw_cbd_mid, key=lambda rc: (rc[0] - cr_c) ** 2 + (rc[1] - cc_c) ** 2)
-    sr, sc, _ = station_cell
-    nearest = _nearest_lot_of_zone(grid, sr, sc, ZONE_MIDTOWN, radius=15)
-    nearest20 = _nearest_lot_of_zone(grid, sr, sc, ZONE_MIDTOWN, radius=20)
-    print(f'Station cell: ({sr},{sc}), nearest(r=15): {nearest}, nearest(r=20): {nearest20}')
+    # Missing building types
+    no_bldg = sum(
+        1 for r, c, cell in grid.all_cells()
+        if cell.lot_id >= 0 and not getattr(cell, 'is_setback', False)
+        and not cell.is_park and not cell.building_type
+    )
+
+    # Empty tile roles
+    empty_role = sum(1 for r, c, cell in grid.all_cells() if cell.is_land and cell.tile_role == '')
+
+    # Setback cells with building roles
+    setback_bldg = sum(
+        1 for r, c, cell in grid.all_cells()
+        if getattr(cell, 'is_setback', False)
+        and cell.tile_role in (ROLE_BUILDING_CBD, ROLE_BUILDING_MIDTOWN, ROLE_BUILDING_RESI)
+    )
+
+    issues = []
+    if tiny_parks > 0:
+        issues.append(f'tiny_parks={tiny_parks}')
+    if no_bldg > 0:
+        issues.append(f'no_bldg_lots={no_bldg}')
+    if empty_role > 0:
+        issues.append(f'empty_role={empty_role}')
+    if setback_bldg > 0:
+        issues.append(f'setback_has_bldg_role={setback_bldg}')
+
+    lmk = gen.stats.get('landmarks', 0)
+    if issues:
+        print(f'FAIL seed={seed} coast={coast} {w}x{h}: {issues} lmk={lmk}')
+        all_pass = False
+    else:
+        print(f'PASS seed={seed} coast={coast} {w}x{h}: lmk={lmk}')
+
+print()
+if all_pass:
+    print('All Team 5 quality checks PASS')
+else:
+    print('SOME CHECKS FAILED')
