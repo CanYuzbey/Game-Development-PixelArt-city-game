@@ -171,7 +171,7 @@ def _inject_landmarks(
         )
         # Find the lot nearest to this junction
         sr, sc = station_cell_rc
-        nearest_lot = _nearest_lot_of_zone(grid, sr, sc, ZONE_MIDTOWN, radius=8)
+        nearest_lot = _nearest_lot_of_zone(grid, sr, sc, ZONE_MIDTOWN, radius=max(rows, cols))
         if nearest_lot is not None and not _landmarks_too_close(nearest_lot, placed_positions):
             target_lot_id = grid[nearest_lot[0]][nearest_lot[1]].lot_id
             if target_lot_id >= 0:
@@ -426,6 +426,13 @@ def generate_buildings(
         elif cell.lot_id >= 0:
             # Setback cells keep their sidewalk role; skip building assignment
             if getattr(cell, 'is_setback', False):
+                # Setback cells adjacent to a park get park-adjacent flag for
+                # visual rendering (use park colour instead of lawn).
+                for dr2, dc2 in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                    nbr2 = grid.cell(r + dr2, c + dc2)
+                    if nbr2 is not None and nbr2.is_park:
+                        cell.near_park = True
+                        break
                 cell.encounter_chance = 0.0
                 continue
             if cell.zone_id == ZONE_CBD:
@@ -497,10 +504,38 @@ def generate_buildings(
                 grid[r][c].is_spawn_point = True
                 spawn_count += 1
 
+    # ── Pass 5: Alley terminus encounter boost ────────────────────────────────
+    # Cells within Chebyshev distance 2 of an alley dead-end get a small
+    # encounter-chance boost (dark alleyway atmosphere spills onto nearby road).
+    ALLEY_BOOST = 0.07
+    alley_tips: list[tuple[int, int]] = [
+        (r, c)
+        for r, c, cell in grid.all_cells()
+        if cell.tile_role == ROLE_WALKABLE_ALLEY
+        and sum(
+            1
+            for dr2, dc2 in ((-1, 0), (1, 0), (0, -1), (0, 1))
+            if grid.in_bounds(r + dr2, c + dc2) and grid[r + dr2][c + dc2].is_road
+        ) == 1
+    ]
+    for ar, ac in alley_tips:
+        for dr2 in range(-2, 3):
+            for dc2 in range(-2, 3):
+                if max(abs(dr2), abs(dc2)) > 2:
+                    continue
+                nbr = grid.cell(ar + dr2, ac + dc2)
+                if nbr is not None and nbr.tile_role in (
+                    ROLE_WALKABLE_ROAD, ROLE_WALKABLE_HIGHWAY, ROLE_WALKABLE_SIDEWALK
+                ):
+                    nbr.encounter_chance = round(
+                        min(1.0, nbr.encounter_chance + ALLEY_BOOST), 3
+                    )
+
     yield GeneratorProgress(
         PHASE_BUILDINGS, 1.0,
         (
             f'Buildings phase complete — {len(lots)} lots typed, '
-            f'{len(landmarks)} landmarks, {spawn_count} spawn points.'
+            f'{len(landmarks)} landmarks, {spawn_count} spawn points, '
+            f'{len(alley_tips)} alley tips boosted.'
         ),
     )

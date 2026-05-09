@@ -211,6 +211,8 @@ def cell_color(cell) -> tuple[int, int, int]:
 
     # ── Residential setback / front yard ─────────────────────────────────────
     if getattr(cell, 'is_setback', False):
+        if getattr(cell, 'near_park', False):
+            return C_PARK  # setback adjacent to park blends into the green
         return (188, 195, 160)   # warm light green — lawn / setback
 
     # ── Sidewalk ─────────────────────────────────────────────────────────────
