@@ -15,7 +15,7 @@ Block geometry (64×48 grid defaults):
   avenue_spacing    = 18 cells  → ~3 avenues on a 64-col map
   connector_spacing =  7 cells  → ~6 cross-streets on a 48-row map
   block ratio 2.6:1             (real Harlem ~3.6:1, compressed for small grid)
-  drift_max = 1 always          → near-straight streets, authentic Harlem feel
+  drift_max = 1..3              → center streets nearly straight; outer streets curve more
 
 Algorithm:
   ┌───────────────────────────────────────────────────────────────────────────┐
@@ -40,9 +40,9 @@ Algorithm:
   └───────────────────────────────────────────────────────────────────────────┘
 
 Noise drift:
-  All streets use drift_max = 1 — at most ±1 cell deviation per row/column.
-  This gives the hand-drawn, slightly organic quality of a real city block
-  while keeping streets clearly parallel and perpendicular.
+  Center streets use drift_max = 1 (CBD grid feel); outer streets scale up to
+  drift_max + 2 for organic curvature in residential zones.  All streets stay
+  clearly parallel/perpendicular — at most a few cells of smooth deviation.
 """
 from __future__ import annotations
 import math
@@ -54,6 +54,7 @@ from ..constants import (
     ROAD_CONNECTOR,
     LAYER_ROAD, LAYER_DECOR,
     DIRECTION_OFFSETS,
+    ZONE_RESIDENTIAL,
 )
 from ..map_state     import MapGrid, MapConfig, GeneratorProgress
 from ..noise_utils   import build_perm_table, noise2d
@@ -179,11 +180,16 @@ def _trace_diagonal_street(
     """
     rows, cols = grid.height, grid.width
 
-    # Compute NW start and SE end fractions, shifted by index
-    start_r = max(1, int(rows * (0.08 + index * 0.15)))
-    start_c = max(1, int(cols * (0.10 + index * 0.05)))
-    end_r   = min(rows - 2, int(rows * 0.92))
-    end_c   = min(cols - 2, int(cols * 0.90))
+    # Each diagonal gets a unique seed-dependent start in the NW quadrant
+    # and a unique end in the SE quadrant, so diagonals differ every seed.
+    start_frac_r = rng.uniform(0.05 + index * 0.12, 0.25 + index * 0.10)
+    start_frac_c = rng.uniform(0.05 + index * 0.08, 0.25 + index * 0.08)
+    end_frac_r   = rng.uniform(0.75 - index * 0.05, 0.95)
+    end_frac_c   = rng.uniform(0.75 - index * 0.05, 0.95)
+    start_r = max(1, int(rows * start_frac_r))
+    start_c = max(1, int(cols * start_frac_c))
+    end_r   = min(rows - 2, int(rows * end_frac_r))
+    end_c   = min(cols - 2, int(cols * end_frac_c))
 
     start = _find_land_near(grid, start_r, start_c, max(rows, cols) // 4)
     end   = _find_land_near(grid, end_r,   end_c,   max(rows, cols) // 4)
@@ -365,6 +371,13 @@ def _gap_fill_positions(
     return secondary
 
 
+# ── Zone-score helper ─────────────────────────────────────────────────────────
+
+def _zone_score(pos: int, total: int) -> float:
+    """Return 0.0 (map center / CBD) to 1.0 (map edge / residential)."""
+    return abs(pos - total / 2) / (total / 2)
+
+
 # ── Public phase generator ────────────────────────────────────────────────────
 
 def generate_connectors(
@@ -401,9 +414,9 @@ def generate_connectors(
         config.min_block_depth * 2 + 2,
     )
 
-    # Harlem streets are almost perfectly straight — fix drift at 1 cell max.
-    # connector_turn_bias still tunes the noise amplitude but caps at 1.
-    drift_max = min(1, max(1, round(config.connector_turn_bias * 10)))
+    # Base drift: connector_turn_bias=0.05 → 1 (CBD straight); higher values
+    # give more organic outer streets.  Per-street zone scaling is applied below.
+    drift_max = max(1, round(config.connector_turn_bias * 20))
 
     # ── Grid line positions ───────────────────────────────────────────────────
     ns_bases = list(range(av_block, cols - av_block // 2, av_block))
@@ -416,13 +429,29 @@ def generate_connectors(
         )
         return
 
-    # Apply density: randomly drop (1 - connector_density) fraction of lines.
+    # Apply zone-aware density: CBD center is denser, residential edges sparser.
     rng.shuffle(ns_bases)
     rng.shuffle(ew_bases)
-    keep_ns  = max(1, round(len(ns_bases) * config.connector_density))
-    keep_ew  = max(1, round(len(ew_bases) * config.connector_density))
-    ns_bases = sorted(ns_bases[:keep_ns])
-    ew_bases = sorted(ew_bases[:keep_ew])
+
+    ns_bases_kept = []
+    for base_col in ns_bases:
+        zone = _zone_score(base_col, cols)
+        eff_density = config.connector_density * (1.0 - zone * 0.35)
+        if rng.random() < eff_density:
+            ns_bases_kept.append(base_col)
+    if not ns_bases_kept and ns_bases:
+        ns_bases_kept = [ns_bases[len(ns_bases) // 2]]
+    ns_bases = sorted(ns_bases_kept)
+
+    ew_bases_kept = []
+    for base_row in ew_bases:
+        zone = _zone_score(base_row, rows)
+        eff_density = config.connector_density * (1.0 - zone * 0.50)
+        if rng.random() < eff_density:
+            ew_bases_kept.append(base_row)
+    if not ew_bases_kept and ew_bases:
+        ew_bases_kept = [ew_bases[len(ew_bases) // 2]]
+    ew_bases = sorted(ew_bases_kept)
 
     total_streets = len(ns_bases) + len(ew_bases)
     total_cells   = 0
@@ -436,7 +465,9 @@ def generate_connectors(
 
     # ── Pass 1: N-S avenues ───────────────────────────────────────────────────
     for base_col in ns_bases:
-        path          = _trace_ns_street(grid, base_col, perm, drift_max)
+        zone          = _zone_score(base_col, cols)
+        street_drift  = max(1, drift_max + int(zone * 2))
+        path          = _trace_ns_street(grid, base_col, perm, street_drift)
         total_cells  += len(path)
         streets_done += 1
 
@@ -450,7 +481,9 @@ def generate_connectors(
 
     # ── Pass 2: E-W cross-streets ─────────────────────────────────────────────
     for i, base_row in enumerate(ew_bases):
-        path          = _trace_ew_street(grid, base_row, perm, drift_max)
+        zone          = _zone_score(base_row, rows)
+        street_drift  = max(1, drift_max + int(zone * 2))
+        path          = _trace_ew_street(grid, base_row, perm, street_drift)
         total_cells  += len(path)
         streets_done += 1
 
@@ -504,35 +537,69 @@ def generate_connectors(
             f'{diag_count} diagonal street(s) — {diag_cells} cells …'
         )
 
-    # ── Pass 4: Bitmask tile-ID resolution ────────────────────────────────────
+    # ── Passes 4 / 4b / 4c: bitmask resolution, surface variation, cul-de-sacs ─
+    # Single scan covers all three tasks to avoid triple-iterating the grid.
     yield GeneratorProgress(PHASE_CONNECTOR, 0.72, 'Resolving road tile variants …')
 
+    cul_de_sac_count = 0
     for r, c, cell in grid.all_cells():
         if not cell.is_road:
             continue
-        # Preserve any roundabout tiles that might have been pre-placed
         tile_id = cell.layers[LAYER_ROAD] or ''
         if tile_id.startswith('roundabout_'):
             continue
+
+        # Pass 4: resolve bitmask tile ID
         mask    = grid.road_bitmask(r, c)
         tile_id = REGISTRY.resolve_road_tile_id(mask, cell.road_category)
         cell.layers[LAYER_ROAD] = tile_id
 
-    # ── Pass 4b: Road surface variation ──────────────────────────────────────
-    # Tiles like TILE_ROAD_STRAIGHT_NS register multiple sprite variants
-    # (plain asphalt, dashed centre line, yellow centre line, etc.) from
-    # roads.png bands 0-3.  Randomly assign a variant index per cell so the
-    # street grid looks hand-drawn rather than copy-pasted.
-    # Does not touch roundabout tiles, T/X structural tiles, or highways.
-    for r, c, cell in grid.all_cells():
-        if not cell.is_road or cell.road_category != ROAD_CONNECTOR:
+        if cell.road_category != ROAD_CONNECTOR:
             continue
-        tile_id = cell.layers[LAYER_ROAD] or ''
-        if tile_id.startswith('roundabout_'):
-            continue
+
+        # Pass 4b: randomise surface variant per connector cell
         variants = REGISTRY.get_variants(tile_id)
         if len(variants) > 1:
             cell.variation[LAYER_ROAD] = rng.randrange(len(variants))
+
+        # Pass 4c: cul-de-sac sprouting — residential cells on through-roads only
+        if cell.zone_id != ZONE_RESIDENTIAL:
+            continue
+        popcount = bin(mask).count('1')
+        if popcount != 2:
+            continue
+        if rng.random() > 0.15:
+            continue
+
+        connected_dirs = [d for d, bit in zip(range(4), [8, 4, 2, 1]) if mask & bit]
+        perp_dirs = [d for d in range(4) if d not in connected_dirs]
+
+        for perp_dir in rng.sample(perp_dirs, min(len(perp_dirs), 2)):
+            off_r, off_c = DIRECTION_OFFSETS[perp_dir]
+            branch_len = rng.randint(3, 6)
+            branch = []
+            br, bc = r + off_r, c + off_c
+            ok = True
+            for _ in range(branch_len):
+                nbr = grid.cell(br, bc)
+                if nbr is None or nbr.is_water or nbr.is_road:
+                    ok = False
+                    break
+                branch.append((br, bc))
+                br += off_r
+                bc += off_c
+
+            if ok and len(branch) >= 3:
+                for sr, sc in branch:
+                    grid[sr][sc].set_road('road_1010', ROAD_CONNECTOR, variation=0)
+                cul_de_sac_count += 1
+                break
+
+    if cul_de_sac_count > 0:
+        yield GeneratorProgress(
+            PHASE_CONNECTOR, 0.90,
+            f'Cul-de-sac stubs: {cul_de_sac_count} residential dead-ends added.'
+        )
 
     # ── Pass 5: Roundabout placement ──────────────────────────────────────────
     rb_count = config.roundabout_count
