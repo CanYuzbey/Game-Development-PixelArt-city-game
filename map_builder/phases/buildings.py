@@ -47,6 +47,8 @@ from ..constants import (
     BLDG_HOUSE, BLDG_SCHOOL, BLDG_PARK_FEATURE, BLDG_STATION,
     BLDG_HOSPITAL, BLDG_POLICE, BLDG_EMPTY_LOT,
     CBD_BLDG_WEIGHTS, MIDTOWN_BLDG_WEIGHTS, RESI_BLDG_WEIGHTS, WATERFRONT_BLDG_WEIGHTS,
+    COAST_TYPE_CLIFF, COAST_TYPE_BEACH, COAST_TYPE_DOCK,
+    BEACH_BLDG_WEIGHTS, DOCK_BLDG_WEIGHTS,
     ENCOUNTER_BASE, ENCOUNTER_ZONE_MOD,
     ENCOUNTER_DENSITY_K, ENCOUNTER_CIVIC_PENALTY, ENCOUNTER_CIVIC_RADIUS,
     BLOCK_EXTERIOR_ID,
@@ -463,6 +465,13 @@ def generate_buildings(
             cell.tile_role = ROLE_WATER
             cell.encounter_chance = 0.0
 
+        elif getattr(cell, 'coast_type', '') == COAST_TYPE_CLIFF and not cell.is_park and not cell.is_road:
+            # Cliff face — impassable, no buildings, clear any lot assignment.
+            # Parks and roads on the shoreline keep their existing roles.
+            cell.lot_id = -1
+            cell.tile_role = ROLE_EXTERIOR
+            cell.encounter_chance = 0.0
+
         elif cell.is_road:
             # Determine precise road role
             if (r, c) in plaza_cells:
@@ -578,8 +587,17 @@ def generate_buildings(
         r0, c0 = next(iter(lot_cells))
         zone = grid[r0][c0].zone_id
 
-        # Waterfront lots override zone weights with coastal building mix
-        if _is_waterfront_lot(grid, lot_cells):
+        # Coastal lots get specialised building weights (beach/dock override waterfront)
+        lot_coast = next(
+            (grid[r][c].coast_type for r, c in lot_cells
+             if getattr(grid[r][c], 'coast_type', '') in (COAST_TYPE_BEACH, COAST_TYPE_DOCK)),
+            '',
+        )
+        if lot_coast == COAST_TYPE_BEACH:
+            btype = _weighted_choice(rng, BEACH_BLDG_WEIGHTS)
+        elif lot_coast == COAST_TYPE_DOCK:
+            btype = _weighted_choice(rng, DOCK_BLDG_WEIGHTS)
+        elif _is_waterfront_lot(grid, lot_cells):
             btype = _weighted_choice(rng, WATERFRONT_BLDG_WEIGHTS)
         elif zone == ZONE_CBD:
             btype = _weighted_choice(rng, CBD_BLDG_WEIGHTS)

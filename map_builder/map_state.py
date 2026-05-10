@@ -50,6 +50,7 @@ class MapCell:
     is_park:         bool  = False      # True if this cell belongs to a park block
     is_civic_anchor: bool  = False      # True for the single CBD civic centre cell
     is_setback:      bool  = False      # True for residential lot perimeter (front-yard / lawn)
+    coast_type:      str   = ''         # COAST_TYPE_* — set by coastline phase for shoreline cells
     # ── RPG game layer ────────────────────────────────────────────────────────
     tile_role:        str   = ''        # ROLE_* constant — gameplay traversability
     building_type:    str   = ''        # BLDG_* constant — what kind of building

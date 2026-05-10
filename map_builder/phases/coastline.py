@@ -22,6 +22,7 @@ from ..constants import (
     SALT_COAST,
     COAST_RANDOM, COAST_NONE,
     TILE_GROUND_LAND, TILE_GROUND_WATER,
+    COAST_TYPE_CLIFF, COAST_TYPE_BEACH, COAST_TYPE_DOCK,
 )
 from ..map_state   import MapGrid, MapConfig, GeneratorProgress
 from ..noise_utils import build_perm_table, fbm, directional_gradient, smooth_land_grid
@@ -140,4 +141,68 @@ def generate_coastline(
                 cell.is_land  = False
                 cell.set_ground(TILE_GROUND_WATER)
 
-    yield GeneratorProgress(PHASE_COASTLINE, 1.0, 'Coastline complete.')
+    yield GeneratorProgress(PHASE_COASTLINE, 0.90, 'Classifying shoreline character …')
+
+    # ── Shoreline classification ───────────────────────────────────────────────
+    # Identifies land cells adjacent to water and assigns coast_type:
+    # cliff (35%) / beach (45%) / dock (20%) in contiguous runs.
+
+    shoreline = []
+    for r in range(rows):
+        for c in range(cols):
+            if not land[r][c]:
+                continue
+            for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                nr, nc = r + dr, c + dc
+                if 0 <= nr < rows and 0 <= nc < cols and not land[nr][nc]:
+                    shoreline.append((r, c))
+                    break
+
+    shoreline.sort()
+
+    coast_rng = random.Random(config.master_seed ^ SALT_COAST ^ 0xC0A51)
+    coast_type_grid: dict = {}
+
+    i = 0
+    while i < len(shoreline):
+        roll = coast_rng.random()
+        if roll < 0.35:
+            seg_type = COAST_TYPE_CLIFF
+            seg_len  = coast_rng.randint(5, 18)
+        elif roll < 0.80:
+            seg_type = COAST_TYPE_BEACH
+            seg_len  = coast_rng.randint(6, 20)
+        else:
+            seg_type = COAST_TYPE_DOCK
+            seg_len  = coast_rng.randint(3, 8)
+
+        for j in range(seg_len):
+            if i + j < len(shoreline):
+                coast_type_grid[shoreline[i + j]] = seg_type
+        i += seg_len
+
+    # Write coast_type to cells + spread 1 cell inland for beach/dock
+    for r in range(rows):
+        for c in range(cols):
+            cell = grid[r][c]
+            if not cell.is_land:
+                continue
+            ct = coast_type_grid.get((r, c), '')
+            if ct:
+                cell.coast_type = ct
+                if ct in (COAST_TYPE_BEACH, COAST_TYPE_DOCK):
+                    for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                        nr, nc = r + dr, c + dc
+                        if 0 <= nr < rows and 0 <= nc < cols:
+                            nbr = grid[nr][nc]
+                            if nbr.is_land and not nbr.coast_type:
+                                nbr.coast_type = ct
+
+    n_cliff = sum(1 for _, _, cell in grid.all_cells() if cell.coast_type == COAST_TYPE_CLIFF)
+    n_beach = sum(1 for _, _, cell in grid.all_cells() if cell.coast_type == COAST_TYPE_BEACH)
+    n_dock  = sum(1 for _, _, cell in grid.all_cells() if cell.coast_type == COAST_TYPE_DOCK)
+
+    yield GeneratorProgress(
+        PHASE_COASTLINE, 1.0,
+        f'Coastline complete — {n_cliff} cliff, {n_beach} beach, {n_dock} dock cells.',
+    )

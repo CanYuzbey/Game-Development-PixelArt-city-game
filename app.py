@@ -91,7 +91,15 @@ C_BLDG_CIVIC       = (195, 185, 155)   # pale limestone — classical civic
 C_LANDMARK         = (158, 148, 115)   # darker stone landmark accent
 C_ALLEY            = (162, 155, 145)   # service alley — darker than sidewalk
 C_PLAZA            = (210, 205, 192)   # open plaza/market — light stone pavement
-C_BEACH_SAND       = (215, 195, 155)   # warm beach/shore sand strip
+C_BEACH_SAND       = (215, 195, 155)   # warm beach/shore sand strip (existing shore gradient)
+
+# Coastal character colours (Sprint 7)
+C_CLIFF        = (105,  95,  82)   # dark rocky grey-brown — impassable coast
+C_CLIFF_EDGE   = ( 78,  70,  60)   # darker edge on water side
+C_BEACH_SAND_W = (225, 208, 165)   # wide beach — warm sandy yellow
+C_BEACH_WET    = (195, 182, 142)   # wet sand near waterline
+C_DOCK_PLANKS  = (138, 108,  72)   # weathered wooden pier planks
+C_DOCK_PILINGS = (105,  82,  58)   # dark pier pilings
 
 # ── Per-lot deterministic color variation (Team 7 research, §1) ───────────────
 # Uses a 3-tap LCG so R/G/B channels are independently varied.
@@ -258,6 +266,47 @@ def cell_color(cell, row: int = 0, col: int = 0, grid=None) -> tuple[int, int, i
     # ── Civic anchor (the single central red marker) ────────────────────────
     if getattr(cell, 'is_civic_anchor', False):
         return C_CIVIC
+
+    # ── Coastal character (cliff / beach / dock) ─────────────────────────────
+    coast_type = getattr(cell, 'coast_type', '')
+    if coast_type == 'cliff':
+        if grid is not None:
+            for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                nr, nc = row + dr, col + dc
+                if 0 <= nr < grid.height and 0 <= nc < grid.width:
+                    if grid[nr][nc].is_water:
+                        return C_CLIFF_EDGE
+        return C_CLIFF
+
+    if coast_type == 'beach':
+        if grid is not None:
+            for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                nr, nc = row + dr, col + dc
+                if 0 <= nr < grid.height and 0 <= nc < grid.width:
+                    if grid[nr][nc].is_water:
+                        return C_BEACH_WET
+        cell_id = row * 1000 + col
+        h = (cell_id * 1664525 + 1013904223) & 0xFFFFFFFF
+        shift = ((h & 0x1F) - 16)
+        base = C_BEACH_SAND_W
+        return (
+            max(180, min(240, base[0] + shift)),
+            max(165, min(225, base[1] + shift)),
+            max(120, min(195, base[2] + shift)),
+        )
+
+    if coast_type == 'dock':
+        if (row + col) % 3 == 0:
+            return C_DOCK_PILINGS
+        cell_id = row * 1000 + col
+        h = (cell_id * 22695477 + 1013904223) & 0xFFFFFFFF
+        shift = ((h & 0xF) - 8)
+        base = C_DOCK_PLANKS
+        return (
+            max(90,  min(180, base[0] + shift)),
+            max(70,  min(145, base[1] + shift)),
+            max(40,  min(110, base[2] + shift)),
+        )
 
     # ── Parks — always green (checked BEFORE sidewalk) ───────────────────────
     if getattr(cell, 'is_park', False):
@@ -726,6 +775,9 @@ class MapApp:
             (C_BLDG_CIVIC,     'civic bldg'),
             (C_CIVIC,          'town hall'),
             (C_PARK,           'park'),
+            (C_CLIFF,          'cliff'),
+            (C_BEACH_SAND_W,   'beach'),
+            (C_DOCK_PLANKS,    'dock'),
             (C_LAND,           'exterior'),
         ]
         lx = WIN_W - 14
