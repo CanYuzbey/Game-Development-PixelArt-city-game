@@ -293,6 +293,36 @@ ENCOUNTER_DENSITY_K: Final[float] = 0.08
 ENCOUNTER_BY_ROLE: Final[dict] = ENCOUNTER_BASE
 ENCOUNTER_ZONE_MULT: Final[dict] = {k: v[0] for k, v in ENCOUNTER_ZONE_MOD.items()}
 
+# ── Coastal character types ────────────────────────────────────────────────────
+COAST_TYPE_NONE:  Final[str] = ''        # inland / not on shoreline
+COAST_TYPE_CLIFF: Final[str] = 'cliff'   # rocky impassable face
+COAST_TYPE_BEACH: Final[str] = 'beach'   # sandy gradual shore (buildable)
+COAST_TYPE_DOCK:  Final[str] = 'dock'    # man-made pier / harbour (buildable)
+
+# Building types for coastal lots
+BLDG_WAREHOUSE:  Final[str] = 'warehouse'   # dock-side storage
+BLDG_PIER:       Final[str] = 'pier'        # fishing / ferry pier
+BLDG_RESORT:     Final[str] = 'resort'      # beachfront hotel
+BLDG_BEACH_BAR:  Final[str] = 'beach_bar'   # casual beach restaurant
+
+# Beach lot weights
+BEACH_BLDG_WEIGHTS: Final[list] = [
+    (BLDG_RESORT,      30),
+    (BLDG_RESTAURANT,  30),
+    (BLDG_BEACH_BAR,   20),
+    (BLDG_APARTMENT,   15),
+    (BLDG_EMPTY_LOT,    5),
+]
+
+# Dock lot weights
+DOCK_BLDG_WEIGHTS: Final[list] = [
+    (BLDG_WAREHOUSE,   35),
+    (BLDG_PIER,        25),
+    (BLDG_MARKET,      20),
+    (BLDG_STATION,     10),
+    (BLDG_EMPTY_LOT,   10),
+]
+
 # ── Phase names (new) ─────────────────────────────────────────────────────────
 PHASE_BUILDINGS: Final[str] = 'buildings'
 SALT_BUILDINGS:  Final[int]  = 0xB1C2D3

@@ -2,6 +2,46 @@
 
 ---
 
+## Sprint 7 — Coastal Character Types (May 10, 2026)
+
+**Theme**: Added three distinct coastal character types (cliff, beach, dock) to land cells adjacent to water. Applies only to coastal maps; inland maps are unaffected.
+
+### Features Implemented
+
+**Coastal Type Classification** (`map_builder/phases/coastline.py`)
+- New classification pass runs after coastline generation for coastal maps.
+- Identifies all "shoreline" land cells (land adjacent to water in any 4-cardinal direction).
+- Segments the sorted shoreline into contiguous runs; each run is assigned a type via weighted random: cliff 35%, beach 45%, dock 20%.
+- Cliff runs are 5–18 cells; beach 6–20 cells; dock (harbour) 3–8 cells.
+- Beach and dock types spread 1 cell inland to create a visible shore strip; cliff remains single-cell-wide only.
+- Seeded with `master_seed ^ SALT_COAST ^ 0xC0A51` for reproducibility.
+
+**MapCell Extension** (`map_builder/map_state.py`)
+- Added `coast_type: str = ''` field (COAST_TYPE_* constant) after `is_setback`.
+
+**New Constants** (`map_builder/constants.py`)
+- `COAST_TYPE_NONE / CLIFF / BEACH / DOCK` type identifiers.
+- `BLDG_WAREHOUSE, BLDG_PIER, BLDG_RESORT, BLDG_BEACH_BAR` building types.
+- `BEACH_BLDG_WEIGHTS` and `DOCK_BLDG_WEIGHTS` weighted building lists.
+
+**Building Integration** (`map_builder/phases/buildings.py`)
+- Cliff cells: forced to `ROLE_EXTERIOR`, lot_id cleared, encounter_chance = 0. Parks and roads on the shoreline are exempt (they keep their existing roles).
+- Lots containing beach/dock cells use specialised building weights (beach: resort/restaurant/beach_bar; dock: warehouse/pier/market). These take priority over generic waterfront weights.
+
+**Visual Rendering** (`app.py`)
+- `C_CLIFF / C_CLIFF_EDGE / C_BEACH_SAND_W / C_BEACH_WET / C_DOCK_PLANKS / C_DOCK_PILINGS` colour constants added.
+- `cell_color()`: cliff cells render dark grey-brown (darker edge on water side); beach cells render warm sandy yellow with wet-sand tint adjacent to water plus per-cell noise for texture; dock cells render weathered plank brown with piling-post pattern on `(row+col)%3==0` cells.
+- Legend swatches added for cliff, beach, and dock.
+
+### Bug Fixed
+- Cliff cells that were also park blocks (rare edge case on small maps) were incorrectly overriding park tile_role with ROLE_EXTERIOR. Fixed by excluding `is_park` and `is_road` cells from the cliff branch in buildings Pass 1.
+
+### Test Results
+- Custom coastal test: 0 render errors across seeds 7/42/99/13 (coast) and 1 (inland).
+- Full suite: **60/60 PASS**.
+
+---
+
 ## Sprint 5 — Missing Parts (May 10, 2026)
 
 **Theme**: Seven features identified in the Sprint 4 Perfection Report implemented, 60-config test suite created, and three latent bugs fixed.
