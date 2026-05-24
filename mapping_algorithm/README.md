@@ -1,19 +1,17 @@
 # Mapping Algorithm
 
-This folder contains the game-facing procedural mapping algorithm.
+This folder contains the native C++17 procedural city generator.
 
-## Primary Implementation
-
-The primary implementation is now C++17:
+## Structure
 
 ```text
 mapping_algorithm/
   cpp/
     CMakeLists.txt
     include/mapping_algorithm/
-      map_types.hpp
-      map_generator.hpp
       design_blueprint.hpp
+      map_generator.hpp
+      map_types.hpp
     src/
       map_generator.cpp
     examples/
@@ -22,48 +20,34 @@ mapping_algorithm/
       smoke.cpp
 ```
 
-The C++ code is intended for direct integration into game code. It has no
-Pygame dependency, no Python runtime dependency, and exposes native structures:
-
-- `MapConfig`
-- `MapCell`
-- `MapGrid`
-- `MapGenerator`
-- `MapStats`
-- `DesignBlueprint`
-
 ## Build
+
+From the repository root:
+
+```bash
+cmake -S . -B build
+cmake --build build
+```
+
+Or build this module alone:
 
 ```bash
 cmake -S mapping_algorithm/cpp -B build/mapping_algorithm
 cmake --build build/mapping_algorithm
-build/mapping_algorithm/mapping_algorithm_demo
-build/mapping_algorithm/mapping_algorithm_smoke
 ```
 
-I could not compile locally in the current shell because no C++ compiler or
-CMake executable is installed here. The project is standard CMake/C++17 and
-should build in Visual Studio, CLion, Rider, Unreal build tooling, or a normal
-GCC/Clang/MSVC environment.
+## Quality Gate
 
-## Relationship To Python
+`mapping_algorithm_smoke` runs the native deterministic gate:
 
-The root `map_builder/` Python package remains as a reference implementation,
-visual demo backend, and regression oracle while the C++ version matures.
+- 12 seeds.
+- 5 coast modes.
+- repeated generation per config to verify determinism.
+- city anatomy checks for land, roads, blocks, lots, parks, spawns, landmarks.
+- design blueprint checks for roads, blocks, lots, asset requirements, and profile
+  identity.
 
-Current quality gate still runs through Python:
-
-```bash
-python tests/full_suite.py
-```
-
-The C++ port currently covers the same backend concepts at a native-library
-level: coastline, elevation, zones, civic anchor, roads, sidewalks, blocks,
-parks, lots, density, buildings, district names, stats, and design blueprint
-export. Future work should deepen parity phase-by-phase against the Python
-reference and then move tests fully native.
-
-## Current Native API Example
+## API Example
 
 ```cpp
 #include "mapping_algorithm/map_generator.hpp"
@@ -80,16 +64,17 @@ config.city_profile = "manhattan";
 MapGenerator generator(config);
 generator.generate();
 
+const MapGrid& grid = generator.grid();
 const MapStats& stats = generator.stats();
 DesignBlueprint blueprint = generator.to_design_blueprint();
 ```
 
-## Verification Plan
+## Native Data Types
 
-Before considering the C++ port production-ready:
-
-1. Compile with MSVC, Clang, and GCC.
-2. Run `mapping_algorithm_smoke`.
-3. Compare core metrics against Python for fixed seeds.
-4. Port the 60-config quality gate to native C++.
-5. Integrate with the renderer/game runtime.
+- `MapConfig`: generation inputs and tuning knobs.
+- `MapCell`: per-cell terrain, road, zone, lot, building, encounter, and design
+  metadata.
+- `MapGrid`: fixed-size city grid with road and sidewalk helpers.
+- `MapStats`: generation summary.
+- `DesignBlueprint`: design-facing export for city profile, roads, blocks, lots,
+  landmarks, and required asset slots.

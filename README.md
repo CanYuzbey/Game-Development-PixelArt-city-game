@@ -1,184 +1,42 @@
 # GameDev Mapping System
 
-Seed-based procedural city mapping for game worlds.
+Seed-based procedural city mapping for game worlds, implemented as a C++17
+codebase.
 
-The project is now split into two professional root-level work areas:
+The project is split into two production work areas:
 
-- `mapping_algorithm/`: the mapping algorithm, now with a C++17 game-facing implementation.
-- `mapping_design/`: design/export/assets work for turning algorithm output into existing-city-inspired layouts.
+- `mapping_algorithm/`: native map generation, gameplay metadata, and design
+  blueprint export.
+- `mapping_design/`: city design assets, asset audit notes, and native asset
+  validation.
 
-The older Python package `map_builder/` remains as the reference implementation,
-visual demo backend, and regression oracle while the native C++ version matures.
-
-## Quick Start
-
-### C++ Algorithm
+## Build
 
 ```bash
-cmake -S mapping_algorithm/cpp -B build/mapping_algorithm
-cmake --build build/mapping_algorithm
-build/mapping_algorithm/mapping_algorithm_demo
-build/mapping_algorithm/mapping_algorithm_smoke
+cmake -S . -B build
+cmake --build build
 ```
 
-### Python Reference / Visual Tools
+The top-level build creates:
+
+- `mapping_algorithm_demo`: prints a generated city summary.
+- `mapping_algorithm_smoke`: runs the deterministic 60-configuration algorithm
+  and design-export quality gate.
+- `mapping_asset_validator`: validates the design asset manifest and raw PNG
+  sheet presence.
+
+## Run Checks
 
 ```bash
-pip install pygame
-python app.py                           # visual demo (default seed 1, random coast)
-python app.py --seed 42 --coast west    # specific seed and coast direction
-python app.py --seed 7 --width 160 --height 120
-python main.py --seed 7 --width 160 --height 120   # CLI text renderer
+build/mapping_algorithm/cpp/mapping_algorithm_smoke
+build/mapping_design/cpp/mapping_asset_validator mapping_design/assets
 ```
 
-## Controls (app.py)
+Executable paths can vary by generator and platform. On Visual Studio
+generators, the executable may live under a configuration folder such as
+`Debug` or `Release`.
 
-| Key | Action |
-|---|---|
-| `SPACE` | New map (auto-increment seed) |
-| `R` | Regenerate same seed (determinism test) |
-| `H` | Cycle coast direction: none → N → S → E → W → random |
-| `Z` | Toggle zone colour overlay (CBD / Midtown / Residential) |
-| `+` / `=` or scroll up | Zoom in |
-| `-` or scroll down | Zoom out |
-| Arrow keys | Pan when zoomed in |
-| `1`–`9` | Jump to that seed directly |
-| `Q` / `Esc` | Quit |
-
-## Architecture — Pipeline Phases
-
-The generator runs 11 yielded phases, plus density and district-name post-passes, each yielding `GeneratorProgress` events for non-blocking game-loop integration:
-
-| # | Phase | File | Description |
-|---|---|---|---|
-| 1 | **Coastline** | `phases/coastline.py` | Perlin FBM + directional gradient → water/land mask with smoothing |
-| 2 | **Elevation** | `phases/elevation.py` | Seeded FBM height field for terrain colour variation |
-| 3 | **Zones** | `phases/zones.py` | Chebyshev distance from city centre → CBD / Midtown / Residential, with noise-softened boundaries |
-| 4 | **Civic Anchor** | `phases/civic.py` | Selects the CBD land cell furthest from water as the city's focal point |
-| 5 | **Highways** | `phases/highway.py` | N–S and E–W arterial roads with organic deviation; optional roundabouts and diagonal "Broadway" streets |
-| 6 | **Connectors** | `phases/connector.py` | Dense local street grid filling blocks between highways |
-| 7 | **Sidewalks** | `phases/sidewalk.py` | 1-cell sidewalk bands on connector-adjacent land with correct bitmask tile selection |
-| 8 | **Blocks** | `phases/blocks.py` | Flood-fill interior block detection; exterior cells marked void |
-| 9 | **Parks** | `phases/parks.py` | Priority-scored block selection with minimum-separation constraint; count scales dynamically with map size |
-| 10 | **Lots** | `phases/lots.py` | Recursive alternating-axis binary split with ±20% noise offset; residential lots get 1-cell setback perimeter |
-| 11 | **Buildings** | `phases/buildings.py` | RPG data layer: tile roles, building types, encounter probabilities, landmarks, spawn points |
-
-After lots, a **density post-pass** runs O(N) BFS from highway cells to compute per-cell `density_score` used by the encounter system and building colour variation. After buildings, a district naming post-pass assigns human-readable district names to land cells.
-
-## Generation Parameters (MapConfig)
-
-```python
-from map_builder import MapConfig
-
-config = MapConfig(
-    width=96,                  # grid columns (default 96 → ~960 m at 10 m/cell)
-    height=72,                 # grid rows
-    master_seed=1,             # integer seed — same seed always produces identical map
-    coast_side='west',         # 'none'|'north'|'south'|'east'|'west'|'random'
-    coast_coverage=0.28,       # fraction of map that is water (0.0–0.6)
-    coast_noise_scale=3.5,     # lower = smoother coast; higher = jagged
-    coast_smoothing_passes=2,  # erosion passes after noise thresholding
-    highway_ns_min=2,          # N–S highway count minimum (triangular distribution)
-    highway_ns_max=5,          # N–S highway count ceiling
-    highway_ew_min=0,          # E–W highway count minimum
-    highway_ew_max=3,          # E–W highway count ceiling
-    highway_organic=0.3,       # organic deviation 0=perfectly straight
-    connector_density=0.65,    # 0=sparse streets 1=full dense grid
-    connector_spacing=8,       # E–W cross-street spacing in cells (~80 m)
-    avenue_spacing=18,         # N–S avenue spacing in cells (~180 m)
-    connector_turn_bias=0.08,  # Perlin drift amplitude for organic streets
-    roundabout_count=8,        # max circular junctions
-    diagonal_streets=2,        # Broadway / diagonal avenue count
-    sidewalk_depth=1,          # cells of sidewalk on each road side
-    sidewalk_damage_rate=0.15, # probability a sidewalk tile is cracked/worn variant
-)
-```
-
-## Game Data Layer
-
-Every `MapCell` after generation carries:
-
-| Field | Type | Description |
-|---|---|---|
-| `tile_role` | `str` | `ROLE_*` constant — traversability class |
-| `building_type` | `str` | `BLDG_*` constant — semantic building label |
-| `encounter_chance` | `float` | 0.0–1.0 per-step random encounter probability |
-| `is_spawn_point` | `bool` | NPC/enemy spawn origin |
-| `landmark_type` | `str` | `'town_hall'` / `'station'` / `'hospital'` / `'police'` / `'school'` / `''` |
-| `density_score` | `float` | 0.0–1.0 proximity to highway network |
-| `elevation` | `float` | 0.0–1.0 visual height field for terrain shading |
-| `district_name` | `str` | Human-readable district label assigned after buildings |
-| `zone_id` | `int` | `ZONE_CBD=0` / `ZONE_MIDTOWN=1` / `ZONE_RESIDENTIAL=2` |
-| `is_park` | `bool` | True if cell belongs to a park block |
-| `is_setback` | `bool` | True for residential front-yard cells (rendered as lawn) |
-| `lot_id` | `int` | ≥ 0 for subdivided building lots; -1 for roads/parks/exterior |
-
-### Tile Roles
-
-| Role constant | String | Meaning |
-|---|---|---|
-| `ROLE_WALKABLE_HIGHWAY` | `'highway'` | Arterial road — lower encounter, fast traffic |
-| `ROLE_WALKABLE_ROAD` | `'road'` | Connector road — standard street danger |
-| `ROLE_WALKABLE_ALLEY` | `'alley'` | Short dead-end (≤ 3 cells) — high danger |
-| `ROLE_WALKABLE_SIDEWALK` | `'sidewalk'` | Pavement — safe, low encounter |
-| `ROLE_WALKABLE_PARK` | `'park'` | Green space — medium encounter, spawn points |
-| `ROLE_WALKABLE_PLAZA` | `'plaza'` | Roundabout / market square — scripted events only |
-| `ROLE_BUILDING_CBD` | `'bldg_cbd'` | Office tower — obstacle |
-| `ROLE_BUILDING_MIDTOWN` | `'bldg_mid'` | Shop / apartment — obstacle |
-| `ROLE_BUILDING_RESI` | `'bldg_resi'` | House — obstacle |
-| `ROLE_BUILDING_CIVIC` | `'bldg_civic'` | Landmark building — obstacle |
-| `ROLE_WATER` | `'water'` | Impassable ocean/river |
-| `ROLE_EXTERIOR` | `'exterior'` | Outside any city block — void |
-
-## File Structure
-
-```
-GameDev/
-├── mapping_algorithm/     — C++17 native generator + algorithm README
-│   └── cpp/
-│       ├── include/mapping_algorithm/
-│       ├── src/
-│       ├── examples/
-│       └── tests/
-│
-├── mapping_design/        — design/export/assets for existing-city mapping
-│   ├── assets/raw/
-│   ├── assets/debug/
-│   ├── docs/
-│   └── tools/
-│
-├── app.py                  — Pygame visual demo + cell_color() renderer
-├── main.py                 — CLI text-mode runner with ASCII map
-├── DEVLOG.md               — Sprint-by-sprint development log
-├── README.md               — This file
-│
-├── map_builder/            — Python reference generation engine (no Pygame dependency)
-│   ├── __init__.py         — Public API exports
-│   ├── constants.py        — All shared constants (ROLE_*, ZONE_*, BLDG_*, etc.)
-│   ├── map_state.py        — MapCell, MapGrid, MapConfig, GeneratorProgress
-│   ├── map_generator.py    — MapGenerator — orchestrates full pipeline
-│   ├── noise_utils.py      — Pure-Python Perlin noise + FBM
-│   ├── tile_registry.py    — Sprite sheet tile descriptor database
-│   └── phases/
-│       ├── coastline.py    — Phase 1: water/land generation
-│       ├── elevation.py    — Phase 2: visual terrain height field
-│       ├── zones.py        — Phase 3: CBD/Midtown/Residential assignment
-│       ├── civic.py        — Phase 4: town centre anchor placement
-│       ├── highway.py      — Phase 5: arterial road generation
-│       ├── connector.py    — Phase 6: local street grid
-│       ├── sidewalk.py     — Phase 7: sidewalk tile placement
-│       ├── blocks.py       — Phase 8: interior block flood-fill
-│       ├── parks.py        — Phase 9: park block selection
-│       ├── lots.py         — Phase 10: building lot subdivision + setbacks
-│       └── buildings.py    — Phase 11: RPG game data layer
-│
-├── assets/                 — Sprite sheets (roads.png, sidewalks.png)
-└── docs/                   — Sprint research documents
-    ├── sprint4_brief.md    — City planning research (parks, waterfront, setbacks)
-    └── sprint4_test_results.md — Sprint 4 test results (30 configs, 0 errors)
-```
-
-## C++ Usage as a Library
+## C++ Library Usage
 
 ```cpp
 #include "mapping_algorithm/map_generator.hpp"
@@ -192,50 +50,71 @@ config.master_seed = 42;
 config.coast_side = CoastSide::West;
 config.city_profile = "manhattan";
 
-MapGenerator gen(config);
-gen.generate();
+MapGenerator generator(config);
+generator.generate();
 
-const MapGrid& grid = gen.grid();
-DesignBlueprint blueprint = gen.to_design_blueprint();
+const MapGrid& grid = generator.grid();
+DesignBlueprint blueprint = generator.to_design_blueprint();
 ```
 
-## Python Reference Usage
+## Generation Pipeline
 
-```python
-from map_builder import MapGenerator, MapConfig
+| # | Phase | Native owner |
+|---|-------|--------------|
+| 1 | Coastline | `MapGenerator::generate_coastline()` |
+| 2 | Elevation | `MapGenerator::generate_elevation()` |
+| 3 | Zones | `MapGenerator::generate_zones()` |
+| 4 | Civic anchor | `MapGenerator::generate_civic_anchor()` |
+| 5 | Highways | `MapGenerator::generate_highways()` |
+| 6 | Connectors | `MapGenerator::generate_connectors()` |
+| 7 | Sidewalks | `MapGenerator::generate_sidewalks()` |
+| 8 | Blocks | `MapGenerator::generate_blocks()` |
+| 9 | Parks | `MapGenerator::generate_parks()` |
+| 10 | Lots | `MapGenerator::generate_lots()` |
+| 11 | Density | `MapGenerator::compute_density()` |
+| 12 | Buildings/game data | `MapGenerator::generate_buildings()` |
+| 13 | District names | `MapGenerator::generate_district_names()` |
+| 14 | Stats | `MapGenerator::compute_stats()` |
 
-# Generate a map blocking (e.g. for a server, tool, or test)
-config = MapConfig(width=80, height=60, master_seed=42, coast_side='west')
-gen = MapGenerator(config)
-gen.generate_blocking()
+## Repository Layout
 
-# Read the grid
-grid = gen.grid
-cell = grid[30][40]          # row 30, column 40
-print(cell.tile_role)        # e.g. 'road'
-print(cell.building_type)    # e.g. 'shop'
-print(cell.encounter_chance) # e.g. 0.142
-
-# Non-blocking game-loop integration
-gen_iter = MapGenerator(config).generate()
-for progress in gen_iter:
-    loading_screen.set_progress(progress.phase, progress.progress, progress.message)
-# grid is now fully populated
-
-# Statistics
-print(gen.stats)  # seed, size, land/water/road counts, blocks, parks, lots, spawns, time
+```text
+GameDev/
+├── CMakeLists.txt
+├── DEVLOG.md
+├── README.md
+├── mapping_algorithm/
+│   ├── README.md
+│   └── cpp/
+│       ├── CMakeLists.txt
+│       ├── examples/
+│       ├── include/mapping_algorithm/
+│       ├── src/
+│       └── tests/
+└── mapping_design/
+    ├── README.md
+    ├── assets/
+    ├── cpp/
+    │   ├── CMakeLists.txt
+    │   └── tools/
+    └── docs/
 ```
 
-## Determinism Guarantee
+## Design Blueprint Contract
 
-Same `master_seed` + same `MapConfig` always produces bit-identical maps. All randomness is derived from `master_seed ^ SALT_*` per-phase constants. You never need to save the full grid — just save the seed and config.
+`MapGenerator::to_design_blueprint()` returns `DesignBlueprint`, a native C++
+record containing:
+
+- city profile and pattern tags,
+- road records with category, zone, bitmask, and asset slot,
+- block records with bounds, zone, and park markers,
+- lot records with building and landmark metadata,
+- landmark records,
+- required asset slot names for downstream sprite assignment.
 
 ## Dependencies
 
-- **C++17** for the native mapping algorithm.
-- **CMake 3.16+** for the provided native build files.
-- **Python 3.10+** for the reference implementation, tests, and visual tools.
-- **Pygame 2.x** only for `app.py`; `map_builder` and `main.py` have no Pygame dependency.
+- C++17 compiler.
+- CMake 3.16 or newer.
 
-Note: this shell currently has no local C++ compiler or CMake available, so the
-C++ port is added as standard C++17/CMake source but was not compiled locally.
+No runtime scripting language is required by the current source tree.
