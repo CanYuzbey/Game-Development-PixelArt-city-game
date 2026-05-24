@@ -4,14 +4,14 @@
 
 The newly added generated PNGs were moved from `assets/` into:
 
-`existing_city_mapping/assets/raw/`
+`mapping_design/assets/raw/`
 
 All nine files are RGB PNG sheets at `1254x1254`. They are large generated
 sprite-sheet concepts, not ready-to-use renderer sheets yet.
 
 Debug contact sheet:
 
-`existing_city_mapping/assets/debug/new_assets_contact_sheet.png`
+`mapping_design/assets/debug/new_assets_contact_sheet.png`
 
 ## Observed Asset Groups
 

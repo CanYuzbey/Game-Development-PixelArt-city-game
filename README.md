@@ -1,8 +1,27 @@
-# Map Builder — Procedural City Generator
+# GameDev Mapping System
 
-A seed-based procedural city map generator written in Python, with a Pygame visual demo and a text-mode CLI runner. Generates fully game-ready maps with RPG encounter data, building types, landmark injection, and spawn points — deterministically from a single integer seed.
+Seed-based procedural city mapping for game worlds.
+
+The project is now split into two professional root-level work areas:
+
+- `mapping_algorithm/`: the mapping algorithm, now with a C++17 game-facing implementation.
+- `mapping_design/`: design/export/assets work for turning algorithm output into existing-city-inspired layouts.
+
+The older Python package `map_builder/` remains as the reference implementation,
+visual demo backend, and regression oracle while the native C++ version matures.
 
 ## Quick Start
+
+### C++ Algorithm
+
+```bash
+cmake -S mapping_algorithm/cpp -B build/mapping_algorithm
+cmake --build build/mapping_algorithm
+build/mapping_algorithm/mapping_algorithm_demo
+build/mapping_algorithm/mapping_algorithm_smoke
+```
+
+### Python Reference / Visual Tools
 
 ```bash
 pip install pygame
@@ -115,12 +134,25 @@ Every `MapCell` after generation carries:
 
 ```
 GameDev/
+├── mapping_algorithm/     — C++17 native generator + algorithm README
+│   └── cpp/
+│       ├── include/mapping_algorithm/
+│       ├── src/
+│       ├── examples/
+│       └── tests/
+│
+├── mapping_design/        — design/export/assets for existing-city mapping
+│   ├── assets/raw/
+│   ├── assets/debug/
+│   ├── docs/
+│   └── tools/
+│
 ├── app.py                  — Pygame visual demo + cell_color() renderer
 ├── main.py                 — CLI text-mode runner with ASCII map
 ├── DEVLOG.md               — Sprint-by-sprint development log
 ├── README.md               — This file
 │
-├── map_builder/            — Core generation engine (no Pygame dependency)
+├── map_builder/            — Python reference generation engine (no Pygame dependency)
 │   ├── __init__.py         — Public API exports
 │   ├── constants.py        — All shared constants (ROLE_*, ZONE_*, BLDG_*, etc.)
 │   ├── map_state.py        — MapCell, MapGrid, MapConfig, GeneratorProgress
@@ -146,7 +178,28 @@ GameDev/
     └── sprint4_test_results.md — Sprint 4 test results (30 configs, 0 errors)
 ```
 
-## Usage as a Library
+## C++ Usage as a Library
+
+```cpp
+#include "mapping_algorithm/map_generator.hpp"
+
+using namespace mapping_algorithm;
+
+MapConfig config;
+config.width = 80;
+config.height = 60;
+config.master_seed = 42;
+config.coast_side = CoastSide::West;
+config.city_profile = "manhattan";
+
+MapGenerator gen(config);
+gen.generate();
+
+const MapGrid& grid = gen.grid();
+DesignBlueprint blueprint = gen.to_design_blueprint();
+```
+
+## Python Reference Usage
 
 ```python
 from map_builder import MapGenerator, MapConfig
@@ -179,5 +232,10 @@ Same `master_seed` + same `MapConfig` always produces bit-identical maps. All ra
 
 ## Dependencies
 
-- **Python 3.10+** (uses `match`-free syntax, compatible with 3.10+)
-- **Pygame 2.x** — only required for `app.py` (visual demo); `map_builder` and `main.py` have no external dependencies
+- **C++17** for the native mapping algorithm.
+- **CMake 3.16+** for the provided native build files.
+- **Python 3.10+** for the reference implementation, tests, and visual tools.
+- **Pygame 2.x** only for `app.py`; `map_builder` and `main.py` have no Pygame dependency.
+
+Note: this shell currently has no local C++ compiler or CMake available, so the
+C++ port is added as standard C++17/CMake source but was not compiled locally.
