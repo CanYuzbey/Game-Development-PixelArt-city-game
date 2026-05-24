@@ -14,6 +14,7 @@ Exit code 1 = one or more configs fail.
 import sys
 import time
 import os
+import subprocess
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
@@ -124,6 +125,79 @@ def run_config(seed: int, coast: str) -> tuple[bool, list[str], dict]:
     })
 
 
+def deterministic_fingerprint(seed: int, coast: str) -> tuple:
+    """
+    Compact deterministic signature for the generated gameplay map.
+    Excludes elapsed time, which is intentionally runtime-dependent.
+    """
+    config = MapConfig(width=80, height=60, master_seed=seed, coast_side=coast)
+    gen = MapGenerator(config)
+    gen.generate_blocking()
+
+    stats = tuple(
+        sorted((k, v) for k, v in gen.stats.items() if k != 'elapsed_s')
+    )
+    cells = tuple(
+        (
+            cell.is_water,
+            cell.is_land,
+            cell.road_category,
+            cell.zone_id,
+            cell.block_id,
+            cell.lot_id,
+            round(cell.density_score, 3),
+            cell.is_park,
+            cell.is_setback,
+            cell.tile_role,
+            cell.building_type,
+            round(cell.encounter_chance, 3),
+            cell.is_spawn_point,
+            cell.landmark_type,
+            round(cell.elevation, 3),
+            cell.footprint_style,
+            cell.district_name,
+        )
+        for _, _, cell in gen.grid.all_cells()
+    )
+    return stats, cells
+
+
+def run_determinism_checks() -> tuple[bool, list[str]]:
+    """Verify documented same-seed/same-config determinism on representative maps."""
+    issues: list[str] = []
+    for seed, coast in ((1, 'none'), (7, 'west'), (12, 'east')):
+        first = deterministic_fingerprint(seed, coast)
+        second = deterministic_fingerprint(seed, coast)
+        if first != second:
+            issues.append(f'seed={seed} coast={coast}')
+    return (len(issues) == 0, issues)
+
+
+def run_cross_process_determinism_check() -> tuple[bool, str]:
+    """Catch hash-seed/process-level nondeterminism on a representative coastal map."""
+    code = (
+        "import hashlib, sys; "
+        "sys.path.insert(0, 'tests'); "
+        "import full_suite as fs; "
+        "fp = fs.deterministic_fingerprint(7, 'west'); "
+        "print(hashlib.sha256(repr(fp).encode()).hexdigest())"
+    )
+    hashes: list[str] = []
+    for hash_seed in ('1', '2'):
+        env = dict(os.environ)
+        env['PYTHONHASHSEED'] = hash_seed
+        out = subprocess.check_output(
+            [sys.executable, '-c', code],
+            cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            env=env,
+            text=True,
+        )
+        hashes.append(out.strip())
+    if hashes[0] != hashes[1]:
+        return False, 'seed=7 coast=west differs across PYTHONHASHSEED=1/2'
+    return True, ''
+
+
 def main() -> int:
     print("=" * 72)
     print("  FULL 60-CONFIGURATION TEST SUITE — Sprint 5 Quality Gate")
@@ -151,6 +225,20 @@ def main() -> int:
                 pass_count += 1
             else:
                 fail_count += 1
+
+    det_ok, det_issues = run_determinism_checks()
+    if det_ok:
+        print("\n  determinism: PASS (3 representative configs)")
+    else:
+        fail_count += len(det_issues)
+        print(f"\n  determinism: FAIL {', '.join(det_issues)}")
+
+    cross_det_ok, cross_det_issue = run_cross_process_determinism_check()
+    if cross_det_ok:
+        print("  cross-process determinism: PASS (PYTHONHASHSEED=1/2)")
+    else:
+        fail_count += 1
+        print(f"  cross-process determinism: FAIL {cross_det_issue}")
 
     elapsed_total = round(time.perf_counter() - start, 1)
     print()

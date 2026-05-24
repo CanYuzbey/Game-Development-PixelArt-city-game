@@ -37,19 +37,21 @@ import sys, io, time, argparse, random as _random
 if sys.platform == 'win32':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
-import pygame
+try:
+    import pygame
+except ModuleNotFoundError:
+    pygame = None
 
 from map_builder             import MapGenerator, MapConfig, PHASE_COMPLETE
 from map_builder.constants   import (
     LAYER_DECOR,
     ROAD_HIGHWAY, ROAD_CONNECTOR,
     PHASE_COASTLINE, PHASE_HIGHWAY, PHASE_CONNECTOR,
-    PHASE_SIDEWALK, PHASE_ZONES, PHASE_BUILDINGS,
+    PHASE_SIDEWALK, PHASE_ZONES, PHASE_ELEVATION, PHASE_BUILDINGS,
     ZONE_CBD, ZONE_MIDTOWN, ZONE_RESIDENTIAL,
     ROLE_BUILDING_CBD, ROLE_BUILDING_MIDTOWN, ROLE_BUILDING_RESI, ROLE_BUILDING_CIVIC,
     ROLE_WALKABLE_ALLEY, ROLE_WALKABLE_PLAZA, ROLE_WALKABLE_HIGHWAY, ROLE_WALKABLE_PARK,
 )
-from map_builder.phases.elevation import PHASE_ELEVATION
 
 
 # ── Colour palette ─────────────────────────────────────────────────────────────
@@ -889,6 +891,11 @@ def parse_args():
 
 
 if __name__ == '__main__':
+    if pygame is None:
+        raise SystemExit(
+            'pygame is required to run the visual demo. '
+            'Headless tests may still import app.cell_color.'
+        )
     args = parse_args()
     MapApp(
         seed   = args.seed,

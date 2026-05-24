@@ -187,9 +187,9 @@ def _trace_highway_spine(
 
         if best_dir is None:
             if len(path) > 1:
-                path.pop()
+                dead_end = path.pop()
+                visited.discard(dead_end)
                 r, c = path[-1]
-                visited.discard((r, c))
             else:
                 break
             continue

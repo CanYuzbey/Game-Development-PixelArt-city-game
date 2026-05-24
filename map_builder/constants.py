@@ -164,6 +164,7 @@ ZONE_RESIDENTIAL: Final[int] = 2   # Residential outskirts — sparse, cul-de-sa
 
 # ── Phase names ───────────────────────────────────────────────────────────────
 PHASE_ZONES: Final[str] = 'zones'
+PHASE_ELEVATION: Final[str] = 'elevation'
 PHASE_BLOCKS: Final[str] = 'blocks'
 PHASE_PARKS:  Final[str] = 'parks'
 PHASE_LOTS:   Final[str] = 'lots'
