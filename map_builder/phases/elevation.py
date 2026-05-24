@@ -21,11 +21,10 @@ App.py uses elevation for a subtle brightness shift:
 from __future__ import annotations
 from typing import Generator
 
-from ..constants import PHASE_ZONES   # piggyback on phases enum slot
+from ..constants import PHASE_ELEVATION
 from ..map_state import MapGrid, MapConfig, GeneratorProgress
 from ..noise_utils import build_perm_table, fbm
 
-PHASE_ELEVATION: str = 'elevation'
 SALT_ELEVATION:  int  = 0xE1E2E3E4
 
 

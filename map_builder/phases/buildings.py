@@ -358,18 +358,20 @@ def _lots_by_zone(
     for lot_cells in lots:
         if not lot_cells:
             continue
-        r0, c0 = next(iter(lot_cells))
-        cell0 = grid[r0][c0]
-        if cell0.zone_id != zone:
+        if not any(grid[r][c].zone_id == zone for r, c in lot_cells):
             continue
         if near_zone is not None:
-            # Check if any cell in lot is within radius of near_zone
+            # Check if any cell in the lot is within radius of near_zone.
+            # Lots are sets, so the first iterated cell is not spatially stable.
             found = False
-            for dr in range(-radius, radius + 1):
-                for dc in range(-radius, radius + 1):
-                    nr, nc = r0 + dr, c0 + dc
-                    if grid.in_bounds(nr, nc) and grid[nr][nc].zone_id == near_zone:
-                        found = True
+            for lr, lc in lot_cells:
+                for dr in range(-radius, radius + 1):
+                    for dc in range(-radius, radius + 1):
+                        nr, nc = lr + dr, lc + dc
+                        if grid.in_bounds(nr, nc) and grid[nr][nc].zone_id == near_zone:
+                            found = True
+                            break
+                    if found:
                         break
                 if found:
                     break

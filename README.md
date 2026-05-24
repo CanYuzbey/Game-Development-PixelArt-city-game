@@ -28,22 +28,23 @@ python main.py --seed 7 --width 160 --height 120   # CLI text renderer
 
 ## Architecture — Pipeline Phases
 
-The generator runs 10 sequential phases, each yielding `GeneratorProgress` events for non-blocking game-loop integration:
+The generator runs 11 yielded phases, plus density and district-name post-passes, each yielding `GeneratorProgress` events for non-blocking game-loop integration:
 
 | # | Phase | File | Description |
 |---|---|---|---|
 | 1 | **Coastline** | `phases/coastline.py` | Perlin FBM + directional gradient → water/land mask with smoothing |
-| 2 | **Zones** | `phases/zones.py` | Chebyshev distance from city centre → CBD / Midtown / Residential, with noise-softened boundaries |
-| 3 | **Civic Anchor** | `phases/civic.py` | Selects the CBD land cell furthest from water as the city's focal point |
-| 4 | **Highways** | `phases/highway.py` | N–S and E–W arterial roads with organic deviation; optional roundabouts and diagonal "Broadway" streets |
-| 5 | **Connectors** | `phases/connector.py` | Dense local street grid filling blocks between highways |
-| 6 | **Sidewalks** | `phases/sidewalk.py` | 1-cell sidewalk bands on connector-adjacent land with correct bitmask tile selection |
-| 7 | **Blocks** | `phases/blocks.py` | Flood-fill interior block detection; exterior cells marked void |
-| 8 | **Parks** | `phases/parks.py` | Priority-scored block selection with minimum-separation constraint; count scales dynamically with map size |
-| 9 | **Lots** | `phases/lots.py` | Recursive alternating-axis binary split with ±20% noise offset; residential lots get 1-cell setback perimeter |
-| 10 | **Buildings** | `phases/buildings.py` | RPG data layer: tile roles, building types, encounter probabilities, landmarks, spawn points |
+| 2 | **Elevation** | `phases/elevation.py` | Seeded FBM height field for terrain colour variation |
+| 3 | **Zones** | `phases/zones.py` | Chebyshev distance from city centre → CBD / Midtown / Residential, with noise-softened boundaries |
+| 4 | **Civic Anchor** | `phases/civic.py` | Selects the CBD land cell furthest from water as the city's focal point |
+| 5 | **Highways** | `phases/highway.py` | N–S and E–W arterial roads with organic deviation; optional roundabouts and diagonal "Broadway" streets |
+| 6 | **Connectors** | `phases/connector.py` | Dense local street grid filling blocks between highways |
+| 7 | **Sidewalks** | `phases/sidewalk.py` | 1-cell sidewalk bands on connector-adjacent land with correct bitmask tile selection |
+| 8 | **Blocks** | `phases/blocks.py` | Flood-fill interior block detection; exterior cells marked void |
+| 9 | **Parks** | `phases/parks.py` | Priority-scored block selection with minimum-separation constraint; count scales dynamically with map size |
+| 10 | **Lots** | `phases/lots.py` | Recursive alternating-axis binary split with ±20% noise offset; residential lots get 1-cell setback perimeter |
+| 11 | **Buildings** | `phases/buildings.py` | RPG data layer: tile roles, building types, encounter probabilities, landmarks, spawn points |
 
-After lots, a **density post-pass** runs O(N) BFS from highway cells to compute per-cell `density_score` used by the encounter system and building colour variation.
+After lots, a **density post-pass** runs O(N) BFS from highway cells to compute per-cell `density_score` used by the encounter system and building colour variation. After buildings, a district naming post-pass assigns human-readable district names to land cells.
 
 ## Generation Parameters (MapConfig)
 
@@ -63,11 +64,11 @@ config = MapConfig(
     highway_ew_min=0,          # E–W highway count minimum
     highway_ew_max=3,          # E–W highway count ceiling
     highway_organic=0.3,       # organic deviation 0=perfectly straight
-    connector_density=0.70,    # 0=sparse streets 1=full dense grid
-    connector_spacing=12,      # E–W cross-street spacing in cells (~120 m)
-    avenue_spacing=24,         # N–S avenue spacing in cells (~240 m)
-    connector_turn_bias=0.05,  # Perlin drift amplitude for organic streets
-    roundabout_count=10,       # max circular junctions
+    connector_density=0.65,    # 0=sparse streets 1=full dense grid
+    connector_spacing=8,       # E–W cross-street spacing in cells (~80 m)
+    avenue_spacing=18,         # N–S avenue spacing in cells (~180 m)
+    connector_turn_bias=0.08,  # Perlin drift amplitude for organic streets
+    roundabout_count=8,        # max circular junctions
     diagonal_streets=2,        # Broadway / diagonal avenue count
     sidewalk_depth=1,          # cells of sidewalk on each road side
     sidewalk_damage_rate=0.15, # probability a sidewalk tile is cracked/worn variant
@@ -84,8 +85,10 @@ Every `MapCell` after generation carries:
 | `building_type` | `str` | `BLDG_*` constant — semantic building label |
 | `encounter_chance` | `float` | 0.0–1.0 per-step random encounter probability |
 | `is_spawn_point` | `bool` | NPC/enemy spawn origin |
-| `landmark_type` | `str` | `'town_hall'` / `'station'` / `'hospital'` / `'police'` / `''` |
+| `landmark_type` | `str` | `'town_hall'` / `'station'` / `'hospital'` / `'police'` / `'school'` / `''` |
 | `density_score` | `float` | 0.0–1.0 proximity to highway network |
+| `elevation` | `float` | 0.0–1.0 visual height field for terrain shading |
+| `district_name` | `str` | Human-readable district label assigned after buildings |
 | `zone_id` | `int` | `ZONE_CBD=0` / `ZONE_MIDTOWN=1` / `ZONE_RESIDENTIAL=2` |
 | `is_park` | `bool` | True if cell belongs to a park block |
 | `is_setback` | `bool` | True for residential front-yard cells (rendered as lawn) |
@@ -126,15 +129,16 @@ GameDev/
 │   ├── tile_registry.py    — Sprite sheet tile descriptor database
 │   └── phases/
 │       ├── coastline.py    — Phase 1: water/land generation
-│       ├── zones.py        — Phase 2: CBD/Midtown/Residential assignment
-│       ├── civic.py        — Phase 3: town centre anchor placement
-│       ├── highway.py      — Phase 4: arterial road generation
-│       ├── connector.py    — Phase 5: local street grid
-│       ├── sidewalk.py     — Phase 6: sidewalk tile placement
-│       ├── blocks.py       — Phase 7: interior block flood-fill
-│       ├── parks.py        — Phase 8: park block selection
-│       ├── lots.py         — Phase 9: building lot subdivision + setbacks
-│       └── buildings.py    — Phase 10: RPG game data layer
+│       ├── elevation.py    — Phase 2: visual terrain height field
+│       ├── zones.py        — Phase 3: CBD/Midtown/Residential assignment
+│       ├── civic.py        — Phase 4: town centre anchor placement
+│       ├── highway.py      — Phase 5: arterial road generation
+│       ├── connector.py    — Phase 6: local street grid
+│       ├── sidewalk.py     — Phase 7: sidewalk tile placement
+│       ├── blocks.py       — Phase 8: interior block flood-fill
+│       ├── parks.py        — Phase 9: park block selection
+│       ├── lots.py         — Phase 10: building lot subdivision + setbacks
+│       └── buildings.py    — Phase 11: RPG game data layer
 │
 ├── assets/                 — Sprite sheets (roads.png, sidewalks.png)
 └── docs/                   — Sprint research documents
