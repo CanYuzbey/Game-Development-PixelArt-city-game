@@ -198,6 +198,44 @@ def run_cross_process_determinism_check() -> tuple[bool, str]:
     return True, ''
 
 
+def run_design_export_check() -> tuple[bool, list[str]]:
+    """Verify the design/backend blueprint exists and has stable core records."""
+    config = MapConfig(
+        width=80,
+        height=60,
+        master_seed=7,
+        coast_side='west',
+        city_profile='manhattan',
+    )
+    gen = MapGenerator(config)
+    gen.generate_blocking()
+    blueprint = gen.to_design_dict(include_cells=False)
+
+    issues: list[str] = []
+    if blueprint.get('schema') != 'city_design_blueprint.v1':
+        issues.append('bad_schema')
+    if blueprint.get('profile', {}).get('id') != 'manhattan':
+        issues.append('bad_profile')
+    for key in ('districts', 'roads', 'blocks', 'lots', 'landmarks', 'asset_requirements'):
+        if key not in blueprint:
+            issues.append(f'missing_{key}')
+    if len(blueprint.get('roads', [])) != gen.stats['roads']:
+        issues.append('road_record_count')
+    if len(blueprint.get('blocks', [])) != gen.stats['blocks']:
+        issues.append('block_record_count')
+    if len(blueprint.get('lots', [])) != gen.stats['lots']:
+        issues.append('lot_record_count')
+    if len(blueprint.get('landmarks', [])) < 3:
+        issues.append('landmark_records')
+
+    first = repr(blueprint)
+    second = repr(gen.to_design_dict(include_cells=False))
+    if first != second:
+        issues.append('design_export_nondeterministic')
+
+    return (len(issues) == 0, issues)
+
+
 def main() -> int:
     print("=" * 72)
     print("  FULL 60-CONFIGURATION TEST SUITE — Sprint 5 Quality Gate")
@@ -239,6 +277,13 @@ def main() -> int:
     else:
         fail_count += 1
         print(f"  cross-process determinism: FAIL {cross_det_issue}")
+
+    design_ok, design_issues = run_design_export_check()
+    if design_ok:
+        print("  design export: PASS (schema + core record counts)")
+    else:
+        fail_count += len(design_issues)
+        print(f"  design export: FAIL {', '.join(design_issues)}")
 
     elapsed_total = round(time.perf_counter() - start, 1)
     print()

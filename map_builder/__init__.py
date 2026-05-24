@@ -11,6 +11,7 @@ Public API — import only what your game needs.
 from .map_state      import MapGrid, MapCell, MapConfig, GeneratorProgress
 from .map_generator  import MapGenerator
 from .tile_registry  import REGISTRY, TileDef, TileRegistry
+from .design         import CITY_PROFILES, city_profile, export_design_blueprint
 from .constants      import (
     # Layers
     LAYER_GROUND, LAYER_ROAD, LAYER_SIDEWALK, LAYER_DECOR,
@@ -42,6 +43,7 @@ __all__ = [
     'MapGenerator', 'MapConfig',
     'MapGrid', 'MapCell', 'GeneratorProgress',
     'REGISTRY', 'TileDef', 'TileRegistry',
+    'CITY_PROFILES', 'city_profile', 'export_design_blueprint',
     'LAYER_GROUND', 'LAYER_ROAD', 'LAYER_SIDEWALK', 'LAYER_DECOR',
     'ROAD_HIGHWAY', 'ROAD_CONNECTOR',
     'PHASE_COASTLINE', 'PHASE_HIGHWAY', 'PHASE_CONNECTOR',

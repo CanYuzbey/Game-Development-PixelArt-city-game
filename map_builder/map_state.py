@@ -246,6 +246,7 @@ class MapConfig:
 
     # ── Seed ──────────────────────────────────────────────────────────────────
     master_seed: int = 1
+    city_profile: str = 'generic_dense'  # design-export profile / existing-city style hint
 
     # ── Phase 1 — Coastline ───────────────────────────────────────────────────
     coast_side:      str   = COAST_NONE  # 'none'|'north'|'south'|'east'|'west'|'random'
