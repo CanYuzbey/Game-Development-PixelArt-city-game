@@ -1,0 +1,70 @@
+{
+  "schema": "existing_city_assets.v1",
+  "status": "raw_audit_only",
+  "raw_sheets": [
+    {
+      "id": "raw_facade_panels_01",
+      "file": "raw/facade_masonry_modules_raw.png",
+      "size": [1254, 1254],
+      "mode": "RGB",
+      "candidate_slots": ["building/office", "building/apartment", "terrain/exterior"]
+    },
+    {
+      "id": "raw_modular_buildings_02",
+      "file": "raw/facade_arch_corner_modules_raw.png",
+      "size": [1254, 1254],
+      "mode": "RGB",
+      "candidate_slots": ["building/apartment", "building/office", "landmark/town_hall"]
+    },
+    {
+      "id": "raw_props_roofs_03",
+      "file": "raw/roof_props_street_details_raw.png",
+      "size": [1254, 1254],
+      "mode": "RGB",
+      "candidate_slots": ["prop/street", "coast/dock", "landscape/park"]
+    },
+    {
+      "id": "raw_storefronts_04",
+      "file": "raw/storefront_awning_modules_raw.png",
+      "size": [1254, 1254],
+      "mode": "RGB",
+      "candidate_slots": ["building/shop", "building/restaurant", "building/market"]
+    },
+    {
+      "id": "raw_rowhouse_facades_05",
+      "file": "raw/brownstone_apartment_facades_raw.png",
+      "size": [1254, 1254],
+      "mode": "RGB",
+      "candidate_slots": ["building/house", "building/apartment", "landmark/school"]
+    },
+    {
+      "id": "raw_mixed_modules_06",
+      "file": "raw/industrial_warehouse_modules_raw.png",
+      "size": [1254, 1254],
+      "mode": "RGB",
+      "candidate_slots": ["building/office", "building/shop", "prop/street"]
+    },
+    {
+      "id": "raw_civic_residential_07",
+      "file": "raw/civic_classical_modules_raw.png",
+      "size": [1254, 1254],
+      "mode": "RGB",
+      "candidate_slots": ["building/house", "landmark/town_hall", "landmark/school"]
+    },
+    {
+      "id": "raw_glass_cbd_08",
+      "file": "raw/modern_glass_cbd_modules_raw.png",
+      "size": [1254, 1254],
+      "mode": "RGB",
+      "candidate_slots": ["building/office", "building/bank"]
+    },
+    {
+      "id": "raw_mixed_city_09",
+      "file": "raw/damaged_urban_modules_raw.png",
+      "size": [1254, 1254],
+      "mode": "RGB",
+      "candidate_slots": ["building/apartment", "street/sidewalk", "prop/street"]
+    }
+  ],
+  "next_required_step": "slice_sheets_and_replace_raw_candidates_with_sprite_records"
+}

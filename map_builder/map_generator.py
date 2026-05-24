@@ -413,6 +413,7 @@ class MapGenerator:
             'width':  self.config.width,
             'height': self.config.height,
             'config': {
+                'city_profile':             self.config.city_profile,
                 'coast_side':              self.config.coast_side,
                 'coast_coverage':          self.config.coast_coverage,
                 'coast_noise_scale':       self.config.coast_noise_scale,
@@ -447,6 +448,7 @@ class MapGenerator:
             width                  = data['width'],
             height                 = data['height'],
             master_seed            = data['seed'],
+            city_profile           = cfg_data.get('city_profile',           'generic_dense'),
             coast_side             = cfg_data.get('coast_side',             'none'),
             coast_coverage         = cfg_data.get('coast_coverage',         0.28),
             coast_noise_scale      = cfg_data.get('coast_noise_scale',      3.5),
@@ -468,3 +470,24 @@ class MapGenerator:
             sidewalk_damage_rate   = cfg_data.get('sidewalk_damage_rate',   0.15),
         )
         return cls(config)
+
+    def to_design_dict(
+        self,
+        profile_id: str | None = None,
+        include_cells: bool = True,
+    ) -> dict:
+        """
+        Export the generated map as a design/backend blueprint.
+
+        This rich export is intended for renderers, city-profile matching,
+        sprite assignment, and future existing-city reconstruction tools. Keep
+        `to_dict()` lightweight for save files; use this when tools need the
+        generated layout explained in semantic records.
+        """
+        from .design import export_design_blueprint
+
+        return export_design_blueprint(
+            self,
+            profile_id=profile_id or self.config.city_profile,
+            include_cells=include_cells,
+        )
