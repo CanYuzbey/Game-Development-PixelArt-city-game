@@ -1,19 +1,58 @@
 # Mapping Design
 
-This folder owns city-design data that sits on top of the native mapping
-algorithm: existing-city profiles, raw/sliced assets, sprite manifests, and
-design validation tools.
+City-design assets, sprite registry contracts, and native C++ validation and
+preparation tools.
 
 ## Structure
 
-- `assets/raw/`: source PNG sheets from the latest asset drop.
-- `assets/debug/`: contact sheets and debug atlases.
-- `assets/asset_manifest.json`: raw-sheet manifest and candidate slot mapping.
-- `docs/ASSET_AUDIT.md`: asset readiness findings and missing sprite list.
-- `docs/IMPLEMENTATION_BACKLOG.md`: implementation, sprite, and tooling backlog.
-- `cpp/tools/asset_validator.cpp`: native manifest and PNG-presence validator.
+- `assets/raw/`: original design-side source sheets.
+- `assets/debug/`: contact sheets and debug images.
+- `assets/asset_manifest.json`: raw-sheet manifest.
+- `../assets/source_rgba/`: cleaned RGBA source sheets for runtime slicing.
+- `../assets/runtime_cpp/`: C++-prepared runtime atlases.
+- `../assets/manifests/runtime_registry_cpp.json`: deployable runtime sprite registry.
+- `../assets/manifests/sprite_registry.json`: source slicing registry consumed by the preparer.
+- `cpp/tools/asset_validator.cpp`: raw manifest and PNG signature validator.
+- `cpp/tools/runtime_asset_validator.cpp`: runtime registry/atlas validator.
+- `cpp/tools/runtime_asset_preparer_win.cpp`: Windows-native C++ atlas preparer.
 
-## Backend Bridge
+## Runtime Asset Contract
+
+Runtime sprites are considered game-ready when:
+
+- `estimated` is not `true` on any sprite.
+- `runtime_status` is `exported`.
+- `visual_rect` is `alpha_trimmed`.
+- each `atlas_rect` is inside the declared atlas PNG.
+- required slots exist for terrain, roads, sidewalks, parks, buildings, roofs,
+  shadows, facade kits, and landmarks.
+
+The runtime validator enforces this deployable contract:
+
+```bash
+mapping_runtime_asset_validator assets
+```
+
+## Native Asset Preparation
+
+On Windows, `mapping_runtime_asset_preparer` uses Windows Imaging Component
+from C++:
+
+```bash
+mapping_runtime_asset_preparer assets
+```
+
+It reads `assets/source_rgba/*.png` and `assets/manifests/sprite_registry.json`,
+crops every sprite by `pixel_rect`, alpha-trims non-visible pixels, adds a
+4-pixel transparent guard border, procedurally generates clean orthogonal road
+and sidewalk bitmask tiles, shelf-packs PNG atlases to `assets/runtime_cpp/`,
+and writes `assets/manifests/runtime_registry_cpp.json`.
+
+The prepared C++ runtime output is currently 274 sprites across 11 atlases.
+The older `assets/runtime/` directory is retained for reference and comparison;
+new deployable work should use `assets/runtime_cpp/`.
+
+## Design Blueprint Bridge
 
 The mapping algorithm exports native design data:
 
@@ -29,19 +68,6 @@ generator.generate();
 mapping_algorithm::DesignBlueprint blueprint = generator.to_design_blueprint();
 ```
 
-Design code consumes `DesignBlueprint` and maps each asset slot to prepared
-sprites in `assets/asset_manifest.json`.
-
-## Asset Status
-
-The current raw sheets are not runtime-ready. They are RGB sheets with baked
-checkerboard backgrounds and no real alpha channel. They must be sliced,
-cleaned, alpha-converted, scaled, named, and registered before runtime use.
-
-Run the native validator after building:
-
-```bash
-build/mapping_design/cpp/mapping_asset_validator mapping_design/assets
-```
-
-Expected current result: manifest OK and all listed raw PNG sheets present.
+Design and rendering code consume `DesignBlueprint::required_asset_slots`,
+`buildings`, and `sprite_assignments` to bind generated city structure to the
+runtime sprite registry.

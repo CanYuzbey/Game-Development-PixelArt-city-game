@@ -1,0 +1,180 @@
+{
+  "schema": "atlas_manifest.v1",
+  "atlas_id": "landmarks",
+  "file": "runtime/landmarks.atlas.png",
+  "size": [
+    2048,
+    906
+  ],
+  "sprite_count": 28,
+  "sprites": {
+    "landmark_town_hall_d": [
+      0,
+      0,
+      286,
+      291
+    ],
+    "landmark_town_hall_c": [
+      288,
+      0,
+      288,
+      290
+    ],
+    "landmark_town_hall_a": [
+      578,
+      0,
+      302,
+      265
+    ],
+    "landmark_town_hall_b": [
+      882,
+      0,
+      295,
+      261
+    ],
+    "landmark_hospital_b": [
+      1179,
+      0,
+      272,
+      239
+    ],
+    "landmark_hospital_c": [
+      1453,
+      0,
+      259,
+      238
+    ],
+    "landmark_hospital_d": [
+      1714,
+      0,
+      258,
+      238
+    ],
+    "landmark_hospital_a": [
+      0,
+      293,
+      270,
+      236
+    ],
+    "landmark_school_a": [
+      272,
+      293,
+      268,
+      232
+    ],
+    "landmark_school_b": [
+      542,
+      293,
+      267,
+      217
+    ],
+    "landmark_school_c": [
+      811,
+      293,
+      266,
+      215
+    ],
+    "landmark_school_d": [
+      1079,
+      293,
+      259,
+      214
+    ],
+    "landmark_station_c": [
+      1340,
+      293,
+      295,
+      209
+    ],
+    "landmark_station_d": [
+      1637,
+      293,
+      294,
+      209
+    ],
+    "landmark_station_a": [
+      0,
+      531,
+      297,
+      193
+    ],
+    "landmark_station_b": [
+      299,
+      531,
+      298,
+      191
+    ],
+    "landmark_park_monument_c": [
+      599,
+      531,
+      113,
+      187
+    ],
+    "landmark_police_c": [
+      714,
+      531,
+      276,
+      186
+    ],
+    "landmark_police_d": [
+      992,
+      531,
+      272,
+      186
+    ],
+    "landmark_park_monument_g": [
+      1266,
+      531,
+      113,
+      186
+    ],
+    "landmark_park_monument_a": [
+      1381,
+      531,
+      126,
+      185
+    ],
+    "landmark_park_monument_e": [
+      1509,
+      531,
+      116,
+      184
+    ],
+    "landmark_park_monument_d": [
+      1627,
+      531,
+      112,
+      182
+    ],
+    "landmark_park_monument_h": [
+      1741,
+      531,
+      113,
+      182
+    ],
+    "landmark_park_monument_f": [
+      1856,
+      531,
+      114,
+      181
+    ],
+    "landmark_park_monument_b": [
+      0,
+      726,
+      115,
+      180
+    ],
+    "landmark_police_b": [
+      117,
+      726,
+      286,
+      168
+    ],
+    "landmark_police_a": [
+      405,
+      726,
+      284,
+      166
+    ]
+  }
+}

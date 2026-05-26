@@ -1,14 +1,15 @@
 # GameDev Mapping System
 
-Seed-based procedural city mapping for game worlds, implemented as a C++17
-codebase.
+Native C++17 procedural isometric city mapping for game worlds.
 
-The project is split into two production work areas:
+The repository is now centered on a deployable city pipeline:
 
-- `mapping_algorithm/`: native map generation, gameplay metadata, and design
-  blueprint export.
-- `mapping_design/`: city design assets, asset audit notes, and native asset
-  validation.
+- `mapping_algorithm/`: deterministic map generation, lot/building assembly,
+  gameplay metadata, smoke tests, and seed JSON export.
+- `mapping_design/`: runtime sprite registry validation and C++ asset
+  preparation tools for alpha-trimmed, guard-padded atlases.
+- `assets/`: prepared source RGBA sheets, runtime atlases, atlas manifests, and
+  sprite registry data used by the generator contract.
 
 ## Build
 
@@ -20,21 +21,42 @@ cmake --build build
 The top-level build creates:
 
 - `mapping_algorithm_demo`: prints a generated city summary.
-- `mapping_algorithm_smoke`: runs the deterministic 60-configuration algorithm
-  and design-export quality gate.
-- `mapping_asset_validator`: validates the design asset manifest and raw PNG
-  sheet presence.
+- `mapping_city_exporter`: exports a fully inspectable deployable city JSON.
+- `mapping_algorithm_smoke`: runs deterministic algorithm and blueprint gates.
+- `mapping_asset_validator`: validates the design raw-sheet manifest.
+- `mapping_runtime_asset_validator`: validates `assets/manifests/runtime_registry_cpp.json`
+  against C++-prepared runtime atlas PNGs.
+- `mapping_runtime_asset_preparer`: Windows-native WIC tool that crops,
+  alpha-trims, adds transparent guard padding, procedurally generates clean
+  orthogonal road/sidewalk bitmask tiles, packs atlases, and writes a runtime
+  manifest.
 
 ## Run Checks
 
 ```bash
 build/mapping_algorithm/cpp/mapping_algorithm_smoke
+build/mapping_design/cpp/mapping_runtime_asset_validator assets
 build/mapping_design/cpp/mapping_asset_validator mapping_design/assets
 ```
 
-Executable paths can vary by generator and platform. On Visual Studio
-generators, the executable may live under a configuration folder such as
-`Debug` or `Release`.
+Executable paths vary by CMake generator. Visual Studio generators normally put
+executables under a configuration folder such as `Debug` or `Release`.
+
+## Export A City
+
+```bash
+build/mapping_algorithm/cpp/mapping_city_exporter \
+  --seed 42 \
+  --width 96 \
+  --height 72 \
+  --profile manhattan \
+  --coast random \
+  --out exports/city_seed_42.json
+```
+
+The exported JSON contains stats, resolved coast side, profile tags, roads,
+blocks, lots, landmarks, assembled buildings, sprite assignments, and every map
+cell with role/zone/lot/building metadata.
 
 ## C++ Library Usage
 
@@ -47,7 +69,7 @@ MapConfig config;
 config.width = 80;
 config.height = 60;
 config.master_seed = 42;
-config.coast_side = CoastSide::West;
+config.coast_side = CoastSide::Random;
 config.city_profile = "manhattan";
 
 MapGenerator generator(config);
@@ -64,57 +86,34 @@ DesignBlueprint blueprint = generator.to_design_blueprint();
 | 1 | Coastline | `MapGenerator::generate_coastline()` |
 | 2 | Elevation | `MapGenerator::generate_elevation()` |
 | 3 | Zones | `MapGenerator::generate_zones()` |
-| 4 | Civic anchor | `MapGenerator::generate_civic_anchor()` |
-| 5 | Highways | `MapGenerator::generate_highways()` |
-| 6 | Connectors | `MapGenerator::generate_connectors()` |
-| 7 | Sidewalks | `MapGenerator::generate_sidewalks()` |
-| 8 | Blocks | `MapGenerator::generate_blocks()` |
+| 4 | Highways | `MapGenerator::generate_highways()` |
+| 5 | Connectors | `MapGenerator::generate_connectors()` |
+| 6 | Sidewalks | `MapGenerator::generate_sidewalks()` |
+| 7 | Blocks | `MapGenerator::generate_blocks()` |
+| 8 | Civic anchor | `MapGenerator::generate_civic_anchor()` |
 | 9 | Parks | `MapGenerator::generate_parks()` |
 | 10 | Lots | `MapGenerator::generate_lots()` |
 | 11 | Density | `MapGenerator::compute_density()` |
-| 12 | Buildings/game data | `MapGenerator::generate_buildings()` |
+| 12 | Lot-level building assembly | `MapGenerator::generate_buildings()` |
 | 13 | District names | `MapGenerator::generate_district_names()` |
 | 14 | Stats | `MapGenerator::compute_stats()` |
 
-## Repository Layout
-
-```text
-GameDev/
-├── CMakeLists.txt
-├── DEVLOG.md
-├── README.md
-├── mapping_algorithm/
-│   ├── README.md
-│   └── cpp/
-│       ├── CMakeLists.txt
-│       ├── examples/
-│       ├── include/mapping_algorithm/
-│       ├── src/
-│       └── tests/
-└── mapping_design/
-    ├── README.md
-    ├── assets/
-    ├── cpp/
-    │   ├── CMakeLists.txt
-    │   └── tools/
-    └── docs/
-```
-
 ## Design Blueprint Contract
 
-`MapGenerator::to_design_blueprint()` returns `DesignBlueprint`, a native C++
-record containing:
+`MapGenerator::to_design_blueprint()` returns a native C++ record containing:
 
-- city profile and pattern tags,
-- road records with category, zone, bitmask, and asset slot,
-- block records with bounds, zone, and park markers,
-- lot records with building and landmark metadata,
+- seed, algorithm version, resolved coast side, and city profile,
+- road records with category, zone, bitmask, and normalized `street/road` slot,
+- block and lot records,
 - landmark records,
-- required asset slot names for downstream sprite assignment.
+- lot-level `BuildingAssemblyRecord` entries,
+- renderer-ready `SpriteAssignmentRecord` entries,
+- required runtime asset slots.
 
 ## Dependencies
 
 - C++17 compiler.
 - CMake 3.16 or newer.
+- Windows Imaging Component for `mapping_runtime_asset_preparer` on Windows.
 
-No runtime scripting language is required by the current source tree.
+No runtime scripting language is required by the production source tree.

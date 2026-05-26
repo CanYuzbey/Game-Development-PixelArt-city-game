@@ -1,0 +1,132 @@
+{
+  "schema": "atlas_manifest.v1",
+  "atlas_id": "kits",
+  "file": "runtime/kits.atlas.png",
+  "size": [
+    2048,
+    535
+  ],
+  "sprite_count": 20,
+  "sprites": {
+    "kit_mhtn_brownstone_stoop": [
+      0,
+      0,
+      205,
+      288
+    ],
+    "kit_mhtn_water_tower": [
+      207,
+      0,
+      163,
+      272
+    ],
+    "kit_bcn_balcony_b": [
+      372,
+      0,
+      164,
+      271
+    ],
+    "kit_mhtn_fire_escape_b": [
+      538,
+      0,
+      175,
+      269
+    ],
+    "kit_mhtn_fire_escape_a": [
+      715,
+      0,
+      186,
+      265
+    ],
+    "kit_bcn_balcony_a": [
+      903,
+      0,
+      187,
+      264
+    ],
+    "kit_bcn_courtyard_gate": [
+      1092,
+      0,
+      152,
+      264
+    ],
+    "kit_ldn_fanlight_door": [
+      1246,
+      0,
+      146,
+      262
+    ],
+    "kit_ldn_sash_window_a": [
+      1394,
+      0,
+      144,
+      259
+    ],
+    "kit_ldn_shopfront_a": [
+      1540,
+      0,
+      213,
+      255
+    ],
+    "kit_ldn_bay_window_a": [
+      1755,
+      0,
+      168,
+      249
+    ],
+    "kit_ldn_chimney_pot_a": [
+      0,
+      290,
+      181,
+      245
+    ],
+    "kit_paris_arcade_pillar": [
+      183,
+      290,
+      139,
+      238
+    ],
+    "kit_paris_balcony_ironwork": [
+      324,
+      290,
+      205,
+      236
+    ],
+    "kit_paris_storefront_boul": [
+      531,
+      290,
+      235,
+      234
+    ],
+    "kit_paris_lamp_post": [
+      768,
+      290,
+      67,
+      234
+    ],
+    "kit_bcn_chamfer_corner": [
+      837,
+      290,
+      182,
+      232
+    ],
+    "kit_mhtn_cornice_a": [
+      1021,
+      290,
+      220,
+      214
+    ],
+    "kit_paris_mansard_dormer": [
+      1243,
+      290,
+      207,
+      214
+    ],
+    "kit_bcn_awning_a": [
+      1452,
+      290,
+      231,
+      190
+    ]
+  }
+}

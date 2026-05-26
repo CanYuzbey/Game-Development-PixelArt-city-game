@@ -2,9 +2,12 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
+#include <limits>
+#include <map>
 #include <numeric>
 #include <queue>
-#include <random>
+#include <sstream>
 #include <stdexcept>
 
 namespace mapping_algorithm {
@@ -18,6 +21,91 @@ constexpr std::uint32_t SALT_PARKS = 0xA1B2C3;
 constexpr std::uint32_t SALT_BUILDINGS = 0xB1C2D3;
 
 using Point = std::pair<int, int>;
+
+struct ProfileRules {
+    int avenue_spacing = 18;
+    int connector_spacing = 8;
+    double connector_density = 0.65;
+    int diagonal_streets = 2;
+    double highway_organic = 0.3;
+    int park_min_area = 18;
+    int park_max_area = 140;
+};
+
+struct Bounds {
+    int r0 = 0;
+    int c0 = 0;
+    int r1 = 0;
+    int c1 = 0;
+};
+
+std::uint32_t mix_u32(std::uint32_t x) {
+    x ^= x >> 16;
+    x *= 0x7feb352dU;
+    x ^= x >> 15;
+    x *= 0x846ca68bU;
+    x ^= x >> 16;
+    return x;
+}
+
+std::uint32_t decision_hash(std::uint32_t seed, int a, int b, std::uint32_t salt) {
+    std::uint32_t h = seed ^ salt;
+    h ^= mix_u32(static_cast<std::uint32_t>(a) + 0x9e3779b9U);
+    h ^= mix_u32(static_cast<std::uint32_t>(b) + 0x85ebca6bU);
+    return mix_u32(h);
+}
+
+double decision01(std::uint32_t seed, int a, int b, std::uint32_t salt) {
+    return static_cast<double>(decision_hash(seed, a, b, salt)) /
+           static_cast<double>(std::numeric_limits<std::uint32_t>::max());
+}
+
+int decision_range(std::uint32_t seed, int a, int b, std::uint32_t salt, int min_value, int max_value) {
+    if (max_value <= min_value) {
+        return min_value;
+    }
+    const auto span = static_cast<std::uint32_t>(max_value - min_value + 1);
+    return min_value + static_cast<int>(decision_hash(seed, a, b, salt) % span);
+}
+
+ProfileRules rules_for_profile(const std::string& id, const MapConfig& config) {
+    ProfileRules rules;
+    rules.avenue_spacing = config.avenue_spacing;
+    rules.connector_spacing = config.connector_spacing;
+    rules.connector_density = config.connector_density;
+    rules.diagonal_streets = config.diagonal_streets;
+    rules.highway_organic = config.highway_organic;
+
+    if (id == "manhattan") {
+        rules.avenue_spacing = std::max(8, config.avenue_spacing - 5);
+        rules.connector_spacing = std::max(5, config.connector_spacing - 2);
+        rules.connector_density = std::max(config.connector_density, 0.78);
+        rules.diagonal_streets = std::max(config.diagonal_streets, 2);
+        rules.highway_organic = std::min(config.highway_organic, 0.22);
+    } else if (id == "barcelona_eixample") {
+        rules.avenue_spacing = std::max(8, config.avenue_spacing - 6);
+        rules.connector_spacing = std::max(8, config.connector_spacing + 1);
+        rules.connector_density = std::max(config.connector_density, 0.86);
+        rules.diagonal_streets = 0;
+        rules.highway_organic = std::min(config.highway_organic, 0.12);
+    } else if (id == "paris_haussmann") {
+        rules.avenue_spacing = std::max(10, config.avenue_spacing - 3);
+        rules.connector_spacing = std::max(7, config.connector_spacing);
+        rules.connector_density = std::max(config.connector_density, 0.72);
+        rules.diagonal_streets = std::max(config.diagonal_streets, 4);
+        rules.highway_organic = std::max(config.highway_organic, 0.24);
+    } else if (id == "london_organic") {
+        rules.avenue_spacing = std::max(9, config.avenue_spacing - 4);
+        rules.connector_spacing = std::max(7, config.connector_spacing + 1);
+        rules.connector_density = std::min(config.connector_density, 0.62);
+        rules.diagonal_streets = std::max(1, config.diagonal_streets);
+        rules.highway_organic = std::max(config.highway_organic, 0.52);
+        rules.park_min_area = 10;
+        rules.park_max_area = 110;
+    }
+
+    return rules;
+}
 
 double clamp01(double value) {
     return std::max(0.0, std::min(1.0, value));
@@ -144,13 +232,244 @@ CityProfile profile_for(const std::string& id) {
             {"neutral_facade", "mixed_urban", "generic_props"}};
 }
 
+Point representative_point(const std::set<Point>& points) {
+    double avg_r = 0.0;
+    double avg_c = 0.0;
+    for (const auto [r, c] : points) {
+        avg_r += r;
+        avg_c += c;
+    }
+    avg_r /= std::max<std::size_t>(points.size(), 1);
+    avg_c /= std::max<std::size_t>(points.size(), 1);
+
+    Point best = *points.begin();
+    double best_dist = std::numeric_limits<double>::max();
+    for (const auto p : points) {
+        const double d = std::hypot(p.first - avg_r, p.second - avg_c);
+        if (d < best_dist) {
+            best_dist = d;
+            best = p;
+        }
+    }
+    return best;
+}
+
+ZoneId dominant_zone(const std::set<Point>& points, const MapGrid& grid) {
+    std::map<ZoneId, int> counts;
+    for (const auto [r, c] : points) {
+        ++counts[grid.at(r, c).zone_id];
+    }
+    return std::max_element(counts.begin(), counts.end(), [](const auto& a, const auto& b) {
+        return a.second < b.second;
+    })->first;
+}
+
+Bounds bounds_for(const std::set<Point>& points) {
+    Bounds bounds{
+        std::numeric_limits<int>::max(),
+        std::numeric_limits<int>::max(),
+        std::numeric_limits<int>::min(),
+        std::numeric_limits<int>::min()
+    };
+    for (const auto [r, c] : points) {
+        bounds.r0 = std::min(bounds.r0, r);
+        bounds.c0 = std::min(bounds.c0, c);
+        bounds.r1 = std::max(bounds.r1, r);
+        bounds.c1 = std::max(bounds.c1, c);
+    }
+    return bounds;
+}
+
+bool touches_waterfront(const std::set<Point>& points, const MapGrid& grid) {
+    for (const auto [r, c] : points) {
+        if (!grid.at(r, c).coast_type.empty()) {
+            return true;
+        }
+        for (const auto [nr, nc] : neighbours4(r, c)) {
+            if (grid.in_bounds(nr, nc) && grid.at(nr, nc).is_water) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+std::string pick_building_type(ZoneId zone, double roll, bool waterfront) {
+    if (waterfront) {
+        if (roll < 0.35) return "restaurant";
+        if (roll < 0.60) return "market";
+        if (roll < 0.90) return "apartment";
+        return "empty";
+    }
+    if (zone == ZoneId::CBD) {
+        if (roll < 0.64) return "office";
+        if (roll < 0.82) return "bank";
+        return "civic";
+    }
+    if (zone == ZoneId::Midtown) {
+        if (roll < 0.46) return "apartment";
+        if (roll < 0.76) return "shop";
+        return "restaurant";
+    }
+    if (roll < 0.78) return "house";
+    if (roll < 0.92) return "apartment";
+    return "shop";
+}
+
+std::string asset_slot_for_building(const std::string& type) {
+    if (type == "office") return "building/office";
+    if (type == "apartment") return "building/apartment";
+    if (type == "house") return "building/house";
+    if (type == "shop") return "building/shop";
+    if (type == "restaurant") return "building/restaurant";
+    if (type == "market") return "building/market";
+    if (type == "bank") return "building/bank";
+    if (type == "civic") return "building/civic";
+    if (type == "station") return "landmark/station";
+    if (type == "school") return "landmark/school";
+    return "terrain/exterior";
+}
+
+std::string asset_slot_for_building_record(const std::string& type, const std::string& landmark_type) {
+    if (!landmark_type.empty()) {
+        return "landmark/" + landmark_type;
+    }
+    return asset_slot_for_building(type);
+}
+
+int floor_count_for(ZoneId zone, const std::string& type, std::uint32_t seed, int lot_id) {
+    if (type == "office") return decision_range(seed, lot_id, 10, SALT_BUILDINGS, 7, 16);
+    if (type == "bank" || type == "civic") return decision_range(seed, lot_id, 11, SALT_BUILDINGS, 3, 5);
+    if (type == "hospital" || type == "police" || type == "station") return decision_range(seed, lot_id, 16, SALT_BUILDINGS, 2, 4);
+    if (type == "apartment") return zone == ZoneId::CBD
+        ? decision_range(seed, lot_id, 12, SALT_BUILDINGS, 5, 9)
+        : decision_range(seed, lot_id, 13, SALT_BUILDINGS, 3, 6);
+    if (type == "shop" || type == "restaurant" || type == "market") return decision_range(seed, lot_id, 14, SALT_BUILDINGS, 1, 3);
+    if (type == "house" || type == "school") return decision_range(seed, lot_id, 15, SALT_BUILDINGS, 1, 3);
+    return 1;
+}
+
+std::string roof_for(const std::string& profile_id, const std::string& type, int floors) {
+    if (type == "office") return floors >= 8 ? "roof_glass_tower" : "roof_flat_a";
+    if (profile_id == "paris_haussmann") return "roof_mansard_a";
+    if (profile_id == "barcelona_eixample") return "roof_terracotta_a";
+    if (type == "house") return "roof_peaked_a";
+    if (profile_id == "manhattan") return "roof_rowhouse_parapet";
+    return "roof_flat_b";
+}
+
+std::string facade_family_for(const std::string& profile_id, const std::string& type) {
+    if (type == "office") return "glass_cbd";
+    if (profile_id == "manhattan") return "brick_brownstone";
+    if (profile_id == "barcelona_eixample") return "stucco_balcony";
+    if (profile_id == "paris_haussmann") return "limestone_mansard";
+    if (profile_id == "london_organic") return "brick_terrace";
+    return "mixed_urban";
+}
+
+std::string footprint_style_for(const std::string& profile_id,
+                                ZoneId zone,
+                                const std::string& type,
+                                const Bounds& bounds) {
+    const int w = bounds.c1 - bounds.c0 + 1;
+    const int h = bounds.r1 - bounds.r0 + 1;
+    if (type == "civic" || type == "hospital" || type == "police" || type == "station" || type == "school") {
+        return "institutional_courtyard";
+    }
+    if (profile_id == "barcelona_eixample") {
+        return std::abs(w - h) <= 1 ? "chamfered_courtyard" : "linear_courtyard";
+    }
+    if (profile_id == "paris_haussmann") {
+        return "perimeter_courtyard";
+    }
+    if (zone == ZoneId::Residential) {
+        return w > h ? "rowhouse_strip" : "setback_pair";
+    }
+    if (zone == ZoneId::CBD) {
+        return "tower_podium";
+    }
+    return w >= h ? "mixed_frontage_wide" : "mixed_frontage_deep";
+}
+
+std::string tile_role_for_building(ZoneId zone, const std::string& type, const std::string& landmark_type) {
+    if (!landmark_type.empty() || type == "civic" || type == "hospital" || type == "police" || type == "station") {
+        return "bldg_civic";
+    }
+    if (zone == ZoneId::CBD) {
+        return "bldg_cbd";
+    }
+    if (zone == ZoneId::Midtown) {
+        return "bldg_mid";
+    }
+    return "bldg_resi";
+}
+
+std::string variant_suffix(std::uint32_t seed, int lot_id, int salt_shift) {
+    static const char suffixes[] = {'a', 'b', 'c', 'd'};
+    const auto index = decision_hash(seed, lot_id, salt_shift, SALT_BUILDINGS) % 4U;
+    return std::string(1, suffixes[index]);
+}
+
+std::vector<std::string> sprite_stack_for(const std::string& profile_id,
+                                          const std::string& type,
+                                          const std::string& landmark_type,
+                                          int floors,
+                                          std::uint32_t seed,
+                                          int lot_id) {
+    std::vector<std::string> sprites;
+    sprites.push_back("shadow_bldg_2x2");
+    if (landmark_type == "town_hall") {
+        sprites.push_back("landmark_town_hall_" + variant_suffix(seed, lot_id, 101));
+        sprites.push_back("bldg_civic_columns_a");
+    } else if (landmark_type == "station") {
+        sprites.push_back("landmark_station_" + variant_suffix(seed, lot_id, 102));
+    } else if (landmark_type == "hospital") {
+        sprites.push_back("landmark_hospital_" + variant_suffix(seed, lot_id, 103));
+    } else if (landmark_type == "police") {
+        sprites.push_back("landmark_police_" + variant_suffix(seed, lot_id, 104));
+    } else if (landmark_type == "school") {
+        sprites.push_back("landmark_school_" + variant_suffix(seed, lot_id, 105));
+    } else if (type == "office") {
+        sprites.push_back(decision_hash(seed, lot_id, 1, SALT_BUILDINGS) % 2 ? "bldg_cbd_glass_a" : "bldg_cbd_glass_b");
+    } else if (type == "apartment") {
+        sprites.push_back(decision_hash(seed, lot_id, 2, SALT_BUILDINGS) % 2 ? "bldg_mid_brownstone_a" : "bldg_mid_brick_a");
+    } else if (type == "house") {
+        sprites.push_back(decision_hash(seed, lot_id, 3, SALT_BUILDINGS) % 2 ? "bldg_resi_detached_a" : "bldg_resi_rowhouse_a");
+    } else if (type == "shop") {
+        sprites.push_back(decision_hash(seed, lot_id, 4, SALT_BUILDINGS) % 2 ? "bldg_shop_storefront_a" : "bldg_shop_storefront_b");
+    } else if (type == "restaurant") {
+        sprites.push_back("bldg_restaurant_a");
+    } else if (type == "market") {
+        sprites.push_back("bldg_market_a");
+    } else if (type == "bank") {
+        sprites.push_back("bldg_bank_a");
+    } else if (type == "civic") {
+        sprites.push_back("bldg_civic_a");
+    }
+
+    if (landmark_type.empty()) {
+        sprites.push_back(roof_for(profile_id, type, floors));
+    }
+    if (landmark_type.empty() && profile_id == "manhattan" && floors >= 4) {
+        sprites.push_back("kit_mhtn_fire_escape_a");
+    } else if (landmark_type.empty() && profile_id == "barcelona_eixample") {
+        sprites.push_back("kit_bcn_balcony_a");
+    } else if (landmark_type.empty() && profile_id == "paris_haussmann") {
+        sprites.push_back("kit_paris_balcony_ironwork");
+    } else if (landmark_type.empty() && profile_id == "london_organic" && type == "house") {
+        sprites.push_back("kit_ldn_bay_window_a");
+    }
+    return sprites;
+}
+
 } // namespace
 
 MapGrid::MapGrid(int width, int height)
-    : width_(width), height_(height), cells_(static_cast<std::size_t>(width * height)) {
+    : width_(width), height_(height) {
     if (width <= 0 || height <= 0) {
         throw std::invalid_argument("MapGrid dimensions must be positive");
     }
+    cells_.resize(static_cast<std::size_t>(width) * static_cast<std::size_t>(height));
 }
 
 bool MapGrid::in_bounds(int row, int col) const noexcept {
@@ -206,14 +525,23 @@ MapGenerator::MapGenerator(MapConfig config)
     : config_(std::move(config)), grid_(config_.width, config_.height) {}
 
 void MapGenerator::generate() {
+    validate_config();
+    grid_ = MapGrid(config_.width, config_.height);
+    stats_ = MapStats{};
+    blocks_.clear();
+    lots_.clear();
+    buildings_.clear();
+    civic_anchor_ = {-1, -1};
+    resolved_coast_side_ = CoastSide::None;
+
     generate_coastline();
     generate_elevation();
     generate_zones();
-    generate_civic_anchor();
     generate_highways();
     generate_connectors();
     generate_sidewalks();
     generate_blocks();
+    generate_civic_anchor();
     generate_parks();
     generate_lots();
     compute_density();
@@ -222,18 +550,40 @@ void MapGenerator::generate() {
     compute_stats();
 }
 
+void MapGenerator::validate_config() const {
+    if (config_.width <= 0 || config_.height <= 0) {
+        throw std::invalid_argument("MapConfig dimensions must be positive");
+    }
+    if (config_.width > 512 || config_.height > 512) {
+        throw std::invalid_argument("MapConfig dimensions exceed supported 512x512 guard rail");
+    }
+    if (config_.connector_spacing <= 0 || config_.avenue_spacing <= 0) {
+        throw std::invalid_argument("MapConfig road spacing must be positive");
+    }
+    if (config_.highway_ns_min < 0 || config_.highway_ew_min < 0 ||
+        config_.highway_ns_max < config_.highway_ns_min ||
+        config_.highway_ew_max < config_.highway_ew_min) {
+        throw std::invalid_argument("MapConfig highway ranges are invalid");
+    }
+    if (config_.coast_coverage < 0.0 || config_.coast_coverage > 0.75) {
+        throw std::invalid_argument("MapConfig coast_coverage must be in [0.0, 0.75]");
+    }
+    if (config_.coast_noise_scale <= 0.0) {
+        throw std::invalid_argument("MapConfig coast_noise_scale must be positive");
+    }
+}
+
 void MapGenerator::generate_coastline() {
     CoastSide side = config_.coast_side;
-    std::mt19937 rng(config_.master_seed ^ SALT_COAST);
     if (side == CoastSide::Random) {
-        std::uniform_real_distribution<double> prob(0.0, 1.0);
-        if (prob(rng) < 0.50) {
-            std::uniform_int_distribution<int> dir(0, 3);
-            side = static_cast<CoastSide>(static_cast<int>(CoastSide::North) + dir(rng));
+        if (decision01(config_.master_seed, 11, 7, SALT_COAST) < 0.50) {
+            const int dir = decision_range(config_.master_seed, 19, 3, SALT_COAST, 0, 3);
+            side = static_cast<CoastSide>(static_cast<int>(CoastSide::North) + dir);
         } else {
             side = CoastSide::None;
         }
     }
+    resolved_coast_side_ = side;
 
     const int rows = grid_.height();
     const int cols = grid_.width();
@@ -283,7 +633,6 @@ void MapGenerator::generate_coastline() {
         }
     }
 
-    std::uniform_real_distribution<double> prob(0.0, 1.0);
     for (int r = 0; r < rows; ++r) {
         for (int c = 0; c < cols; ++c) {
             auto& cell = grid_.at(r, c);
@@ -298,7 +647,7 @@ void MapGenerator::generate_coastline() {
                 }
             }
             if (shoreline) {
-                const double roll = prob(rng);
+                const double roll = decision01(config_.master_seed, r, c, SALT_COAST);
                 cell.coast_type = roll < 0.35 ? "cliff" : (roll < 0.80 ? "beach" : "dock");
             }
         }
@@ -323,10 +672,10 @@ void MapGenerator::generate_zones() {
     const int cols = grid_.width();
     double center_r = rows / 2.0;
     double center_c = cols / 2.0;
-    if (config_.coast_side == CoastSide::West) center_c = cols * 0.60;
-    if (config_.coast_side == CoastSide::East) center_c = cols * 0.40;
-    if (config_.coast_side == CoastSide::North) center_r = rows * 0.60;
-    if (config_.coast_side == CoastSide::South) center_r = rows * 0.40;
+    if (resolved_coast_side_ == CoastSide::West) center_c = cols * 0.60;
+    if (resolved_coast_side_ == CoastSide::East) center_c = cols * 0.40;
+    if (resolved_coast_side_ == CoastSide::North) center_r = rows * 0.60;
+    if (resolved_coast_side_ == CoastSide::South) center_r = rows * 0.40;
 
     for (int r = 0; r < rows; ++r) {
         for (int c = 0; c < cols; ++c) {
@@ -338,6 +687,13 @@ void MapGenerator::generate_zones() {
             const double dc = std::abs(c - center_c) / (cols / 2.0);
             const double dist = std::max(dr, dc);
             cell.zone_id = dist < 0.45 ? ZoneId::CBD : (dist < 0.72 ? ZoneId::Midtown : ZoneId::Residential);
+
+            const double transition = decision01(config_.master_seed, r, c, SALT_ELEVATION);
+            if (dist >= 0.42 && dist < 0.50 && transition < 0.40) {
+                cell.zone_id = ZoneId::Midtown;
+            } else if (dist >= 0.69 && dist < 0.77 && transition < 0.35) {
+                cell.zone_id = ZoneId::Residential;
+            }
         }
     }
 }
@@ -348,7 +704,7 @@ void MapGenerator::generate_civic_anchor() {
     for (int r = 0; r < grid_.height(); ++r) {
         for (int c = 0; c < grid_.width(); ++c) {
             const auto& cell = grid_.at(r, c);
-            if (!cell.is_land || cell.zone_id != ZoneId::CBD) {
+            if (!cell.is_land || cell.is_water || cell.is_road() || cell.zone_id != ZoneId::CBD || cell.block_id < 0) {
                 continue;
             }
             int water_dist = 999;
@@ -369,7 +725,9 @@ void MapGenerator::generate_civic_anchor() {
     }
     if (best.first >= 0) {
         civic_anchor_ = best;
-        grid_.at(best.first, best.second).is_civic_anchor = true;
+        auto& cell = grid_.at(best.first, best.second);
+        cell.is_civic_anchor = true;
+        cell.tile_role = "civic_anchor";
     }
 }
 
@@ -384,32 +742,29 @@ void MapGenerator::set_road(int row, int col, RoadCategory category) {
 }
 
 void MapGenerator::generate_highways() {
-    std::mt19937 rng(config_.master_seed ^ SALT_HIGHWAY);
-    std::uniform_int_distribution<int> ns_dist(config_.highway_ns_min, std::max(config_.highway_ns_min, config_.highway_ns_max));
-    std::uniform_int_distribution<int> ew_dist(config_.highway_ew_min, std::max(config_.highway_ew_min, config_.highway_ew_max));
-    const int ns_count = ns_dist(rng);
-    const int ew_count = ew_dist(rng);
+    const auto rules = rules_for_profile(config_.city_profile, config_);
+    const int ns_count = decision_range(config_.master_seed, 3, 5, SALT_HIGHWAY, config_.highway_ns_min, config_.highway_ns_max);
+    const int ew_count = decision_range(config_.master_seed, 7, 11, SALT_HIGHWAY, config_.highway_ew_min, config_.highway_ew_max);
     for (int i = 0; i < ns_count; ++i) {
         const int c = (i + 1) * grid_.width() / (ns_count + 1);
         for (int r = 0; r < grid_.height(); ++r) {
-            const int drift = static_cast<int>(std::round((fbm(r / 20.0, i, config_.master_seed ^ SALT_HIGHWAY) - 0.5) * 2.0 * config_.highway_organic * 3.0));
+            const int drift = static_cast<int>(std::round((fbm(r / 20.0, i, config_.master_seed ^ SALT_HIGHWAY) - 0.5) * 2.0 * rules.highway_organic * 3.0));
             set_road(r, std::clamp(c + drift, 0, grid_.width() - 1), RoadCategory::Highway);
         }
     }
     for (int i = 0; i < ew_count; ++i) {
         const int r = (i + 1) * grid_.height() / (ew_count + 1);
         for (int c = 0; c < grid_.width(); ++c) {
-            const int drift = static_cast<int>(std::round((fbm(c / 20.0, i + 99, config_.master_seed ^ SALT_HIGHWAY) - 0.5) * 2.0 * config_.highway_organic * 3.0));
+            const int drift = static_cast<int>(std::round((fbm(c / 20.0, i + 99, config_.master_seed ^ SALT_HIGHWAY) - 0.5) * 2.0 * rules.highway_organic * 3.0));
             set_road(std::clamp(r + drift, 0, grid_.height() - 1), c, RoadCategory::Highway);
         }
     }
 }
 
 void MapGenerator::generate_connectors() {
-    std::mt19937 rng(config_.master_seed ^ SALT_CONNECTOR);
-    std::uniform_real_distribution<double> prob(0.0, 1.0);
-    for (int c = config_.avenue_spacing; c < grid_.width(); c += config_.avenue_spacing) {
-        if (prob(rng) > config_.connector_density) {
+    const auto rules = rules_for_profile(config_.city_profile, config_);
+    for (int c = rules.avenue_spacing; c < grid_.width(); c += rules.avenue_spacing) {
+        if (decision01(config_.master_seed, c, 17, SALT_CONNECTOR) > rules.connector_density) {
             continue;
         }
         for (int r = 0; r < grid_.height(); ++r) {
@@ -418,8 +773,8 @@ void MapGenerator::generate_connectors() {
             }
         }
     }
-    for (int r = config_.connector_spacing; r < grid_.height(); r += config_.connector_spacing) {
-        if (prob(rng) > config_.connector_density) {
+    for (int r = rules.connector_spacing; r < grid_.height(); r += rules.connector_spacing) {
+        if (decision01(config_.master_seed, 23, r, SALT_CONNECTOR) > rules.connector_density) {
             continue;
         }
         for (int c = 0; c < grid_.width(); ++c) {
@@ -428,7 +783,7 @@ void MapGenerator::generate_connectors() {
             }
         }
     }
-    for (int d = 0; d < config_.diagonal_streets; ++d) {
+    for (int d = 0; d < rules.diagonal_streets; ++d) {
         int r = std::max(1, grid_.height() / 8 + d * 5);
         int c = std::max(1, grid_.width() / 8 + d * 7);
         while (r < grid_.height() - 1 && c < grid_.width() - 1) {
@@ -495,7 +850,17 @@ void MapGenerator::generate_blocks() {
                     }
                 }
             }
-            if (edge) {
+            int r0 = rows, c0 = cols, r1 = 0, c1 = 0;
+            for (const auto [r, c] : region) {
+                r0 = std::min(r0, r);
+                r1 = std::max(r1, r);
+                c0 = std::min(c0, c);
+                c1 = std::max(c1, c);
+            }
+            const int depth = std::min(r1 - r0 + 1, c1 - c0 + 1);
+            const bool too_small = static_cast<int>(region.size()) < std::max(4, config_.min_block_depth * 2) ||
+                                   depth < std::max(1, config_.min_block_depth);
+            if (edge || too_small) {
                 for (const auto [r, c] : region) {
                     grid_.at(r, c).block_id = -1;
                 }
@@ -511,13 +876,30 @@ void MapGenerator::generate_blocks() {
 }
 
 void MapGenerator::generate_parks() {
-    std::mt19937 rng(config_.master_seed ^ SALT_PARKS);
-    std::vector<int> order(blocks_.size());
-    std::iota(order.begin(), order.end(), 0);
-    std::shuffle(order.begin(), order.end(), rng);
-    const int target = std::max(1, static_cast<int>(blocks_.size()) / 8);
-    for (int i = 0; i < target && i < static_cast<int>(order.size()); ++i) {
-        for (const auto [r, c] : blocks_[static_cast<std::size_t>(order[i])]) {
+    const auto rules = rules_for_profile(config_.city_profile, config_);
+    std::vector<int> candidates;
+    candidates.reserve(blocks_.size());
+    for (std::size_t i = 0; i < blocks_.size(); ++i) {
+        const auto& block = blocks_[i];
+        const bool contains_civic = std::any_of(block.begin(), block.end(), [&](Point p) {
+            return grid_.at(p.first, p.second).is_civic_anchor;
+        });
+        if (!contains_civic &&
+            static_cast<int>(block.size()) >= rules.park_min_area &&
+            static_cast<int>(block.size()) <= rules.park_max_area) {
+            candidates.push_back(static_cast<int>(i));
+        }
+    }
+    std::sort(candidates.begin(), candidates.end(), [&](int a, int b) {
+        const auto ha = decision_hash(config_.master_seed, a, static_cast<int>(blocks_[a].size()), SALT_PARKS);
+        const auto hb = decision_hash(config_.master_seed, b, static_cast<int>(blocks_[b].size()), SALT_PARKS);
+        return ha < hb;
+    });
+
+    const int land_cells = grid_.land_count();
+    const int target = std::max(1, land_cells / 500);
+    for (int i = 0; i < target && i < static_cast<int>(candidates.size()); ++i) {
+        for (const auto [r, c] : blocks_[static_cast<std::size_t>(candidates[i])]) {
             auto& cell = grid_.at(r, c);
             cell.is_park = true;
             cell.tile_role = "park";
@@ -540,11 +922,12 @@ void MapGenerator::generate_lots() {
             r0 = std::min(r0, r); r1 = std::max(r1, r);
             c0 = std::min(c0, c); c1 = std::max(c1, c);
         }
-        const int mid_c = (c0 + c1) / 2;
+        const bool split_by_col = (c1 - c0) >= (r1 - r0);
+        const int midpoint = split_by_col ? (c0 + c1) / 2 : (r0 + r1) / 2;
         std::set<Point> left;
         std::set<Point> right;
         for (const auto [r, c] : block) {
-            (c <= mid_c ? left : right).insert({r, c});
+            ((split_by_col ? c : r) <= midpoint ? left : right).insert({r, c});
         }
         for (const auto& lot : {left, right}) {
             if (lot.size() < 4) {
@@ -573,8 +956,6 @@ void MapGenerator::compute_density() {
 }
 
 void MapGenerator::generate_buildings() {
-    std::mt19937 rng(config_.master_seed ^ SALT_BUILDINGS);
-    std::uniform_real_distribution<double> prob(0.0, 1.0);
     for (int r = 0; r < grid_.height(); ++r) {
         for (int c = 0; c < grid_.width(); ++c) {
             auto& cell = grid_.at(r, c);
@@ -590,45 +971,163 @@ void MapGenerator::generate_buildings() {
             } else if (cell.tile_role == "sidewalk") {
                 cell.encounter_chance = 0.05;
             } else if (cell.lot_id >= 0) {
-                if (cell.zone_id == ZoneId::CBD) {
-                    cell.tile_role = "bldg_cbd";
-                    cell.building_type = prob(rng) < 0.7 ? "office" : "bank";
-                } else if (cell.zone_id == ZoneId::Midtown) {
-                    cell.tile_role = "bldg_mid";
-                    cell.building_type = prob(rng) < 0.5 ? "shop" : "apartment";
-                } else {
-                    cell.tile_role = "bldg_resi";
-                    cell.building_type = prob(rng) < 0.75 ? "house" : "school";
-                }
+                cell.tile_role = "lot";
             } else {
                 cell.tile_role = "exterior";
             }
         }
     }
-    if (civic_anchor_.first >= 0) {
-        auto& c = grid_.at(civic_anchor_.first, civic_anchor_.second);
-        c.landmark_type = "town_hall";
-        c.building_type = "civic_hall";
-        c.tile_role = "bldg_civic";
-    }
-    std::vector<std::string> landmarks = {"station", "hospital", "police", "school"};
-    int placed = 0;
-    for (auto& lot : lots_) {
-        if (placed >= static_cast<int>(landmarks.size())) {
-            break;
+
+    std::map<int, std::string> landmark_by_lot;
+    if (civic_anchor_.first >= 0 && grid_.in_bounds(civic_anchor_.first, civic_anchor_.second)) {
+        const int civic_lot = grid_.at(civic_anchor_.first, civic_anchor_.second).lot_id;
+        if (civic_lot >= 0) {
+            landmark_by_lot[civic_lot] = "town_hall";
         }
+    }
+
+    std::vector<int> candidate_lots;
+    candidate_lots.reserve(lots_.size());
+    for (std::size_t i = 0; i < lots_.size(); ++i) {
+        std::set<Point> buildable;
+        for (const auto [r, c] : lots_[i]) {
+            const auto& cell = grid_.at(r, c);
+            if (cell.tile_role != "sidewalk" && !cell.is_road() && !cell.is_water && !cell.is_park) {
+                buildable.insert({r, c});
+            }
+        }
+        if (buildable.size() < 6) {
+            continue;
+        }
+        const auto anchor = representative_point(buildable);
+        const int lot_id = grid_.at(anchor.first, anchor.second).lot_id;
+        if (landmark_by_lot.find(lot_id) == landmark_by_lot.end()) {
+            candidate_lots.push_back(static_cast<int>(i));
+        }
+    }
+    std::sort(candidate_lots.begin(), candidate_lots.end(), [&](int a, int b) {
+        const auto& lot_a = lots_[static_cast<std::size_t>(a)];
+        const auto& lot_b = lots_[static_cast<std::size_t>(b)];
+        const auto pa = representative_point(lot_a);
+        const auto pb = representative_point(lot_b);
+        const auto ha = decision_hash(config_.master_seed, grid_.at(pa.first, pa.second).lot_id,
+                                      static_cast<int>(lot_a.size()), SALT_BUILDINGS);
+        const auto hb = decision_hash(config_.master_seed, grid_.at(pb.first, pb.second).lot_id,
+                                      static_cast<int>(lot_b.size()), SALT_BUILDINGS);
+        return ha < hb;
+    });
+
+    const std::vector<std::string> civic_landmarks = {"station", "hospital", "police", "school"};
+    for (std::size_t i = 0; i < civic_landmarks.size() && i < candidate_lots.size(); ++i) {
+        const auto anchor = representative_point(lots_[static_cast<std::size_t>(candidate_lots[i])]);
+        landmark_by_lot[grid_.at(anchor.first, anchor.second).lot_id] = civic_landmarks[i];
+    }
+
+    int building_id = 0;
+    for (const auto& lot : lots_) {
         if (lot.empty()) {
             continue;
         }
-        const auto [r, c] = *lot.begin();
-        auto& cell = grid_.at(r, c);
-        if (!cell.landmark_type.empty()) {
+        std::set<Point> buildable;
+        for (const auto [r, c] : lot) {
+            const auto& cell = grid_.at(r, c);
+            if (cell.tile_role != "sidewalk" && !cell.is_road() && !cell.is_water && !cell.is_park) {
+                buildable.insert({r, c});
+            }
+        }
+        if (buildable.empty()) {
             continue;
         }
-        cell.landmark_type = landmarks[static_cast<std::size_t>(placed)];
-        cell.building_type = landmarks[static_cast<std::size_t>(placed)];
-        cell.tile_role = "bldg_civic";
-        ++placed;
+        const auto lot_anchor = representative_point(buildable);
+        const int lot_id = grid_.at(lot_anchor.first, lot_anchor.second).lot_id;
+        if (lot_id < 0) {
+            continue;
+        }
+        const auto bounds = bounds_for(buildable);
+        const ZoneId zone = dominant_zone(buildable, grid_);
+        const bool waterfront = touches_waterfront(buildable, grid_);
+        const auto landmark_it = landmark_by_lot.find(lot_id);
+        const std::string landmark_type = landmark_it == landmark_by_lot.end() ? "" : landmark_it->second;
+        const double roll = decision01(config_.master_seed, lot_id, static_cast<int>(buildable.size()), SALT_BUILDINGS);
+
+        std::string building_type;
+        if (landmark_type == "town_hall") {
+            building_type = "civic";
+        } else if (!landmark_type.empty()) {
+            building_type = landmark_type;
+        } else {
+            building_type = pick_building_type(zone, roll, waterfront);
+        }
+        if (building_type == "empty") {
+            for (const auto [r, c] : buildable) {
+                auto& cell = grid_.at(r, c);
+                cell.tile_role = "exterior";
+                cell.building_type.clear();
+                cell.landmark_type.clear();
+            }
+            continue;
+        }
+
+        const bool uses_setback = zone == ZoneId::Residential &&
+                                  buildable.size() >= 9 &&
+                                  landmark_type.empty() &&
+                                  building_type != "apartment";
+        std::set<Point> footprint;
+        for (const auto [r, c] : buildable) {
+            const bool perimeter = r == bounds.r0 || r == bounds.r1 || c == bounds.c0 || c == bounds.c1;
+            auto& cell = grid_.at(r, c);
+            if (uses_setback && perimeter) {
+                cell.is_setback = true;
+                cell.tile_role = "setback";
+                cell.encounter_chance = 0.03;
+                continue;
+            }
+            footprint.insert({r, c});
+        }
+        if (footprint.empty()) {
+            footprint.insert(lot_anchor);
+            grid_.at(lot_anchor.first, lot_anchor.second).is_setback = false;
+        }
+
+        const auto footprint_bounds = bounds_for(footprint);
+        const auto anchor = representative_point(footprint);
+        const int floors = floor_count_for(zone, building_type, config_.master_seed, lot_id);
+        const std::string profile_id = profile_for(config_.city_profile).id;
+        const std::string footprint_style = footprint_style_for(profile_id, zone, building_type, footprint_bounds);
+        const std::string roof_type = landmark_type.empty() ? roof_for(profile_id, building_type, floors) : "";
+        const std::string facade = facade_family_for(profile_id, building_type);
+        const std::string tile_role = tile_role_for_building(zone, building_type, landmark_type);
+        const std::string asset_slot = asset_slot_for_building_record(building_type, landmark_type);
+
+        for (const auto [r, c] : footprint) {
+            auto& cell = grid_.at(r, c);
+            cell.tile_role = tile_role;
+            cell.building_type = building_type;
+            cell.landmark_type = landmark_type;
+            cell.footprint_style = footprint_style;
+            cell.encounter_chance = tile_role == "bldg_civic" ? 0.16 : (zone == ZoneId::CBD ? 0.10 : 0.06);
+        }
+
+        BuildingAssemblyRecord record;
+        record.id = building_id++;
+        record.lot_id = lot_id;
+        record.block_id = grid_.at(anchor.first, anchor.second).block_id;
+        record.anchor_row = anchor.first;
+        record.anchor_col = anchor.second;
+        record.footprint_r0 = footprint_bounds.r0;
+        record.footprint_c0 = footprint_bounds.c0;
+        record.footprint_r1 = footprint_bounds.r1;
+        record.footprint_c1 = footprint_bounds.c1;
+        record.floors = floors;
+        record.zone = to_string(zone);
+        record.building_type = building_type;
+        record.landmark_type = landmark_type;
+        record.footprint_style = footprint_style;
+        record.facade_family = facade;
+        record.roof_type = roof_type;
+        record.asset_slot = asset_slot;
+        record.sprite_stack = sprite_stack_for(profile_id, building_type, landmark_type, floors, config_.master_seed, lot_id);
+        buildings_.push_back(std::move(record));
     }
 }
 
@@ -646,6 +1145,7 @@ void MapGenerator::generate_district_names() {
 }
 
 void MapGenerator::compute_stats() {
+    stats_ = MapStats{};
     stats_.seed = config_.master_seed;
     stats_.width = grid_.width();
     stats_.height = grid_.height();
@@ -655,6 +1155,7 @@ void MapGenerator::compute_stats() {
     stats_.sidewalks = grid_.sidewalk_count();
     stats_.blocks = static_cast<int>(blocks_.size());
     stats_.lots = static_cast<int>(lots_.size());
+    stats_.buildings = static_cast<int>(buildings_.size());
     stats_.parks = 0;
     for (const auto& block : blocks_) {
         const bool is_park_block = std::any_of(block.begin(), block.end(), [&](Point p) {
@@ -678,13 +1179,17 @@ void MapGenerator::compute_stats() {
 DesignBlueprint MapGenerator::to_design_blueprint(const std::string& profile_id) const {
     DesignBlueprint out;
     out.profile = profile_for(profile_id.empty() ? config_.city_profile : profile_id);
+    out.seed = config_.master_seed;
+    out.resolved_coast_side = to_string(resolved_coast_side_);
     out.width = grid_.width();
     out.height = grid_.height();
     out.required_asset_slots = {
-        "terrain/water", "terrain/exterior", "road/highway", "road/connector",
-        "street/sidewalk", "landscape/park", "building/office", "building/shop",
-        "building/apartment", "building/house", "landmark/town_hall",
-        "landmark/station", "landmark/hospital", "landmark/police", "landmark/school"
+        "terrain/water", "terrain/exterior", "street/road", "street/sidewalk",
+        "landscape/park", "building/office", "building/shop", "building/apartment",
+        "building/house", "building/restaurant", "building/market", "building/bank",
+        "building/civic", "building/roof", "overlay/shadow", "prop/facade_kit",
+        "landmark/town_hall", "landmark/station", "landmark/hospital",
+        "landmark/police", "landmark/school"
     };
     for (int r = 0; r < grid_.height(); ++r) {
         for (int c = 0; c < grid_.width(); ++c) {
@@ -692,10 +1197,7 @@ DesignBlueprint MapGenerator::to_design_blueprint(const std::string& profile_id)
             if (cell.is_road()) {
                 out.roads.push_back({r, c, to_string(cell.road_category), grid_.road_bitmask(r, c),
                                      to_string(cell.zone_id), grid_.road_bitmask(r, c) == 15,
-                                     cell.road_category == RoadCategory::Highway ? "road/highway" : "road/connector"});
-            }
-            if (!cell.landmark_type.empty()) {
-                out.landmarks.push_back({cell.landmark_type, r, c, "landmark/" + cell.landmark_type});
+                                     "street/road"});
             }
         }
     }
@@ -715,13 +1217,39 @@ DesignBlueprint MapGenerator::to_design_blueprint(const std::string& profile_id)
         }
         out.blocks.push_back({id, static_cast<int>(block.size()), r0, c0, r1, c1, to_string(zone), park});
     }
+    std::map<int, const BuildingAssemblyRecord*> building_by_lot;
+    for (const auto& building : buildings_) {
+        building_by_lot[building.lot_id] = &building;
+        if (!building.landmark_type.empty()) {
+            out.landmarks.push_back({building.landmark_type, building.anchor_row, building.anchor_col, building.asset_slot});
+        }
+        std::ostringstream reason;
+        reason << "profile=" << out.profile.id
+               << ";type=" << building.building_type
+               << ";floors=" << building.floors
+               << ";footprint=" << building.footprint_style;
+        out.sprite_assignments.push_back({
+            "building",
+            building.id,
+            building.anchor_row,
+            building.anchor_col,
+            building.asset_slot,
+            building.sprite_stack,
+            reason.str(),
+            decision_hash(config_.master_seed, building.lot_id, building.floors, SALT_BUILDINGS)
+        });
+    }
+    out.buildings = buildings_;
     for (const auto& lot : lots_) {
         if (lot.empty()) continue;
-        const auto [r, c] = *lot.begin();
+        const auto [r, c] = representative_point(lot);
         const auto& cell = grid_.at(r, c);
+        const auto building_it = building_by_lot.find(cell.lot_id);
+        const BuildingAssemblyRecord* building = building_it == building_by_lot.end() ? nullptr : building_it->second;
         out.lots.push_back({cell.lot_id, cell.block_id, static_cast<int>(lot.size()), to_string(cell.zone_id),
-                            cell.building_type, cell.landmark_type,
-                            cell.landmark_type.empty() ? "building/" + cell.building_type : "landmark/" + cell.landmark_type});
+                            building ? building->building_type : "",
+                            building ? building->landmark_type : "",
+                            building ? building->asset_slot : "terrain/exterior"});
     }
     return out;
 }

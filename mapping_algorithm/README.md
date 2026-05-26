@@ -1,6 +1,6 @@
 # Mapping Algorithm
 
-This folder contains the native C++17 procedural city generator.
+Native C++17 procedural city generation and deployable map export.
 
 ## Structure
 
@@ -12,12 +12,10 @@ mapping_algorithm/
       design_blueprint.hpp
       map_generator.hpp
       map_types.hpp
-    src/
-      map_generator.cpp
-    examples/
-      demo.cpp
-    tests/
-      smoke.cpp
+    src/map_generator.cpp
+    examples/demo.cpp
+    tests/smoke.cpp
+    tools/city_exporter.cpp
 ```
 
 ## Build
@@ -41,11 +39,25 @@ cmake --build build/mapping_algorithm
 `mapping_algorithm_smoke` runs the native deterministic gate:
 
 - 12 seeds.
-- 5 coast modes.
-- repeated generation per config to verify determinism.
-- city anatomy checks for land, roads, blocks, lots, parks, spawns, landmarks.
-- design blueprint checks for roads, blocks, lots, asset requirements, and profile
-  identity.
+- 6 coast modes, including deterministic resolution of `random`.
+- repeat generation on fresh and reused generator instances.
+- anatomy checks for land, roads, blocks, lots, parks, spawns, landmarks, and
+  buildings.
+- road-density guard rails.
+- blueprint checks for roads, blocks, lots, buildings, sprite assignments,
+  normalized asset slots, and profile identity.
+- invalid-config rejection checks.
+
+## Export Tool
+
+`mapping_city_exporter` writes a deployable JSON file for a seed:
+
+```bash
+mapping_city_exporter --seed 7 --profile manhattan --coast west --out exports/seed_7.json
+```
+
+The JSON includes the resolved city design, every assembled building, every
+sprite assignment, and every cell's gameplay/design metadata.
 
 ## API Example
 
@@ -75,6 +87,10 @@ DesignBlueprint blueprint = generator.to_design_blueprint();
 - `MapCell`: per-cell terrain, road, zone, lot, building, encounter, and design
   metadata.
 - `MapGrid`: fixed-size city grid with road and sidewalk helpers.
-- `MapStats`: generation summary.
-- `DesignBlueprint`: design-facing export for city profile, roads, blocks, lots,
-  landmarks, and required asset slots.
+- `MapStats`: generation summary, including building count.
+- `BuildingAssemblyRecord`: lot-level building result with footprint, floors,
+  facade/roof selection, asset slot, and sprite stack.
+- `SpriteAssignmentRecord`: renderer-facing sprite stack assigned to a generated
+  target.
+- `DesignBlueprint`: design-facing export for profile, roads, blocks, lots,
+  landmarks, buildings, sprite assignments, and required asset slots.

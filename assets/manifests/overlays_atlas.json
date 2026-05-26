@@ -1,0 +1,150 @@
+{
+  "schema": "atlas_manifest.v1",
+  "atlas_id": "overlays",
+  "file": "runtime/overlays.atlas.png",
+  "size": [
+    2048,
+    882
+  ],
+  "sprite_count": 23,
+  "sprites": {
+    "overlay_sign_neon_b": [
+      0,
+      0,
+      74,
+      616
+    ],
+    "overlay_bldg_stain_a": [
+      76,
+      0,
+      148,
+      312
+    ],
+    "overlay_lamp_cone_a": [
+      226,
+      0,
+      148,
+      298
+    ],
+    "overlay_bldg_moss_a": [
+      376,
+      0,
+      201,
+      288
+    ],
+    "overlay_bldg_graffiti_b": [
+      579,
+      0,
+      180,
+      287
+    ],
+    "overlay_bldg_damage_a": [
+      761,
+      0,
+      194,
+      283
+    ],
+    "shadow_bldg_2x2": [
+      957,
+      0,
+      442,
+      264
+    ],
+    "shadow_bldg_2x1": [
+      1401,
+      0,
+      296,
+      171
+    ],
+    "overlay_bldg_graffiti_a": [
+      1699,
+      0,
+      181,
+      165
+    ],
+    "overlay_window_lit_warm": [
+      0,
+      618,
+      248,
+      143
+    ],
+    "overlay_window_lit_warm_b": [
+      250,
+      618,
+      247,
+      141
+    ],
+    "overlay_window_lit_cold": [
+      499,
+      618,
+      230,
+      138
+    ],
+    "overlay_window_lit_warm_c": [
+      731,
+      618,
+      249,
+      133
+    ],
+    "overlay_window_lit_cold_b": [
+      982,
+      618,
+      228,
+      131
+    ],
+    "overlay_sign_neon_a": [
+      1212,
+      618,
+      140,
+      129
+    ],
+    "overlay_window_lit_warm_d": [
+      1354,
+      618,
+      246,
+      120
+    ],
+    "overlay_window_lit_cold_c": [
+      1602,
+      618,
+      228,
+      119
+    ],
+    "overlay_lamp_cone_b": [
+      1832,
+      618,
+      87,
+      119
+    ],
+    "overlay_sign_neon_c": [
+      0,
+      763,
+      131,
+      119
+    ],
+    "shadow_bldg_1x1": [
+      133,
+      763,
+      149,
+      110
+    ],
+    "overlay_sign_neon_d": [
+      284,
+      763,
+      120,
+      106
+    ],
+    "overlay_window_lit_cold_d": [
+      406,
+      763,
+      229,
+      105
+    ],
+    "overlay_lamp_cone_c": [
+      637,
+      763,
+      69,
+      96
+    ]
+  }
+}

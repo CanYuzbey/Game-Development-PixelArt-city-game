@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -52,8 +53,43 @@ struct LandmarkRecord {
     std::string asset_slot;
 };
 
+struct BuildingAssemblyRecord {
+    int id = -1;
+    int lot_id = -1;
+    int block_id = -1;
+    int anchor_row = 0;
+    int anchor_col = 0;
+    int footprint_r0 = 0;
+    int footprint_c0 = 0;
+    int footprint_r1 = 0;
+    int footprint_c1 = 0;
+    int floors = 1;
+    std::string zone;
+    std::string building_type;
+    std::string landmark_type;
+    std::string footprint_style;
+    std::string facade_family;
+    std::string roof_type;
+    std::string asset_slot;
+    std::vector<std::string> sprite_stack;
+};
+
+struct SpriteAssignmentRecord {
+    std::string target_kind;
+    int target_id = -1;
+    int row = 0;
+    int col = 0;
+    std::string asset_slot;
+    std::vector<std::string> sprite_ids;
+    std::string reason;
+    std::uint32_t decision_hash = 0;
+};
+
 struct DesignBlueprint {
     std::string schema = "city_design_blueprint.v1";
+    std::uint32_t seed = 0;
+    std::string algorithm_version = "mapping_algorithm_cpp.v2";
+    std::string resolved_coast_side;
     CityProfile profile;
     int width = 0;
     int height = 0;
@@ -61,6 +97,8 @@ struct DesignBlueprint {
     std::vector<BlockRecord> blocks;
     std::vector<LotRecord> lots;
     std::vector<LandmarkRecord> landmarks;
+    std::vector<BuildingAssemblyRecord> buildings;
+    std::vector<SpriteAssignmentRecord> sprite_assignments;
     std::vector<std::string> required_asset_slots;
 };
 

@@ -24,8 +24,10 @@ int main() {
               << " roads=" << stats.roads
               << " blocks=" << stats.blocks
               << " lots=" << stats.lots
+              << " buildings=" << stats.buildings
               << " landmarks=" << stats.landmarks
               << " profile=" << blueprint.profile.id
+              << " coast=" << blueprint.resolved_coast_side
               << "\n";
 
     return 0;

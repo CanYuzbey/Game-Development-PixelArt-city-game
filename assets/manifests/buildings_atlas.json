@@ -1,0 +1,156 @@
+{
+  "schema": "atlas_manifest.v1",
+  "atlas_id": "buildings",
+  "file": "runtime/buildings.atlas.png",
+  "size": [
+    2048,
+    934
+  ],
+  "sprite_count": 24,
+  "sprites": {
+    "bldg_civic_columns_a": [
+      0,
+      0,
+      576,
+      564
+    ],
+    "bldg_civic_columns_b": [
+      578,
+      0,
+      576,
+      562
+    ],
+    "bldg_cbd_brick_a": [
+      1156,
+      0,
+      120,
+      217
+    ],
+    "bldg_cbd_concrete_a": [
+      1278,
+      0,
+      113,
+      215
+    ],
+    "bldg_civic_a": [
+      1393,
+      0,
+      210,
+      215
+    ],
+    "bldg_cbd_glass_a": [
+      1605,
+      0,
+      115,
+      214
+    ],
+    "bldg_cbd_corner_glass": [
+      1722,
+      0,
+      106,
+      208
+    ],
+    "bldg_cbd_glass_b": [
+      1830,
+      0,
+      109,
+      203
+    ],
+    "bldg_mid_brownstone_a": [
+      1941,
+      0,
+      106,
+      202
+    ],
+    "bldg_mid_brownstone_b": [
+      0,
+      566,
+      104,
+      202
+    ],
+    "bldg_resi_terrace_a": [
+      106,
+      566,
+      191,
+      199
+    ],
+    "bldg_mid_stucco_a": [
+      299,
+      566,
+      181,
+      190
+    ],
+    "bldg_mid_limestone_a": [
+      482,
+      566,
+      184,
+      190
+    ],
+    "bldg_resi_detached_b": [
+      668,
+      566,
+      272,
+      190
+    ],
+    "bldg_resi_detached_a": [
+      942,
+      566,
+      268,
+      189
+    ],
+    "bldg_mid_brick_b": [
+      1212,
+      566,
+      182,
+      188
+    ],
+    "bldg_resi_rowhouse_a": [
+      1396,
+      566,
+      121,
+      187
+    ],
+    "bldg_bank_a": [
+      1519,
+      566,
+      139,
+      187
+    ],
+    "bldg_mid_brick_a": [
+      1660,
+      566,
+      177,
+      186
+    ],
+    "bldg_resi_rowhouse_b": [
+      1839,
+      566,
+      119,
+      183
+    ],
+    "bldg_shop_storefront_b": [
+      0,
+      770,
+      231,
+      164
+    ],
+    "bldg_restaurant_a": [
+      233,
+      770,
+      173,
+      164
+    ],
+    "bldg_market_a": [
+      408,
+      770,
+      218,
+      164
+    ],
+    "bldg_shop_storefront_a": [
+      628,
+      770,
+      127,
+      155
+    ]
+  }
+}

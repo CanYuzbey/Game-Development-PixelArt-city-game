@@ -22,6 +22,8 @@ public:
     const MapStats& stats() const noexcept { return stats_; }
     const std::vector<std::set<std::pair<int, int>>>& blocks() const noexcept { return blocks_; }
     const std::vector<std::set<std::pair<int, int>>>& lots() const noexcept { return lots_; }
+    const std::vector<BuildingAssemblyRecord>& buildings() const noexcept { return buildings_; }
+    CoastSide resolved_coast_side() const noexcept { return resolved_coast_side_; }
 
     DesignBlueprint to_design_blueprint(const std::string& profile_id = "") const;
 
@@ -41,6 +43,7 @@ private:
     void generate_district_names();
     void compute_stats();
 
+    void validate_config() const;
     void set_road(int row, int col, RoadCategory category);
     bool can_place_road(int row, int col) const;
 
@@ -49,7 +52,9 @@ private:
     MapStats stats_;
     std::vector<std::set<std::pair<int, int>>> blocks_;
     std::vector<std::set<std::pair<int, int>>> lots_;
+    std::vector<BuildingAssemblyRecord> buildings_;
     std::pair<int, int> civic_anchor_{-1, -1};
+    CoastSide resolved_coast_side_ = CoastSide::None;
 };
 
 std::string to_string(CoastSide side);

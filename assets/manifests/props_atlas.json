@@ -1,0 +1,180 @@
+{
+  "schema": "atlas_manifest.v1",
+  "atlas_id": "props",
+  "file": "runtime/props.atlas.png",
+  "size": [
+    2048,
+    727
+  ],
+  "sprite_count": 28,
+  "sprites": {
+    "prop_hydrant_a": [
+      0,
+      0,
+      108,
+      521
+    ],
+    "prop_hydrant_c": [
+      110,
+      0,
+      116,
+      519
+    ],
+    "prop_hydrant_d": [
+      228,
+      0,
+      120,
+      519
+    ],
+    "prop_hydrant_e": [
+      350,
+      0,
+      107,
+      519
+    ],
+    "prop_hydrant_b": [
+      459,
+      0,
+      110,
+      518
+    ],
+    "prop_atm_a": [
+      571,
+      0,
+      116,
+      396
+    ],
+    "prop_atm_b": [
+      689,
+      0,
+      95,
+      306
+    ],
+    "prop_atm_c": [
+      786,
+      0,
+      95,
+      304
+    ],
+    "prop_traffic_light_ns": [
+      883,
+      0,
+      70,
+      256
+    ],
+    "prop_traffic_light_ns_w": [
+      955,
+      0,
+      69,
+      255
+    ],
+    "prop_traffic_light_ew": [
+      1026,
+      0,
+      68,
+      253
+    ],
+    "prop_traffic_light_arm": [
+      1096,
+      0,
+      168,
+      248
+    ],
+    "prop_traffic_light_arm_c": [
+      1266,
+      0,
+      181,
+      238
+    ],
+    "prop_traffic_light_arm_b": [
+      1449,
+      0,
+      171,
+      234
+    ],
+    "prop_traffic_light_arm_w": [
+      1622,
+      0,
+      181,
+      234
+    ],
+    "prop_bus_stop_a": [
+      0,
+      523,
+      809,
+      204
+    ],
+    "prop_street_sign_post": [
+      811,
+      523,
+      90,
+      201
+    ],
+    "prop_street_sign_cross": [
+      903,
+      523,
+      271,
+      201
+    ],
+    "prop_phone_booth_a": [
+      1176,
+      523,
+      92,
+      146
+    ],
+    "prop_phone_booth_b": [
+      1270,
+      523,
+      87,
+      143
+    ],
+    "prop_news_box_a": [
+      1359,
+      523,
+      86,
+      143
+    ],
+    "prop_phone_booth_c": [
+      1447,
+      523,
+      87,
+      143
+    ],
+    "prop_phone_booth_d": [
+      1536,
+      523,
+      87,
+      139
+    ],
+    "prop_phone_booth_e": [
+      1625,
+      523,
+      86,
+      138
+    ],
+    "prop_phone_booth_f": [
+      1713,
+      523,
+      86,
+      138
+    ],
+    "prop_phone_booth_g": [
+      1801,
+      523,
+      86,
+      137
+    ],
+    "prop_newspaper_pile": [
+      1889,
+      523,
+      67,
+      112
+    ],
+    "prop_newspaper_pile_b": [
+      1958,
+      523,
+      67,
+      110
+    ]
+  }
+}

@@ -1,0 +1,210 @@
+{
+  "schema": "atlas_manifest.v1",
+  "atlas_id": "coastal",
+  "file": "runtime/coastal.atlas.png",
+  "size": [
+    2048,
+    311
+  ],
+  "sprite_count": 33,
+  "sprites": {
+    "coast_seawall_corner_ne": [
+      0,
+      0,
+      162,
+      119
+    ],
+    "coast_seawall_corner_nw": [
+      164,
+      0,
+      119,
+      119
+    ],
+    "coast_seawall_corner_nw_clean": [
+      285,
+      0,
+      119,
+      118
+    ],
+    "coast_seawall_corner_ne_clean": [
+      406,
+      0,
+      162,
+      115
+    ],
+    "coast_beach_corner_ne": [
+      570,
+      0,
+      143,
+      109
+    ],
+    "coast_beach_corner_nw": [
+      715,
+      0,
+      140,
+      107
+    ],
+    "coast_seawall_s": [
+      857,
+      0,
+      138,
+      105
+    ],
+    "coast_seawall_w": [
+      997,
+      0,
+      83,
+      105
+    ],
+    "coast_beach_corner_se": [
+      1082,
+      0,
+      135,
+      104
+    ],
+    "coast_beach_corner_sw": [
+      1219,
+      0,
+      134,
+      104
+    ],
+    "coast_seawall_n": [
+      1355,
+      0,
+      143,
+      104
+    ],
+    "coast_seawall_e": [
+      1500,
+      0,
+      129,
+      104
+    ],
+    "coast_cliff_e_weathered": [
+      1631,
+      0,
+      168,
+      100
+    ],
+    "coast_dock_plank_ns_weathered": [
+      1801,
+      0,
+      115,
+      99
+    ],
+    "coast_cliff_n_weathered": [
+      0,
+      121,
+      189,
+      99
+    ],
+    "coast_dock_edge_n_weathered": [
+      191,
+      121,
+      224,
+      98
+    ],
+    "coast_cliff_e": [
+      417,
+      121,
+      168,
+      98
+    ],
+    "coast_dock_plank_ns": [
+      587,
+      121,
+      115,
+      97
+    ],
+    "coast_dock_plank_ew": [
+      704,
+      121,
+      128,
+      97
+    ],
+    "coast_dock_edge_n": [
+      834,
+      121,
+      224,
+      97
+    ],
+    "coast_cliff_n": [
+      1060,
+      121,
+      189,
+      97
+    ],
+    "coast_cliff_s": [
+      1251,
+      121,
+      189,
+      96
+    ],
+    "coast_cliff_w": [
+      1442,
+      121,
+      194,
+      96
+    ],
+    "coast_beach_n_weathered": [
+      1638,
+      121,
+      138,
+      90
+    ],
+    "coast_beach_e": [
+      1778,
+      121,
+      125,
+      90
+    ],
+    "coast_beach_e_weathered": [
+      1905,
+      121,
+      125,
+      90
+    ],
+    "coast_beach_n": [
+      0,
+      222,
+      138,
+      89
+    ],
+    "coast_dock_edge_e_weathered": [
+      140,
+      222,
+      191,
+      89
+    ],
+    "coast_beach_s": [
+      333,
+      222,
+      129,
+      88
+    ],
+    "coast_beach_s_weathered": [
+      464,
+      222,
+      128,
+      88
+    ],
+    "coast_beach_w_weathered": [
+      594,
+      222,
+      75,
+      88
+    ],
+    "coast_dock_edge_e": [
+      671,
+      222,
+      190,
+      88
+    ],
+    "coast_beach_w": [
+      863,
+      222,
+      74,
+      87
+    ]
+  }
+}

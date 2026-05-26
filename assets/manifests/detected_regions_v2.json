@@ -1,0 +1,3298 @@
+{
+  "schema": "detected_regions.v2",
+  "sheets": {
+    "terrain_ground": {
+      "description": "Terrain & ground tiles",
+      "source_file": "source/terrain_ground.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGB",
+      "alpha_status": "RGB_no_alpha_needs_conversion",
+      "detected_region_count": 20,
+      "regions": [
+        {
+          "index": 0,
+          "pixel_rect": [
+            17,
+            80,
+            301,
+            202
+          ]
+        },
+        {
+          "index": 1,
+          "pixel_rect": [
+            327,
+            80,
+            295,
+            201
+          ]
+        },
+        {
+          "index": 2,
+          "pixel_rect": [
+            631,
+            79,
+            296,
+            205
+          ]
+        },
+        {
+          "index": 3,
+          "pixel_rect": [
+            934,
+            79,
+            296,
+            203
+          ]
+        },
+        {
+          "index": 4,
+          "pixel_rect": [
+            19,
+            288,
+            297,
+            208
+          ]
+        },
+        {
+          "index": 5,
+          "pixel_rect": [
+            327,
+            288,
+            297,
+            208
+          ]
+        },
+        {
+          "index": 6,
+          "pixel_rect": [
+            631,
+            287,
+            295,
+            208
+          ]
+        },
+        {
+          "index": 7,
+          "pixel_rect": [
+            934,
+            287,
+            296,
+            208
+          ]
+        },
+        {
+          "index": 8,
+          "pixel_rect": [
+            17,
+            500,
+            299,
+            211
+          ]
+        },
+        {
+          "index": 9,
+          "pixel_rect": [
+            327,
+            500,
+            296,
+            211
+          ]
+        },
+        {
+          "index": 10,
+          "pixel_rect": [
+            631,
+            500,
+            296,
+            211
+          ]
+        },
+        {
+          "index": 11,
+          "pixel_rect": [
+            934,
+            500,
+            296,
+            210
+          ]
+        },
+        {
+          "index": 12,
+          "pixel_rect": [
+            16,
+            713,
+            302,
+            210
+          ]
+        },
+        {
+          "index": 13,
+          "pixel_rect": [
+            327,
+            713,
+            296,
+            211
+          ]
+        },
+        {
+          "index": 14,
+          "pixel_rect": [
+            632,
+            713,
+            294,
+            211
+          ]
+        },
+        {
+          "index": 15,
+          "pixel_rect": [
+            932,
+            713,
+            298,
+            211
+          ]
+        },
+        {
+          "index": 16,
+          "pixel_rect": [
+            17,
+            925,
+            298,
+            213
+          ]
+        },
+        {
+          "index": 17,
+          "pixel_rect": [
+            328,
+            925,
+            295,
+            213
+          ]
+        },
+        {
+          "index": 18,
+          "pixel_rect": [
+            632,
+            925,
+            294,
+            214
+          ]
+        },
+        {
+          "index": 19,
+          "pixel_rect": [
+            934,
+            925,
+            297,
+            214
+          ]
+        }
+      ]
+    },
+    "coastal": {
+      "description": "Coastal & waterfront tiles",
+      "source_file": "source/coastal.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGB",
+      "alpha_status": "RGB_no_alpha_needs_conversion",
+      "detected_region_count": 26,
+      "regions": [
+        {
+          "index": 0,
+          "pixel_rect": [
+            11,
+            5,
+            226,
+            49
+          ]
+        },
+        {
+          "index": 1,
+          "pixel_rect": [
+            112,
+            43,
+            435,
+            115
+          ]
+        },
+        {
+          "index": 2,
+          "pixel_rect": [
+            537,
+            44,
+            97,
+            112
+          ]
+        },
+        {
+          "index": 3,
+          "pixel_rect": [
+            665,
+            5,
+            582,
+            267
+          ]
+        },
+        {
+          "index": 4,
+          "pixel_rect": [
+            11,
+            72,
+            84,
+            51
+          ]
+        },
+        {
+          "index": 5,
+          "pixel_rect": [
+            11,
+            148,
+            534,
+            113
+          ]
+        },
+        {
+          "index": 6,
+          "pixel_rect": [
+            537,
+            150,
+            96,
+            110
+          ]
+        },
+        {
+          "index": 7,
+          "pixel_rect": [
+            11,
+            279,
+            635,
+            272
+          ]
+        },
+        {
+          "index": 8,
+          "pixel_rect": [
+            660,
+            279,
+            309,
+            278
+          ]
+        },
+        {
+          "index": 9,
+          "pixel_rect": [
+            11,
+            340,
+            84,
+            49
+          ]
+        },
+        {
+          "index": 10,
+          "pixel_rect": [
+            964,
+            303,
+            288,
+            254
+          ]
+        },
+        {
+          "index": 11,
+          "pixel_rect": [
+            11,
+            554,
+            239,
+            251
+          ]
+        },
+        {
+          "index": 12,
+          "pixel_rect": [
+            240,
+            579,
+            153,
+            226
+          ]
+        },
+        {
+          "index": 13,
+          "pixel_rect": [
+            396,
+            575,
+            248,
+            225
+          ]
+        },
+        {
+          "index": 14,
+          "pixel_rect": [
+            657,
+            554,
+            223,
+            143
+          ]
+        },
+        {
+          "index": 15,
+          "pixel_rect": [
+            886,
+            585,
+            197,
+            115
+          ]
+        },
+        {
+          "index": 16,
+          "pixel_rect": [
+            11,
+            608,
+            84,
+            48
+          ]
+        },
+        {
+          "index": 17,
+          "pixel_rect": [
+            655,
+            692,
+            214,
+            110
+          ]
+        },
+        {
+          "index": 18,
+          "pixel_rect": [
+            886,
+            690,
+            197,
+            116
+          ]
+        },
+        {
+          "index": 19,
+          "pixel_rect": [
+            11,
+            802,
+            311,
+            257
+          ]
+        },
+        {
+          "index": 20,
+          "pixel_rect": [
+            316,
+            830,
+            192,
+            231
+          ]
+        },
+        {
+          "index": 21,
+          "pixel_rect": [
+            533,
+            832,
+            212,
+            227
+          ]
+        },
+        {
+          "index": 22,
+          "pixel_rect": [
+            759,
+            832,
+            216,
+            229
+          ]
+        },
+        {
+          "index": 23,
+          "pixel_rect": [
+            979,
+            831,
+            110,
+            118
+          ]
+        },
+        {
+          "index": 24,
+          "pixel_rect": [
+            11,
+            859,
+            84,
+            49
+          ]
+        },
+        {
+          "index": 25,
+          "pixel_rect": [
+            979,
+            940,
+            110,
+            118
+          ]
+        }
+      ]
+    },
+    "park_objects": {
+      "description": "Park & landscape objects",
+      "source_file": "source/park_objects.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGB",
+      "alpha_status": "RGB_no_alpha_needs_conversion",
+      "detected_region_count": 31,
+      "regions": [
+        {
+          "index": 0,
+          "pixel_rect": [
+            46,
+            28,
+            163,
+            228
+          ]
+        },
+        {
+          "index": 1,
+          "pixel_rect": [
+            221,
+            31,
+            167,
+            224
+          ]
+        },
+        {
+          "index": 2,
+          "pixel_rect": [
+            386,
+            34,
+            161,
+            222
+          ]
+        },
+        {
+          "index": 3,
+          "pixel_rect": [
+            608,
+            20,
+            319,
+            241
+          ]
+        },
+        {
+          "index": 4,
+          "pixel_rect": [
+            929,
+            20,
+            143,
+            240
+          ]
+        },
+        {
+          "index": 5,
+          "pixel_rect": [
+            1079,
+            20,
+            147,
+            240
+          ]
+        },
+        {
+          "index": 6,
+          "pixel_rect": [
+            54,
+            260,
+            152,
+            141
+          ]
+        },
+        {
+          "index": 7,
+          "pixel_rect": [
+            223,
+            265,
+            150,
+            135
+          ]
+        },
+        {
+          "index": 8,
+          "pixel_rect": [
+            387,
+            262,
+            149,
+            138
+          ]
+        },
+        {
+          "index": 9,
+          "pixel_rect": [
+            569,
+            274,
+            176,
+            134
+          ]
+        },
+        {
+          "index": 10,
+          "pixel_rect": [
+            753,
+            262,
+            173,
+            147
+          ]
+        },
+        {
+          "index": 11,
+          "pixel_rect": [
+            928,
+            266,
+            158,
+            139
+          ]
+        },
+        {
+          "index": 12,
+          "pixel_rect": [
+            1081,
+            264,
+            154,
+            141
+          ]
+        },
+        {
+          "index": 13,
+          "pixel_rect": [
+            54,
+            403,
+            195,
+            168
+          ]
+        },
+        {
+          "index": 14,
+          "pixel_rect": [
+            338,
+            405,
+            196,
+            167
+          ]
+        },
+        {
+          "index": 15,
+          "pixel_rect": [
+            578,
+            414,
+            326,
+            344
+          ]
+        },
+        {
+          "index": 16,
+          "pixel_rect": [
+            901,
+            411,
+            314,
+            347
+          ]
+        },
+        {
+          "index": 17,
+          "pixel_rect": [
+            66,
+            567,
+            203,
+            177
+          ]
+        },
+        {
+          "index": 18,
+          "pixel_rect": [
+            288,
+            566,
+            205,
+            180
+          ]
+        },
+        {
+          "index": 19,
+          "pixel_rect": [
+            35,
+            763,
+            786,
+            462
+          ]
+        },
+        {
+          "index": 20,
+          "pixel_rect": [
+            67,
+            752,
+            129,
+            230
+          ]
+        },
+        {
+          "index": 21,
+          "pixel_rect": [
+            192,
+            751,
+            128,
+            231
+          ]
+        },
+        {
+          "index": 22,
+          "pixel_rect": [
+            332,
+            761,
+            293,
+            112
+          ]
+        },
+        {
+          "index": 23,
+          "pixel_rect": [
+            772,
+            768,
+            134,
+            229
+          ]
+        },
+        {
+          "index": 24,
+          "pixel_rect": [
+            925,
+            767,
+            119,
+            120
+          ]
+        },
+        {
+          "index": 25,
+          "pixel_rect": [
+            1071,
+            767,
+            126,
+            120
+          ]
+        },
+        {
+          "index": 26,
+          "pixel_rect": [
+            332,
+            865,
+            293,
+            111
+          ]
+        },
+        {
+          "index": 27,
+          "pixel_rect": [
+            925,
+            877,
+            119,
+            120
+          ]
+        },
+        {
+          "index": 28,
+          "pixel_rect": [
+            1071,
+            877,
+            126,
+            120
+          ]
+        },
+        {
+          "index": 29,
+          "pixel_rect": [
+            857,
+            999,
+            88,
+            215
+          ]
+        },
+        {
+          "index": 30,
+          "pixel_rect": [
+            1020,
+            1000,
+            91,
+            214
+          ]
+        }
+      ]
+    },
+    "street_props": {
+      "description": "Signage & street props",
+      "source_file": "source/street_props.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGB",
+      "alpha_status": "RGB_no_alpha_needs_conversion",
+      "detected_region_count": 30,
+      "regions": [
+        {
+          "index": 0,
+          "pixel_rect": [
+            24,
+            26,
+            91,
+            279
+          ]
+        },
+        {
+          "index": 1,
+          "pixel_rect": [
+            120,
+            28,
+            90,
+            277
+          ]
+        },
+        {
+          "index": 2,
+          "pixel_rect": [
+            215,
+            30,
+            89,
+            275
+          ]
+        },
+        {
+          "index": 3,
+          "pixel_rect": [
+            309,
+            29,
+            92,
+            276
+          ]
+        },
+        {
+          "index": 4,
+          "pixel_rect": [
+            420,
+            30,
+            91,
+            278
+          ]
+        },
+        {
+          "index": 5,
+          "pixel_rect": [
+            525,
+            39,
+            190,
+            269
+          ]
+        },
+        {
+          "index": 6,
+          "pixel_rect": [
+            702,
+            52,
+            193,
+            257
+          ]
+        },
+        {
+          "index": 7,
+          "pixel_rect": [
+            901,
+            53,
+            181,
+            256
+          ]
+        },
+        {
+          "index": 8,
+          "pixel_rect": [
+            1066,
+            52,
+            179,
+            261
+          ]
+        },
+        {
+          "index": 9,
+          "pixel_rect": [
+            24,
+            301,
+            115,
+            223
+          ]
+        },
+        {
+          "index": 10,
+          "pixel_rect": [
+            131,
+            302,
+            293,
+            222
+          ]
+        },
+        {
+          "index": 11,
+          "pixel_rect": [
+            429,
+            304,
+            824,
+            226
+          ]
+        },
+        {
+          "index": 12,
+          "pixel_rect": [
+            22,
+            525,
+            115,
+            168
+          ]
+        },
+        {
+          "index": 13,
+          "pixel_rect": [
+            153,
+            530,
+            109,
+            165
+          ]
+        },
+        {
+          "index": 14,
+          "pixel_rect": [
+            291,
+            530,
+            108,
+            164
+          ]
+        },
+        {
+          "index": 15,
+          "pixel_rect": [
+            423,
+            530,
+            108,
+            165
+          ]
+        },
+        {
+          "index": 16,
+          "pixel_rect": [
+            606,
+            534,
+            109,
+            160
+          ]
+        },
+        {
+          "index": 17,
+          "pixel_rect": [
+            764,
+            537,
+            109,
+            160
+          ]
+        },
+        {
+          "index": 18,
+          "pixel_rect": [
+            908,
+            537,
+            110,
+            160
+          ]
+        },
+        {
+          "index": 19,
+          "pixel_rect": [
+            1060,
+            539,
+            107,
+            159
+          ]
+        },
+        {
+          "index": 20,
+          "pixel_rect": [
+            18,
+            687,
+            129,
+            543
+          ]
+        },
+        {
+          "index": 21,
+          "pixel_rect": [
+            153,
+            690,
+            133,
+            540
+          ]
+        },
+        {
+          "index": 22,
+          "pixel_rect": [
+            282,
+            689,
+            139,
+            541
+          ]
+        },
+        {
+          "index": 23,
+          "pixel_rect": [
+            420,
+            689,
+            143,
+            541
+          ]
+        },
+        {
+          "index": 24,
+          "pixel_rect": [
+            590,
+            689,
+            129,
+            541
+          ]
+        },
+        {
+          "index": 25,
+          "pixel_rect": [
+            727,
+            690,
+            90,
+            134
+          ]
+        },
+        {
+          "index": 26,
+          "pixel_rect": [
+            854,
+            692,
+            91,
+            132
+          ]
+        },
+        {
+          "index": 27,
+          "pixel_rect": [
+            746,
+            812,
+            139,
+            418
+          ]
+        },
+        {
+          "index": 28,
+          "pixel_rect": [
+            912,
+            810,
+            120,
+            327
+          ]
+        },
+        {
+          "index": 29,
+          "pixel_rect": [
+            1064,
+            812,
+            119,
+            326
+          ]
+        }
+      ]
+    },
+    "night_overlays": {
+      "description": "Night / lighting overlays",
+      "source_file": "source/night_overlays.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGB",
+      "alpha_status": "RGB_no_alpha_needs_conversion",
+      "detected_region_count": 38,
+      "regions": [
+        {
+          "index": 0,
+          "pixel_rect": [
+            25,
+            55,
+            288,
+            177
+          ]
+        },
+        {
+          "index": 1,
+          "pixel_rect": [
+            33,
+            11,
+            278,
+            54
+          ]
+        },
+        {
+          "index": 2,
+          "pixel_rect": [
+            318,
+            9,
+            269,
+            56
+          ]
+        },
+        {
+          "index": 3,
+          "pixel_rect": [
+            330,
+            52,
+            275,
+            181
+          ]
+        },
+        {
+          "index": 4,
+          "pixel_rect": [
+            595,
+            11,
+            242,
+            54
+          ]
+        },
+        {
+          "index": 5,
+          "pixel_rect": [
+            629,
+            56,
+            199,
+            335
+          ]
+        },
+        {
+          "index": 6,
+          "pixel_rect": [
+            839,
+            11,
+            225,
+            217
+          ]
+        },
+        {
+          "index": 7,
+          "pixel_rect": [
+            1060,
+            10,
+            193,
+            699
+          ]
+        },
+        {
+          "index": 8,
+          "pixel_rect": [
+            25,
+            210,
+            284,
+            175
+          ]
+        },
+        {
+          "index": 9,
+          "pixel_rect": [
+            333,
+            212,
+            271,
+            173
+          ]
+        },
+        {
+          "index": 10,
+          "pixel_rect": [
+            859,
+            218,
+            178,
+            162
+          ]
+        },
+        {
+          "index": 11,
+          "pixel_rect": [
+            26,
+            371,
+            285,
+            166
+          ]
+        },
+        {
+          "index": 12,
+          "pixel_rect": [
+            335,
+            373,
+            269,
+            163
+          ]
+        },
+        {
+          "index": 13,
+          "pixel_rect": [
+            667,
+            383,
+            125,
+            156
+          ]
+        },
+        {
+          "index": 14,
+          "pixel_rect": [
+            863,
+            380,
+            172,
+            159
+          ]
+        },
+        {
+          "index": 15,
+          "pixel_rect": [
+            28,
+            532,
+            281,
+            154
+          ]
+        },
+        {
+          "index": 16,
+          "pixel_rect": [
+            335,
+            534,
+            270,
+            150
+          ]
+        },
+        {
+          "index": 17,
+          "pixel_rect": [
+            675,
+            547,
+            104,
+            134
+          ]
+        },
+        {
+          "index": 18,
+          "pixel_rect": [
+            869,
+            543,
+            156,
+            144
+          ]
+        },
+        {
+          "index": 19,
+          "pixel_rect": [
+            32,
+            691,
+            273,
+            145
+          ]
+        },
+        {
+          "index": 20,
+          "pixel_rect": [
+            338,
+            699,
+            83,
+            108
+          ]
+        },
+        {
+          "index": 21,
+          "pixel_rect": [
+            411,
+            696,
+            191,
+            138
+          ]
+        },
+        {
+          "index": 22,
+          "pixel_rect": [
+            678,
+            709,
+            92,
+            111
+          ]
+        },
+        {
+          "index": 23,
+          "pixel_rect": [
+            874,
+            705,
+            144,
+            132
+          ]
+        },
+        {
+          "index": 24,
+          "pixel_rect": [
+            1111,
+            700,
+            93,
+            157
+          ]
+        },
+        {
+          "index": 25,
+          "pixel_rect": [
+            32,
+            848,
+            270,
+            138
+          ]
+        },
+        {
+          "index": 26,
+          "pixel_rect": [
+            340,
+            858,
+            79,
+            99
+          ]
+        },
+        {
+          "index": 27,
+          "pixel_rect": [
+            413,
+            855,
+            187,
+            128
+          ]
+        },
+        {
+          "index": 28,
+          "pixel_rect": [
+            681,
+            870,
+            80,
+            93
+          ]
+        },
+        {
+          "index": 29,
+          "pixel_rect": [
+            877,
+            865,
+            132,
+            120
+          ]
+        },
+        {
+          "index": 30,
+          "pixel_rect": [
+            1113,
+            858,
+            88,
+            147
+          ]
+        },
+        {
+          "index": 31,
+          "pixel_rect": [
+            35,
+            1014,
+            76,
+            86
+          ]
+        },
+        {
+          "index": 32,
+          "pixel_rect": [
+            107,
+            1004,
+            188,
+            126
+          ]
+        },
+        {
+          "index": 33,
+          "pixel_rect": [
+            342,
+            1016,
+            74,
+            87
+          ]
+        },
+        {
+          "index": 34,
+          "pixel_rect": [
+            415,
+            1009,
+            183,
+            121
+          ]
+        },
+        {
+          "index": 35,
+          "pixel_rect": [
+            882,
+            1019,
+            120,
+            110
+          ]
+        },
+        {
+          "index": 36,
+          "pixel_rect": [
+            1115,
+            1013,
+            82,
+            130
+          ]
+        },
+        {
+          "index": 37,
+          "pixel_rect": [
+            685,
+            1029,
+            69,
+            74
+          ]
+        }
+      ]
+    },
+    "building_overlays": {
+      "description": "Building shadow & weathering overlays",
+      "source_file": "source/building_overlays.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGB",
+      "alpha_status": "RGB_no_alpha_needs_conversion",
+      "detected_region_count": 8,
+      "regions": [
+        {
+          "index": 0,
+          "pixel_rect": [
+            711,
+            213,
+            508,
+            318
+          ]
+        },
+        {
+          "index": 1,
+          "pixel_rect": [
+            337,
+            290,
+            339,
+            219
+          ]
+        },
+        {
+          "index": 2,
+          "pixel_rect": [
+            56,
+            333,
+            208,
+            147
+          ]
+        },
+        {
+          "index": 3,
+          "pixel_rect": [
+            309,
+            582,
+            203,
+            312
+          ]
+        },
+        {
+          "index": 4,
+          "pixel_rect": [
+            541,
+            554,
+            170,
+            334
+          ]
+        },
+        {
+          "index": 5,
+          "pixel_rect": [
+            746,
+            587,
+            226,
+            311
+          ]
+        },
+        {
+          "index": 6,
+          "pixel_rect": [
+            990,
+            606,
+            217,
+            304
+          ]
+        },
+        {
+          "index": 7,
+          "pixel_rect": [
+            52,
+            698,
+            202,
+            187
+          ]
+        }
+      ]
+    },
+    "civic_columns": {
+      "description": "Civic columns building variant",
+      "source_file": "source/civic_columns.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGB",
+      "alpha_status": "RGB_no_alpha_needs_conversion",
+      "detected_region_count": 1,
+      "regions": [
+        {
+          "index": 0,
+          "pixel_rect": [
+            26,
+            323,
+            1179,
+            585
+          ]
+        }
+      ]
+    },
+    "buildings": {
+      "description": "Buildings (CBD / mid-rise / residential / commercial)",
+      "source_file": "source/buildings.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGB",
+      "alpha_status": "RGB_no_alpha_needs_conversion",
+      "dilation_iters": 4,
+      "detected_region_count": 43,
+      "regions": [
+        {
+          "index": 0,
+          "pixel_rect": [
+            22,
+            17,
+            127,
+            221
+          ]
+        },
+        {
+          "index": 1,
+          "pixel_rect": [
+            139,
+            25,
+            119,
+            211
+          ]
+        },
+        {
+          "index": 2,
+          "pixel_rect": [
+            265,
+            25,
+            120,
+            209
+          ]
+        },
+        {
+          "index": 3,
+          "pixel_rect": [
+            376,
+            28,
+            118,
+            206
+          ]
+        },
+        {
+          "index": 4,
+          "pixel_rect": [
+            505,
+            16,
+            130,
+            223
+          ]
+        },
+        {
+          "index": 5,
+          "pixel_rect": [
+            626,
+            17,
+            123,
+            220
+          ]
+        },
+        {
+          "index": 6,
+          "pixel_rect": [
+            758,
+            16,
+            234,
+            221
+          ]
+        },
+        {
+          "index": 7,
+          "pixel_rect": [
+            1000,
+            27,
+            116,
+            213
+          ]
+        },
+        {
+          "index": 8,
+          "pixel_rect": [
+            1111,
+            23,
+            121,
+            217
+          ]
+        },
+        {
+          "index": 9,
+          "pixel_rect": [
+            59,
+            233,
+            140,
+            37
+          ]
+        },
+        {
+          "index": 10,
+          "pixel_rect": [
+            298,
+            231,
+            142,
+            39
+          ]
+        },
+        {
+          "index": 11,
+          "pixel_rect": [
+            549,
+            233,
+            139,
+            37
+          ]
+        },
+        {
+          "index": 12,
+          "pixel_rect": [
+            779,
+            233,
+            165,
+            37
+          ]
+        },
+        {
+          "index": 13,
+          "pixel_rect": [
+            1018,
+            233,
+            176,
+            38
+          ]
+        },
+        {
+          "index": 14,
+          "pixel_rect": [
+            14,
+            277,
+            115,
+            208
+          ]
+        },
+        {
+          "index": 15,
+          "pixel_rect": [
+            121,
+            278,
+            115,
+            207
+          ]
+        },
+        {
+          "index": 16,
+          "pixel_rect": [
+            251,
+            283,
+            195,
+            198
+          ]
+        },
+        {
+          "index": 17,
+          "pixel_rect": [
+            468,
+            293,
+            188,
+            192
+          ]
+        },
+        {
+          "index": 18,
+          "pixel_rect": [
+            657,
+            294,
+            194,
+            222
+          ]
+        },
+        {
+          "index": 19,
+          "pixel_rect": [
+            855,
+            293,
+            193,
+            196
+          ]
+        },
+        {
+          "index": 20,
+          "pixel_rect": [
+            1051,
+            295,
+            195,
+            197
+          ]
+        },
+        {
+          "index": 21,
+          "pixel_rect": [
+            24,
+            479,
+            188,
+            37
+          ]
+        },
+        {
+          "index": 22,
+          "pixel_rect": [
+            254,
+            478,
+            188,
+            37
+          ]
+        },
+        {
+          "index": 23,
+          "pixel_rect": [
+            485,
+            478,
+            142,
+            37
+          ]
+        },
+        {
+          "index": 24,
+          "pixel_rect": [
+            869,
+            479,
+            151,
+            38
+          ]
+        },
+        {
+          "index": 25,
+          "pixel_rect": [
+            488,
+            539,
+            204,
+            231
+          ]
+        },
+        {
+          "index": 26,
+          "pixel_rect": [
+            1055,
+            481,
+            176,
+            37
+          ]
+        },
+        {
+          "index": 27,
+          "pixel_rect": [
+            9,
+            540,
+            240,
+            196
+          ]
+        },
+        {
+          "index": 28,
+          "pixel_rect": [
+            246,
+            540,
+            240,
+            197
+          ]
+        },
+        {
+          "index": 29,
+          "pixel_rect": [
+            699,
+            542,
+            546,
+            227
+          ]
+        },
+        {
+          "index": 30,
+          "pixel_rect": [
+            35,
+            732,
+            174,
+            39
+          ]
+        },
+        {
+          "index": 31,
+          "pixel_rect": [
+            274,
+            731,
+            177,
+            38
+          ]
+        },
+        {
+          "index": 32,
+          "pixel_rect": [
+            757,
+            732,
+            171,
+            37
+          ]
+        },
+        {
+          "index": 33,
+          "pixel_rect": [
+            24,
+            794,
+            258,
+            161
+          ]
+        },
+        {
+          "index": 34,
+          "pixel_rect": [
+            284,
+            789,
+            282,
+            195
+          ]
+        },
+        {
+          "index": 35,
+          "pixel_rect": [
+            571,
+            785,
+            333,
+            199
+          ]
+        },
+        {
+          "index": 36,
+          "pixel_rect": [
+            900,
+            787,
+            337,
+            201
+          ]
+        },
+        {
+          "index": 37,
+          "pixel_rect": [
+            49,
+            946,
+            184,
+            39
+          ]
+        },
+        {
+          "index": 38,
+          "pixel_rect": [
+            52,
+            993,
+            276,
+            195
+          ]
+        },
+        {
+          "index": 39,
+          "pixel_rect": [
+            413,
+            994,
+            222,
+            221
+          ]
+        },
+        {
+          "index": 40,
+          "pixel_rect": [
+            654,
+            984,
+            226,
+            231
+          ]
+        },
+        {
+          "index": 41,
+          "pixel_rect": [
+            113,
+            1182,
+            107,
+            38
+          ]
+        },
+        {
+          "index": 42,
+          "pixel_rect": [
+            584,
+            1182,
+            104,
+            38
+          ]
+        }
+      ]
+    },
+    "landmarks": {
+      "description": "Landmark buildings",
+      "source_file": "source/landmarks.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGB",
+      "alpha_status": "RGB_no_alpha_needs_conversion",
+      "dilation_iters": 4,
+      "detected_region_count": 28,
+      "regions": [
+        {
+          "index": 0,
+          "pixel_rect": [
+            32,
+            26,
+            310,
+            270
+          ]
+        },
+        {
+          "index": 1,
+          "pixel_rect": [
+            334,
+            29,
+            305,
+            266
+          ]
+        },
+        {
+          "index": 2,
+          "pixel_rect": [
+            634,
+            1,
+            296,
+            297
+          ]
+        },
+        {
+          "index": 3,
+          "pixel_rect": [
+            926,
+            2,
+            296,
+            297
+          ]
+        },
+        {
+          "index": 4,
+          "pixel_rect": [
+            31,
+            289,
+            278,
+            208
+          ]
+        },
+        {
+          "index": 5,
+          "pixel_rect": [
+            325,
+            289,
+            277,
+            209
+          ]
+        },
+        {
+          "index": 6,
+          "pixel_rect": [
+            622,
+            293,
+            274,
+            206
+          ]
+        },
+        {
+          "index": 7,
+          "pixel_rect": [
+            918,
+            295,
+            268,
+            206
+          ]
+        },
+        {
+          "index": 8,
+          "pixel_rect": [
+            28,
+            486,
+            279,
+            212
+          ]
+        },
+        {
+          "index": 9,
+          "pixel_rect": [
+            326,
+            487,
+            281,
+            215
+          ]
+        },
+        {
+          "index": 10,
+          "pixel_rect": [
+            622,
+            486,
+            268,
+            214
+          ]
+        },
+        {
+          "index": 11,
+          "pixel_rect": [
+            916,
+            486,
+            267,
+            214
+          ]
+        },
+        {
+          "index": 12,
+          "pixel_rect": [
+            19,
+            689,
+            292,
+            157
+          ]
+        },
+        {
+          "index": 13,
+          "pixel_rect": [
+            313,
+            689,
+            294,
+            158
+          ]
+        },
+        {
+          "index": 14,
+          "pixel_rect": [
+            624,
+            689,
+            284,
+            162
+          ]
+        },
+        {
+          "index": 15,
+          "pixel_rect": [
+            921,
+            689,
+            280,
+            162
+          ]
+        },
+        {
+          "index": 16,
+          "pixel_rect": [
+            21,
+            840,
+            306,
+            199
+          ]
+        },
+        {
+          "index": 17,
+          "pixel_rect": [
+            320,
+            843,
+            306,
+            196
+          ]
+        },
+        {
+          "index": 18,
+          "pixel_rect": [
+            622,
+            842,
+            303,
+            199
+          ]
+        },
+        {
+          "index": 19,
+          "pixel_rect": [
+            923,
+            843,
+            303,
+            199
+          ]
+        },
+        {
+          "index": 20,
+          "pixel_rect": [
+            38,
+            1032,
+            136,
+            192
+          ]
+        },
+        {
+          "index": 21,
+          "pixel_rect": [
+            179,
+            1038,
+            125,
+            185
+          ]
+        },
+        {
+          "index": 22,
+          "pixel_rect": [
+            326,
+            1032,
+            123,
+            192
+          ]
+        },
+        {
+          "index": 23,
+          "pixel_rect": [
+            464,
+            1037,
+            122,
+            188
+          ]
+        },
+        {
+          "index": 24,
+          "pixel_rect": [
+            640,
+            1037,
+            125,
+            189
+          ]
+        },
+        {
+          "index": 25,
+          "pixel_rect": [
+            781,
+            1040,
+            124,
+            186
+          ]
+        },
+        {
+          "index": 26,
+          "pixel_rect": [
+            925,
+            1035,
+            123,
+            192
+          ]
+        },
+        {
+          "index": 27,
+          "pixel_rect": [
+            1066,
+            1040,
+            124,
+            188
+          ]
+        }
+      ]
+    },
+    "roofs": {
+      "description": "Roof variants",
+      "source_file": "source/roofs.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGB",
+      "alpha_status": "RGB_no_alpha_needs_conversion",
+      "dilation_iters": 4,
+      "detected_region_count": 55,
+      "regions": [
+        {
+          "index": 0,
+          "pixel_rect": [
+            17,
+            24,
+            197,
+            152
+          ]
+        },
+        {
+          "index": 1,
+          "pixel_rect": [
+            209,
+            24,
+            194,
+            151
+          ]
+        },
+        {
+          "index": 2,
+          "pixel_rect": [
+            400,
+            24,
+            202,
+            156
+          ]
+        },
+        {
+          "index": 3,
+          "pixel_rect": [
+            599,
+            28,
+            173,
+            143
+          ]
+        },
+        {
+          "index": 4,
+          "pixel_rect": [
+            779,
+            30,
+            162,
+            137
+          ]
+        },
+        {
+          "index": 5,
+          "pixel_rect": [
+            940,
+            32,
+            149,
+            110
+          ]
+        },
+        {
+          "index": 6,
+          "pixel_rect": [
+            1093,
+            32,
+            145,
+            134
+          ]
+        },
+        {
+          "index": 7,
+          "pixel_rect": [
+            17,
+            179,
+            197,
+            154
+          ]
+        },
+        {
+          "index": 8,
+          "pixel_rect": [
+            209,
+            179,
+            193,
+            153
+          ]
+        },
+        {
+          "index": 9,
+          "pixel_rect": [
+            400,
+            179,
+            204,
+            157
+          ]
+        },
+        {
+          "index": 10,
+          "pixel_rect": [
+            599,
+            184,
+            173,
+            144
+          ]
+        },
+        {
+          "index": 11,
+          "pixel_rect": [
+            779,
+            184,
+            162,
+            139
+          ]
+        },
+        {
+          "index": 12,
+          "pixel_rect": [
+            940,
+            184,
+            149,
+            112
+          ]
+        },
+        {
+          "index": 13,
+          "pixel_rect": [
+            1093,
+            185,
+            145,
+            135
+          ]
+        },
+        {
+          "index": 14,
+          "pixel_rect": [
+            13,
+            324,
+            203,
+            334
+          ]
+        },
+        {
+          "index": 15,
+          "pixel_rect": [
+            208,
+            325,
+            199,
+            185
+          ]
+        },
+        {
+          "index": 16,
+          "pixel_rect": [
+            408,
+            331,
+            192,
+            179
+          ]
+        },
+        {
+          "index": 17,
+          "pixel_rect": [
+            598,
+            335,
+            179,
+            174
+          ]
+        },
+        {
+          "index": 18,
+          "pixel_rect": [
+            775,
+            331,
+            168,
+            169
+          ]
+        },
+        {
+          "index": 19,
+          "pixel_rect": [
+            933,
+            342,
+            158,
+            132
+          ]
+        },
+        {
+          "index": 20,
+          "pixel_rect": [
+            1086,
+            332,
+            157,
+            165
+          ]
+        },
+        {
+          "index": 21,
+          "pixel_rect": [
+            214,
+            503,
+            190,
+            152
+          ]
+        },
+        {
+          "index": 22,
+          "pixel_rect": [
+            402,
+            501,
+            199,
+            156
+          ]
+        },
+        {
+          "index": 23,
+          "pixel_rect": [
+            599,
+            518,
+            172,
+            140
+          ]
+        },
+        {
+          "index": 24,
+          "pixel_rect": [
+            779,
+            513,
+            161,
+            135
+          ]
+        },
+        {
+          "index": 25,
+          "pixel_rect": [
+            937,
+            515,
+            153,
+            119
+          ]
+        },
+        {
+          "index": 26,
+          "pixel_rect": [
+            1097,
+            513,
+            143,
+            132
+          ]
+        },
+        {
+          "index": 27,
+          "pixel_rect": [
+            14,
+            643,
+            153,
+            156
+          ]
+        },
+        {
+          "index": 28,
+          "pixel_rect": [
+            203,
+            647,
+            164,
+            159
+          ]
+        },
+        {
+          "index": 29,
+          "pixel_rect": [
+            395,
+            643,
+            162,
+            162
+          ]
+        },
+        {
+          "index": 30,
+          "pixel_rect": [
+            596,
+            650,
+            168,
+            162
+          ]
+        },
+        {
+          "index": 31,
+          "pixel_rect": [
+            778,
+            650,
+            165,
+            162
+          ]
+        },
+        {
+          "index": 32,
+          "pixel_rect": [
+            942,
+            655,
+            148,
+            133
+          ]
+        },
+        {
+          "index": 33,
+          "pixel_rect": [
+            1094,
+            653,
+            147,
+            153
+          ]
+        },
+        {
+          "index": 34,
+          "pixel_rect": [
+            20,
+            804,
+            176,
+            132
+          ]
+        },
+        {
+          "index": 35,
+          "pixel_rect": [
+            203,
+            808,
+            177,
+            130
+          ]
+        },
+        {
+          "index": 36,
+          "pixel_rect": [
+            395,
+            814,
+            168,
+            127
+          ]
+        },
+        {
+          "index": 37,
+          "pixel_rect": [
+            600,
+            814,
+            167,
+            128
+          ]
+        },
+        {
+          "index": 38,
+          "pixel_rect": [
+            780,
+            817,
+            159,
+            127
+          ]
+        },
+        {
+          "index": 39,
+          "pixel_rect": [
+            945,
+            822,
+            135,
+            116
+          ]
+        },
+        {
+          "index": 40,
+          "pixel_rect": [
+            1096,
+            827,
+            135,
+            117
+          ]
+        },
+        {
+          "index": 41,
+          "pixel_rect": [
+            13,
+            930,
+            170,
+            133
+          ]
+        },
+        {
+          "index": 42,
+          "pixel_rect": [
+            188,
+            928,
+            179,
+            139
+          ]
+        },
+        {
+          "index": 43,
+          "pixel_rect": [
+            384,
+            941,
+            201,
+            122
+          ]
+        },
+        {
+          "index": 44,
+          "pixel_rect": [
+            587,
+            942,
+            184,
+            118
+          ]
+        },
+        {
+          "index": 45,
+          "pixel_rect": [
+            771,
+            944,
+            159,
+            123
+          ]
+        },
+        {
+          "index": 46,
+          "pixel_rect": [
+            939,
+            948,
+            152,
+            108
+          ]
+        },
+        {
+          "index": 47,
+          "pixel_rect": [
+            1094,
+            945,
+            148,
+            119
+          ]
+        },
+        {
+          "index": 48,
+          "pixel_rect": [
+            10,
+            1059,
+            175,
+            169
+          ]
+        },
+        {
+          "index": 49,
+          "pixel_rect": [
+            195,
+            1063,
+            172,
+            171
+          ]
+        },
+        {
+          "index": 50,
+          "pixel_rect": [
+            387,
+            1072,
+            172,
+            160
+          ]
+        },
+        {
+          "index": 51,
+          "pixel_rect": [
+            582,
+            1066,
+            165,
+            166
+          ]
+        },
+        {
+          "index": 52,
+          "pixel_rect": [
+            760,
+            1071,
+            165,
+            162
+          ]
+        },
+        {
+          "index": 53,
+          "pixel_rect": [
+            927,
+            1074,
+            158,
+            161
+          ]
+        },
+        {
+          "index": 54,
+          "pixel_rect": [
+            1085,
+            1073,
+            155,
+            160
+          ]
+        }
+      ]
+    },
+    "city_profile_kits": {
+      "description": "City-profile facade kits",
+      "source_file": "source/city_profile_kits.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGB",
+      "alpha_status": "RGB_no_alpha_needs_conversion",
+      "dilation_iters": 4,
+      "detected_region_count": 26,
+      "regions": [
+        {
+          "index": 0,
+          "pixel_rect": [
+            24,
+            36,
+            201,
+            303
+          ]
+        },
+        {
+          "index": 1,
+          "pixel_rect": [
+            269,
+            31,
+            181,
+            274
+          ]
+        },
+        {
+          "index": 2,
+          "pixel_rect": [
+            522,
+            34,
+            187,
+            305
+          ]
+        },
+        {
+          "index": 3,
+          "pixel_rect": [
+            758,
+            18,
+            212,
+            295
+          ]
+        },
+        {
+          "index": 4,
+          "pixel_rect": [
+            1006,
+            88,
+            227,
+            250
+          ]
+        },
+        {
+          "index": 5,
+          "pixel_rect": [
+            27,
+            340,
+            192,
+            302
+          ]
+        },
+        {
+          "index": 6,
+          "pixel_rect": [
+            268,
+            337,
+            177,
+            306
+          ]
+        },
+        {
+          "index": 7,
+          "pixel_rect": [
+            270,
+            301,
+            202,
+            37
+          ]
+        },
+        {
+          "index": 8,
+          "pixel_rect": [
+            747,
+            301,
+            233,
+            38
+          ]
+        },
+        {
+          "index": 9,
+          "pixel_rect": [
+            1007,
+            340,
+            198,
+            302
+          ]
+        },
+        {
+          "index": 10,
+          "pixel_rect": [
+            512,
+            371,
+            189,
+            238
+          ]
+        },
+        {
+          "index": 11,
+          "pixel_rect": [
+            739,
+            405,
+            236,
+            195
+          ]
+        },
+        {
+          "index": 12,
+          "pixel_rect": [
+            18,
+            652,
+            211,
+            242
+          ]
+        },
+        {
+          "index": 13,
+          "pixel_rect": [
+            495,
+            649,
+            243,
+            271
+          ]
+        },
+        {
+          "index": 14,
+          "pixel_rect": [
+            501,
+            604,
+            209,
+            37
+          ]
+        },
+        {
+          "index": 15,
+          "pixel_rect": [
+            776,
+            646,
+            173,
+            274
+          ]
+        },
+        {
+          "index": 16,
+          "pixel_rect": [
+            781,
+            604,
+            154,
+            38
+          ]
+        },
+        {
+          "index": 17,
+          "pixel_rect": [
+            1010,
+            646,
+            193,
+            274
+          ]
+        },
+        {
+          "index": 18,
+          "pixel_rect": [
+            255,
+            671,
+            223,
+            249
+          ]
+        },
+        {
+          "index": 19,
+          "pixel_rect": [
+            10,
+            882,
+            227,
+            38
+          ]
+        },
+        {
+          "index": 20,
+          "pixel_rect": [
+            33,
+            928,
+            196,
+            289
+          ]
+        },
+        {
+          "index": 21,
+          "pixel_rect": [
+            282,
+            923,
+            175,
+            266
+          ]
+        },
+        {
+          "index": 22,
+          "pixel_rect": [
+            514,
+            942,
+            194,
+            276
+          ]
+        },
+        {
+          "index": 23,
+          "pixel_rect": [
+            748,
+            930,
+            224,
+            288
+          ]
+        },
+        {
+          "index": 24,
+          "pixel_rect": [
+            1016,
+            923,
+            182,
+            295
+          ]
+        },
+        {
+          "index": 25,
+          "pixel_rect": [
+            274,
+            1180,
+            189,
+            38
+          ]
+        }
+      ]
+    },
+    "road_diagonals": {
+      "description": "Diagonal road & sidewalk tiles",
+      "source_file": "source/road_diagonals.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGB",
+      "alpha_status": "RGB_no_alpha_needs_conversion",
+      "dilation_iters": 4,
+      "detected_region_count": 42,
+      "regions": [
+        {
+          "index": 0,
+          "pixel_rect": [
+            179,
+            36,
+            99,
+            53
+          ]
+        },
+        {
+          "index": 1,
+          "pixel_rect": [
+            364,
+            36,
+            98,
+            53
+          ]
+        },
+        {
+          "index": 2,
+          "pixel_rect": [
+            550,
+            34,
+            96,
+            55
+          ]
+        },
+        {
+          "index": 3,
+          "pixel_rect": [
+            734,
+            34,
+            97,
+            55
+          ]
+        },
+        {
+          "index": 4,
+          "pixel_rect": [
+            917,
+            34,
+            96,
+            55
+          ]
+        },
+        {
+          "index": 5,
+          "pixel_rect": [
+            1101,
+            34,
+            104,
+            55
+          ]
+        },
+        {
+          "index": 6,
+          "pixel_rect": [
+            134,
+            100,
+            184,
+            189
+          ]
+        },
+        {
+          "index": 7,
+          "pixel_rect": [
+            320,
+            100,
+            183,
+            189
+          ]
+        },
+        {
+          "index": 8,
+          "pixel_rect": [
+            505,
+            99,
+            182,
+            195
+          ]
+        },
+        {
+          "index": 9,
+          "pixel_rect": [
+            684,
+            99,
+            185,
+            195
+          ]
+        },
+        {
+          "index": 10,
+          "pixel_rect": [
+            874,
+            99,
+            184,
+            190
+          ]
+        },
+        {
+          "index": 11,
+          "pixel_rect": [
+            1066,
+            101,
+            181,
+            192
+          ]
+        },
+        {
+          "index": 12,
+          "pixel_rect": [
+            134,
+            292,
+            184,
+            189
+          ]
+        },
+        {
+          "index": 13,
+          "pixel_rect": [
+            320,
+            292,
+            183,
+            189
+          ]
+        },
+        {
+          "index": 14,
+          "pixel_rect": [
+            505,
+            291,
+            181,
+            194
+          ]
+        },
+        {
+          "index": 15,
+          "pixel_rect": [
+            686,
+            291,
+            183,
+            195
+          ]
+        },
+        {
+          "index": 16,
+          "pixel_rect": [
+            874,
+            291,
+            184,
+            190
+          ]
+        },
+        {
+          "index": 17,
+          "pixel_rect": [
+            1066,
+            292,
+            181,
+            193
+          ]
+        },
+        {
+          "index": 18,
+          "pixel_rect": [
+            11,
+            352,
+            106,
+            53
+          ]
+        },
+        {
+          "index": 19,
+          "pixel_rect": [
+            10,
+            537,
+            137,
+            75
+          ]
+        },
+        {
+          "index": 20,
+          "pixel_rect": [
+            134,
+            499,
+            183,
+            185
+          ]
+        },
+        {
+          "index": 21,
+          "pixel_rect": [
+            321,
+            498,
+            182,
+            187
+          ]
+        },
+        {
+          "index": 22,
+          "pixel_rect": [
+            505,
+            499,
+            181,
+            190
+          ]
+        },
+        {
+          "index": 23,
+          "pixel_rect": [
+            686,
+            499,
+            184,
+            191
+          ]
+        },
+        {
+          "index": 24,
+          "pixel_rect": [
+            874,
+            498,
+            186,
+            188
+          ]
+        },
+        {
+          "index": 25,
+          "pixel_rect": [
+            1067,
+            501,
+            179,
+            180
+          ]
+        },
+        {
+          "index": 26,
+          "pixel_rect": [
+            11,
+            714,
+            136,
+            74
+          ]
+        },
+        {
+          "index": 27,
+          "pixel_rect": [
+            134,
+            684,
+            183,
+            363
+          ]
+        },
+        {
+          "index": 28,
+          "pixel_rect": [
+            321,
+            685,
+            184,
+            363
+          ]
+        },
+        {
+          "index": 29,
+          "pixel_rect": [
+            505,
+            684,
+            181,
+            369
+          ]
+        },
+        {
+          "index": 30,
+          "pixel_rect": [
+            684,
+            684,
+            186,
+            369
+          ]
+        },
+        {
+          "index": 31,
+          "pixel_rect": [
+            874,
+            685,
+            186,
+            363
+          ]
+        },
+        {
+          "index": 32,
+          "pixel_rect": [
+            1067,
+            685,
+            179,
+            167
+          ]
+        },
+        {
+          "index": 33,
+          "pixel_rect": [
+            11,
+            897,
+            137,
+            78
+          ]
+        },
+        {
+          "index": 34,
+          "pixel_rect": [
+            1067,
+            863,
+            179,
+            181
+          ]
+        },
+        {
+          "index": 35,
+          "pixel_rect": [
+            11,
+            1072,
+            135,
+            76
+          ]
+        },
+        {
+          "index": 36,
+          "pixel_rect": [
+            134,
+            1045,
+            183,
+            188
+          ]
+        },
+        {
+          "index": 37,
+          "pixel_rect": [
+            321,
+            1046,
+            184,
+            188
+          ]
+        },
+        {
+          "index": 38,
+          "pixel_rect": [
+            505,
+            1046,
+            181,
+            188
+          ]
+        },
+        {
+          "index": 39,
+          "pixel_rect": [
+            685,
+            1045,
+            184,
+            189
+          ]
+        },
+        {
+          "index": 40,
+          "pixel_rect": [
+            874,
+            1045,
+            185,
+            190
+          ]
+        },
+        {
+          "index": 41,
+          "pixel_rect": [
+            1067,
+            1047,
+            179,
+            171
+          ]
+        }
+      ]
+    }
+  }
+}

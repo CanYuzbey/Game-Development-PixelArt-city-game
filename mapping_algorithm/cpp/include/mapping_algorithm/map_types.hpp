@@ -118,6 +118,7 @@ struct MapStats {
     int lots = 0;
     int spawns = 0;
     int landmarks = 0;
+    int buildings = 0;
 };
 
 } // namespace mapping_algorithm

@@ -1,0 +1,108 @@
+{
+  "schema": "atlas_manifest.v1",
+  "atlas_id": "road_diagonals",
+  "file": "runtime/road_diagonals.atlas.png",
+  "size": [
+    2048,
+    375
+  ],
+  "sprite_count": 16,
+  "sprites": {
+    "road_diag_t_nw_weathered": [
+      0,
+      0,
+      178,
+      190
+    ],
+    "road_diag_t_ne": [
+      180,
+      0,
+      176,
+      189
+    ],
+    "road_diag_t_ne_weathered": [
+      358,
+      0,
+      176,
+      189
+    ],
+    "road_diag_t_nw": [
+      536,
+      0,
+      178,
+      189
+    ],
+    "road_diag_sw_corner": [
+      716,
+      0,
+      175,
+      187
+    ],
+    "sw_diag_nw_se": [
+      893,
+      0,
+      177,
+      187
+    ],
+    "road_diag_sw_corner_weathered": [
+      1072,
+      0,
+      176,
+      186
+    ],
+    "sw_diag_ne_sw_weathered": [
+      1250,
+      0,
+      177,
+      186
+    ],
+    "road_diag_nw_se_weathered": [
+      1429,
+      0,
+      177,
+      184
+    ],
+    "road_diag_x": [
+      1608,
+      0,
+      179,
+      184
+    ],
+    "road_diag_x_weathered": [
+      1789,
+      0,
+      179,
+      184
+    ],
+    "road_diag_ne_sw": [
+      0,
+      192,
+      178,
+      183
+    ],
+    "road_diag_ne_sw_weathered": [
+      180,
+      192,
+      177,
+      183
+    ],
+    "road_diag_nw_se": [
+      359,
+      192,
+      177,
+      183
+    ],
+    "sw_diag_nw_se_weathered": [
+      538,
+      192,
+      176,
+      183
+    ],
+    "sw_diag_ne_sw": [
+      716,
+      192,
+      177,
+      180
+    ]
+  }
+}

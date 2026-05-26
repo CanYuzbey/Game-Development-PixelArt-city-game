@@ -1,0 +1,108 @@
+{
+  "schema": "atlas_manifest.v1",
+  "atlas_id": "roofs",
+  "file": "runtime/roofs.atlas.png",
+  "size": [
+    2048,
+    492
+  ],
+  "sprite_count": 16,
+  "sprites": {
+    "roof_peaked_b": [
+      0,
+      0,
+      211,
+      358
+    ],
+    "roof_peaked_b_corner": [
+      213,
+      0,
+      208,
+      178
+    ],
+    "roof_terracotta_a_corner": [
+      423,
+      0,
+      190,
+      163
+    ],
+    "roof_glass_tower_corner": [
+      615,
+      0,
+      196,
+      152
+    ],
+    "roof_flat_b": [
+      813,
+      0,
+      196,
+      149
+    ],
+    "roof_glass_tower": [
+      1011,
+      0,
+      188,
+      147
+    ],
+    "roof_flat_a": [
+      1201,
+      0,
+      191,
+      146
+    ],
+    "roof_flat_a_corner": [
+      1394,
+      0,
+      188,
+      145
+    ],
+    "roof_flat_b_corner": [
+      1584,
+      0,
+      167,
+      138
+    ],
+    "roof_rowhouse_parapet": [
+      1753,
+      0,
+      167,
+      138
+    ],
+    "roof_mansard_a": [
+      0,
+      360,
+      154,
+      132
+    ],
+    "roof_rowhouse_parapet_corner": [
+      156,
+      360,
+      154,
+      132
+    ],
+    "roof_peaked_a_corner": [
+      312,
+      360,
+      138,
+      129
+    ],
+    "roof_terracotta_a": [
+      452,
+      360,
+      138,
+      128
+    ],
+    "roof_peaked_a": [
+      592,
+      360,
+      143,
+      106
+    ],
+    "roof_mansard_a_corner": [
+      737,
+      360,
+      143,
+      105
+    ]
+  }
+}

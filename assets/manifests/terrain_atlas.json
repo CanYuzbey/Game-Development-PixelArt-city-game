@@ -1,0 +1,108 @@
+{
+  "schema": "atlas_manifest.v1",
+  "atlas_id": "terrain",
+  "file": "runtime/terrain.atlas.png",
+  "size": [
+    2048,
+    562
+  ],
+  "sprite_count": 16,
+  "sprites": {
+    "ground_inset_a": [
+      0,
+      0,
+      274,
+      192
+    ],
+    "ground_inset_b": [
+      276,
+      0,
+      273,
+      192
+    ],
+    "ground_inset_c": [
+      551,
+      0,
+      273,
+      192
+    ],
+    "ground_inset_d": [
+      826,
+      0,
+      274,
+      192
+    ],
+    "ground_plaza_paving_weathered": [
+      1102,
+      0,
+      273,
+      189
+    ],
+    "ground_plaza_alt_weathered": [
+      1377,
+      0,
+      274,
+      189
+    ],
+    "ground_plaza_alt": [
+      1653,
+      0,
+      273,
+      188
+    ],
+    "ground_land_alt_b": [
+      0,
+      194,
+      273,
+      187
+    ],
+    "ground_land_alt_b_weathered": [
+      275,
+      194,
+      274,
+      187
+    ],
+    "ground_plaza_paving": [
+      551,
+      194,
+      274,
+      187
+    ],
+    "ground_land_alt_a": [
+      827,
+      194,
+      274,
+      186
+    ],
+    "ground_land_alt_a_weathered": [
+      1103,
+      194,
+      274,
+      186
+    ],
+    "ground_water": [
+      1379,
+      194,
+      273,
+      181
+    ],
+    "ground_water_shimmer": [
+      1654,
+      194,
+      274,
+      181
+    ],
+    "ground_land": [
+      0,
+      383,
+      275,
+      179
+    ],
+    "ground_land_weathered": [
+      277,
+      383,
+      274,
+      179
+    ]
+  }
+}

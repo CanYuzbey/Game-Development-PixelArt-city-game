@@ -1,0 +1,4875 @@
+{
+  "schema": "sprite_registry.v1",
+  "status": "visual_finalized",
+  "pipeline_note": "Visual finalization removed printed source labels, replaced merged or mechanically split rects with curated sprite rects, trimmed transparent padding, and cleared all estimated flags.",
+  "total_sprites": 242,
+  "sprites": {
+    "ground_land": {
+      "source_sheet": "terrain_ground",
+      "pixel_rect": [
+        30,
+        92,
+        275,
+        179
+      ],
+      "asset_slot": "terrain/exterior",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "terrain.atlas.png",
+      "atlas_rect": [
+        0,
+        383,
+        275,
+        179
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "ground_land_weathered": {
+      "source_sheet": "terrain_ground",
+      "pixel_rect": [
+        338,
+        92,
+        274,
+        179
+      ],
+      "asset_slot": "terrain/exterior",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "terrain.atlas.png",
+      "atlas_rect": [
+        277,
+        383,
+        274,
+        179
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "ground_water": {
+      "source_sheet": "terrain_ground",
+      "pixel_rect": [
+        643,
+        90,
+        273,
+        181
+      ],
+      "asset_slot": "terrain/water",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "terrain.atlas.png",
+      "atlas_rect": [
+        1379,
+        194,
+        273,
+        181
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "ground_water_shimmer": {
+      "source_sheet": "terrain_ground",
+      "pixel_rect": [
+        946,
+        90,
+        274,
+        181
+      ],
+      "asset_slot": "terrain/water",
+      "condition": "animated",
+      "runtime_status": "exported",
+      "atlas_file": "terrain.atlas.png",
+      "atlas_rect": [
+        1654,
+        194,
+        274,
+        181
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "ground_land_alt_a": {
+      "source_sheet": "terrain_ground",
+      "pixel_rect": [
+        31,
+        299,
+        274,
+        186
+      ],
+      "asset_slot": "terrain/exterior",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "terrain.atlas.png",
+      "atlas_rect": [
+        827,
+        194,
+        274,
+        186
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "ground_land_alt_a_weathered": {
+      "source_sheet": "terrain_ground",
+      "pixel_rect": [
+        338,
+        299,
+        274,
+        186
+      ],
+      "asset_slot": "terrain/exterior",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "terrain.atlas.png",
+      "atlas_rect": [
+        1103,
+        194,
+        274,
+        186
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "ground_land_alt_b": {
+      "source_sheet": "terrain_ground",
+      "pixel_rect": [
+        643,
+        298,
+        273,
+        187
+      ],
+      "asset_slot": "terrain/exterior",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "terrain.atlas.png",
+      "atlas_rect": [
+        0,
+        194,
+        273,
+        187
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "ground_land_alt_b_weathered": {
+      "source_sheet": "terrain_ground",
+      "pixel_rect": [
+        946,
+        298,
+        274,
+        187
+      ],
+      "asset_slot": "terrain/exterior",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "terrain.atlas.png",
+      "atlas_rect": [
+        275,
+        194,
+        274,
+        187
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "ground_park_grass": {
+      "source_sheet": "terrain_ground",
+      "pixel_rect": [
+        30,
+        511,
+        276,
+        189
+      ],
+      "asset_slot": "landscape/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        0,
+        229,
+        276,
+        189
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "ground_park_grass_weathered": {
+      "source_sheet": "terrain_ground",
+      "pixel_rect": [
+        338,
+        511,
+        274,
+        189
+      ],
+      "asset_slot": "landscape/park",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        278,
+        229,
+        274,
+        189
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "ground_park_grass_b": {
+      "source_sheet": "terrain_ground",
+      "pixel_rect": [
+        643,
+        512,
+        273,
+        188
+      ],
+      "asset_slot": "landscape/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        554,
+        229,
+        273,
+        188
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "ground_park_grass_b_weathered": {
+      "source_sheet": "terrain_ground",
+      "pixel_rect": [
+        946,
+        512,
+        274,
+        188
+      ],
+      "asset_slot": "landscape/park",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        829,
+        229,
+        274,
+        188
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "ground_plaza_paving": {
+      "source_sheet": "terrain_ground",
+      "pixel_rect": [
+        31,
+        725,
+        274,
+        187
+      ],
+      "asset_slot": "terrain/exterior",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "terrain.atlas.png",
+      "atlas_rect": [
+        551,
+        194,
+        274,
+        187
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "ground_plaza_paving_weathered": {
+      "source_sheet": "terrain_ground",
+      "pixel_rect": [
+        339,
+        724,
+        273,
+        189
+      ],
+      "asset_slot": "terrain/exterior",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "terrain.atlas.png",
+      "atlas_rect": [
+        1102,
+        0,
+        273,
+        189
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "ground_plaza_alt": {
+      "source_sheet": "terrain_ground",
+      "pixel_rect": [
+        643,
+        725,
+        273,
+        188
+      ],
+      "asset_slot": "terrain/exterior",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "terrain.atlas.png",
+      "atlas_rect": [
+        1653,
+        0,
+        273,
+        188
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "ground_plaza_alt_weathered": {
+      "source_sheet": "terrain_ground",
+      "pixel_rect": [
+        946,
+        724,
+        274,
+        189
+      ],
+      "asset_slot": "terrain/exterior",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "terrain.atlas.png",
+      "atlas_rect": [
+        1377,
+        0,
+        274,
+        189
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "ground_inset_a": {
+      "source_sheet": "terrain_ground",
+      "pixel_rect": [
+        31,
+        936,
+        274,
+        192
+      ],
+      "asset_slot": "terrain/exterior",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "terrain.atlas.png",
+      "atlas_rect": [
+        0,
+        0,
+        274,
+        192
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "ground_inset_b": {
+      "source_sheet": "terrain_ground",
+      "pixel_rect": [
+        339,
+        936,
+        273,
+        192
+      ],
+      "asset_slot": "terrain/exterior",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "terrain.atlas.png",
+      "atlas_rect": [
+        276,
+        0,
+        273,
+        192
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "ground_inset_c": {
+      "source_sheet": "terrain_ground",
+      "pixel_rect": [
+        643,
+        936,
+        273,
+        192
+      ],
+      "asset_slot": "terrain/exterior",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "terrain.atlas.png",
+      "atlas_rect": [
+        551,
+        0,
+        273,
+        192
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "ground_inset_d": {
+      "source_sheet": "terrain_ground",
+      "pixel_rect": [
+        946,
+        936,
+        274,
+        192
+      ],
+      "asset_slot": "terrain/exterior",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "terrain.atlas.png",
+      "atlas_rect": [
+        826,
+        0,
+        274,
+        192
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "bldg_cbd_glass_a": {
+      "source_sheet": "buildings",
+      "pixel_rect": [
+        27,
+        21,
+        115,
+        214
+      ],
+      "asset_slot": "building/office",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "buildings.atlas.png",
+      "atlas_rect": [
+        1605,
+        0,
+        115,
+        214
+      ],
+      "visual_rect": "curated"
+    },
+    "bldg_cbd_glass_b": {
+      "source_sheet": "buildings",
+      "pixel_rect": [
+        269,
+        29,
+        109,
+        203
+      ],
+      "asset_slot": "building/office",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "buildings.atlas.png",
+      "atlas_rect": [
+        1830,
+        0,
+        109,
+        203
+      ],
+      "visual_rect": "curated"
+    },
+    "bldg_cbd_brick_a": {
+      "source_sheet": "buildings",
+      "pixel_rect": [
+        508,
+        20,
+        120,
+        217
+      ],
+      "asset_slot": "building/office",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "buildings.atlas.png",
+      "atlas_rect": [
+        1156,
+        0,
+        120,
+        217
+      ],
+      "visual_rect": "curated"
+    },
+    "bldg_cbd_concrete_a": {
+      "source_sheet": "buildings",
+      "pixel_rect": [
+        762,
+        20,
+        113,
+        215
+      ],
+      "asset_slot": "building/office",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "buildings.atlas.png",
+      "atlas_rect": [
+        1278,
+        0,
+        113,
+        215
+      ],
+      "visual_rect": "curated"
+    },
+    "bldg_cbd_corner_glass": {
+      "source_sheet": "buildings",
+      "pixel_rect": [
+        1004,
+        30,
+        106,
+        208
+      ],
+      "asset_slot": "building/office",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "buildings.atlas.png",
+      "atlas_rect": [
+        1722,
+        0,
+        106,
+        208
+      ],
+      "visual_rect": "curated"
+    },
+    "bldg_mid_brownstone_a": {
+      "source_sheet": "buildings",
+      "pixel_rect": [
+        17,
+        280,
+        106,
+        202
+      ],
+      "asset_slot": "building/apartment",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "buildings.atlas.png",
+      "atlas_rect": [
+        1941,
+        0,
+        106,
+        202
+      ],
+      "visual_rect": "curated"
+    },
+    "bldg_mid_brownstone_b": {
+      "source_sheet": "buildings",
+      "pixel_rect": [
+        124,
+        281,
+        104,
+        202
+      ],
+      "asset_slot": "building/apartment",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "buildings.atlas.png",
+      "atlas_rect": [
+        0,
+        566,
+        104,
+        202
+      ],
+      "visual_rect": "curated"
+    },
+    "bldg_mid_brick_a": {
+      "source_sheet": "buildings",
+      "pixel_rect": [
+        473,
+        296,
+        177,
+        186
+      ],
+      "asset_slot": "building/apartment",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "buildings.atlas.png",
+      "atlas_rect": [
+        1660,
+        566,
+        177,
+        186
+      ],
+      "visual_rect": "curated"
+    },
+    "bldg_mid_brick_b": {
+      "source_sheet": "buildings",
+      "pixel_rect": [
+        661,
+        297,
+        182,
+        188
+      ],
+      "asset_slot": "building/apartment",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "buildings.atlas.png",
+      "atlas_rect": [
+        1212,
+        566,
+        182,
+        188
+      ],
+      "visual_rect": "curated"
+    },
+    "bldg_mid_stucco_a": {
+      "source_sheet": "buildings",
+      "pixel_rect": [
+        859,
+        296,
+        181,
+        190
+      ],
+      "asset_slot": "building/apartment",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "barcelona_eixample",
+      "atlas_file": "buildings.atlas.png",
+      "atlas_rect": [
+        299,
+        566,
+        181,
+        190
+      ],
+      "visual_rect": "curated"
+    },
+    "bldg_mid_limestone_a": {
+      "source_sheet": "buildings",
+      "pixel_rect": [
+        1055,
+        299,
+        184,
+        190
+      ],
+      "asset_slot": "building/apartment",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "paris_haussmann",
+      "atlas_file": "buildings.atlas.png",
+      "atlas_rect": [
+        482,
+        566,
+        184,
+        190
+      ],
+      "visual_rect": "curated"
+    },
+    "bldg_resi_rowhouse_a": {
+      "source_sheet": "buildings",
+      "pixel_rect": [
+        13,
+        543,
+        121,
+        187
+      ],
+      "asset_slot": "building/house",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "buildings.atlas.png",
+      "atlas_rect": [
+        1396,
+        566,
+        121,
+        187
+      ],
+      "visual_rect": "curated"
+    },
+    "bldg_resi_rowhouse_b": {
+      "source_sheet": "buildings",
+      "pixel_rect": [
+        120,
+        549,
+        119,
+        183
+      ],
+      "asset_slot": "building/house",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "buildings.atlas.png",
+      "atlas_rect": [
+        1839,
+        566,
+        119,
+        183
+      ],
+      "visual_rect": "curated"
+    },
+    "bldg_resi_terrace_a": {
+      "source_sheet": "buildings",
+      "pixel_rect": [
+        492,
+        543,
+        191,
+        199
+      ],
+      "asset_slot": "building/house",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "london_organic",
+      "atlas_file": "buildings.atlas.png",
+      "atlas_rect": [
+        106,
+        566,
+        191,
+        199
+      ],
+      "visual_rect": "curated"
+    },
+    "bldg_resi_detached_a": {
+      "source_sheet": "buildings",
+      "pixel_rect": [
+        702,
+        546,
+        268,
+        189
+      ],
+      "asset_slot": "building/house",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "buildings.atlas.png",
+      "atlas_rect": [
+        942,
+        566,
+        268,
+        189
+      ],
+      "visual_rect": "curated"
+    },
+    "bldg_resi_detached_b": {
+      "source_sheet": "buildings",
+      "pixel_rect": [
+        967,
+        550,
+        272,
+        190
+      ],
+      "asset_slot": "building/house",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "buildings.atlas.png",
+      "atlas_rect": [
+        668,
+        566,
+        272,
+        190
+      ],
+      "visual_rect": "curated"
+    },
+    "bldg_shop_storefront_a": {
+      "source_sheet": "buildings",
+      "pixel_rect": [
+        27,
+        798,
+        127,
+        155
+      ],
+      "asset_slot": "building/shop",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "buildings.atlas.png",
+      "atlas_rect": [
+        628,
+        770,
+        127,
+        155
+      ],
+      "visual_rect": "curated"
+    },
+    "bldg_shop_storefront_b": {
+      "source_sheet": "buildings",
+      "pixel_rect": [
+        288,
+        792,
+        231,
+        164
+      ],
+      "asset_slot": "building/shop",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "buildings.atlas.png",
+      "atlas_rect": [
+        0,
+        770,
+        231,
+        164
+      ],
+      "visual_rect": "curated"
+    },
+    "bldg_restaurant_a": {
+      "source_sheet": "buildings",
+      "pixel_rect": [
+        575,
+        789,
+        173,
+        164
+      ],
+      "asset_slot": "building/restaurant",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "buildings.atlas.png",
+      "atlas_rect": [
+        233,
+        770,
+        173,
+        164
+      ],
+      "visual_rect": "curated"
+    },
+    "bldg_market_a": {
+      "source_sheet": "buildings",
+      "pixel_rect": [
+        905,
+        791,
+        218,
+        164
+      ],
+      "asset_slot": "building/market",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "buildings.atlas.png",
+      "atlas_rect": [
+        408,
+        770,
+        218,
+        164
+      ],
+      "visual_rect": "curated"
+    },
+    "bldg_bank_a": {
+      "source_sheet": "buildings",
+      "pixel_rect": [
+        55,
+        996,
+        139,
+        187
+      ],
+      "asset_slot": "building/bank",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "buildings.atlas.png",
+      "atlas_rect": [
+        1519,
+        566,
+        139,
+        187
+      ],
+      "visual_rect": "curated"
+    },
+    "bldg_civic_a": {
+      "source_sheet": "buildings",
+      "pixel_rect": [
+        416,
+        998,
+        210,
+        170
+      ],
+      "asset_slot": "building/civic",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "buildings.atlas.png",
+      "atlas_rect": [
+        1393,
+        0,
+        210,
+        170
+      ],
+      "visual_rect": "curated"
+    },
+    "bldg_civic_columns_a": {
+      "source_sheet": "civic_columns",
+      "pixel_rect": [
+        39,
+        334,
+        576,
+        564
+      ],
+      "asset_slot": "building/civic",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "buildings.atlas.png",
+      "atlas_rect": [
+        0,
+        0,
+        576,
+        564
+      ],
+      "visual_rect": "curated"
+    },
+    "bldg_civic_columns_b": {
+      "source_sheet": "civic_columns",
+      "pixel_rect": [
+        619,
+        336,
+        576,
+        562
+      ],
+      "asset_slot": "building/civic",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "buildings.atlas.png",
+      "atlas_rect": [
+        578,
+        0,
+        576,
+        562
+      ],
+      "visual_rect": "curated"
+    },
+    "landmark_town_hall_a": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        35,
+        29,
+        302,
+        265
+      ],
+      "asset_slot": "landmark/town_hall",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        578,
+        0,
+        302,
+        265
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_town_hall_b": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        338,
+        32,
+        295,
+        261
+      ],
+      "asset_slot": "landmark/town_hall",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        882,
+        0,
+        295,
+        261
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_town_hall_c": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        637,
+        5,
+        288,
+        290
+      ],
+      "asset_slot": "landmark/town_hall",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        288,
+        0,
+        288,
+        290
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_town_hall_d": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        930,
+        5,
+        286,
+        291
+      ],
+      "asset_slot": "landmark/town_hall",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        0,
+        0,
+        286,
+        291
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_school_a": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        35,
+        277,
+        268,
+        232
+      ],
+      "asset_slot": "landmark/school",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        272,
+        293,
+        268,
+        232
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_school_b": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        329,
+        293,
+        267,
+        217
+      ],
+      "asset_slot": "landmark/school",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        542,
+        293,
+        267,
+        217
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_school_c": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        625,
+        296,
+        266,
+        215
+      ],
+      "asset_slot": "landmark/school",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        811,
+        293,
+        266,
+        215
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_school_d": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        921,
+        299,
+        259,
+        214
+      ],
+      "asset_slot": "landmark/school",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        1079,
+        293,
+        259,
+        214
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_hospital_a": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        32,
+        474,
+        270,
+        236
+      ],
+      "asset_slot": "landmark/hospital",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        0,
+        293,
+        270,
+        236
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_hospital_b": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        329,
+        475,
+        272,
+        239
+      ],
+      "asset_slot": "landmark/hospital",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        1179,
+        0,
+        272,
+        239
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_hospital_c": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        625,
+        474,
+        259,
+        238
+      ],
+      "asset_slot": "landmark/hospital",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        1453,
+        0,
+        259,
+        238
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_hospital_d": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        920,
+        474,
+        258,
+        238
+      ],
+      "asset_slot": "landmark/hospital",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        1714,
+        0,
+        258,
+        238
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_police_a": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        22,
+        677,
+        284,
+        166
+      ],
+      "asset_slot": "landmark/police",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        405,
+        726,
+        284,
+        166
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_police_b": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        317,
+        677,
+        286,
+        168
+      ],
+      "asset_slot": "landmark/police",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        117,
+        726,
+        286,
+        168
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_police_c": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        627,
+        677,
+        276,
+        186
+      ],
+      "asset_slot": "landmark/police",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        714,
+        531,
+        276,
+        186
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_police_d": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        924,
+        677,
+        272,
+        186
+      ],
+      "asset_slot": "landmark/police",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        992,
+        531,
+        272,
+        186
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_station_a": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        25,
+        844,
+        297,
+        193
+      ],
+      "asset_slot": "landmark/station",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        0,
+        531,
+        297,
+        193
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_station_b": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        324,
+        846,
+        298,
+        191
+      ],
+      "asset_slot": "landmark/station",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        299,
+        531,
+        298,
+        191
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_station_c": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        625,
+        830,
+        295,
+        209
+      ],
+      "asset_slot": "landmark/station",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        1340,
+        293,
+        295,
+        209
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_station_d": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        927,
+        831,
+        294,
+        209
+      ],
+      "asset_slot": "landmark/station",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        1637,
+        293,
+        294,
+        209
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_park_monument_a": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        41,
+        1036,
+        126,
+        185
+      ],
+      "asset_slot": "landmark/park_monument",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        1381,
+        531,
+        126,
+        185
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_park_monument_b": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        183,
+        1041,
+        115,
+        180
+      ],
+      "asset_slot": "landmark/park_monument",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        0,
+        726,
+        115,
+        180
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_park_monument_c": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        329,
+        1035,
+        113,
+        187
+      ],
+      "asset_slot": "landmark/park_monument",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        599,
+        531,
+        113,
+        187
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "coast_beach_n": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        124,
+        56,
+        138,
+        89
+      ],
+      "asset_slot": "coast/beach",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        0,
+        222,
+        138,
+        89
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_beach_n_weathered": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        124,
+        160,
+        138,
+        90
+      ],
+      "asset_slot": "coast/beach",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        1638,
+        121,
+        138,
+        90
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_beach_e": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        269,
+        56,
+        125,
+        90
+      ],
+      "asset_slot": "coast/beach",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        1778,
+        121,
+        125,
+        90
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_beach_e_weathered": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        269,
+        160,
+        125,
+        90
+      ],
+      "asset_slot": "coast/beach",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        1905,
+        121,
+        125,
+        90
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_beach_s": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        406,
+        57,
+        129,
+        88
+      ],
+      "asset_slot": "coast/beach",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        333,
+        222,
+        129,
+        88
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_beach_s_weathered": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        406,
+        162,
+        128,
+        88
+      ],
+      "asset_slot": "coast/beach",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        464,
+        222,
+        128,
+        88
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_beach_w": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        549,
+        58,
+        74,
+        87
+      ],
+      "asset_slot": "coast/beach",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        863,
+        222,
+        74,
+        87
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_beach_w_weathered": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        548,
+        162,
+        75,
+        88
+      ],
+      "asset_slot": "coast/beach",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        594,
+        222,
+        75,
+        88
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_beach_corner_ne": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        677,
+        47,
+        143,
+        109
+      ],
+      "asset_slot": "coast/beach",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        570,
+        0,
+        143,
+        109
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_beach_corner_nw": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        824,
+        49,
+        140,
+        107
+      ],
+      "asset_slot": "coast/beach",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        715,
+        0,
+        140,
+        107
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_beach_corner_se": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        966,
+        51,
+        135,
+        104
+      ],
+      "asset_slot": "coast/beach",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        1082,
+        0,
+        135,
+        104
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_beach_corner_sw": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        1102,
+        50,
+        134,
+        104
+      ],
+      "asset_slot": "coast/beach",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        1219,
+        0,
+        134,
+        104
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_seawall_n": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        120,
+        319,
+        143,
+        104
+      ],
+      "asset_slot": "coast/seawall",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        1355,
+        0,
+        143,
+        104
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_seawall_e": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        269,
+        319,
+        129,
+        104
+      ],
+      "asset_slot": "coast/seawall",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        1500,
+        0,
+        129,
+        104
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_seawall_s": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        407,
+        318,
+        138,
+        105
+      ],
+      "asset_slot": "coast/seawall",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        857,
+        0,
+        138,
+        105
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_seawall_w": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        551,
+        318,
+        83,
+        105
+      ],
+      "asset_slot": "coast/seawall",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        997,
+        0,
+        83,
+        105
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_seawall_corner_ne": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        672,
+        424,
+        162,
+        119
+      ],
+      "asset_slot": "coast/seawall",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        0,
+        0,
+        162,
+        119
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_seawall_corner_nw": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        840,
+        428,
+        119,
+        119
+      ],
+      "asset_slot": "coast/seawall",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        164,
+        0,
+        119,
+        119
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_seawall_corner_ne_clean": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        672,
+        312,
+        162,
+        115
+      ],
+      "asset_slot": "coast/seawall",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        406,
+        0,
+        162,
+        115
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_seawall_corner_nw_clean": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        840,
+        312,
+        119,
+        118
+      ],
+      "asset_slot": "coast/seawall",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        285,
+        0,
+        119,
+        118
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_dock_plank_ns": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        124,
+        591,
+        115,
+        97
+      ],
+      "asset_slot": "coast/dock",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        587,
+        121,
+        115,
+        97
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_dock_plank_ew": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        253,
+        590,
+        128,
+        97
+      ],
+      "asset_slot": "coast/dock",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        704,
+        121,
+        128,
+        97
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_dock_plank_ns_weathered": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        124,
+        693,
+        115,
+        99
+      ],
+      "asset_slot": "coast/dock",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        1801,
+        0,
+        115,
+        99
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_dock_edge_n": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        409,
+        587,
+        224,
+        97
+      ],
+      "asset_slot": "coast/dock",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        834,
+        121,
+        224,
+        97
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_dock_edge_e": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        668,
+        598,
+        190,
+        88
+      ],
+      "asset_slot": "coast/dock",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        671,
+        222,
+        190,
+        88
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_dock_edge_n_weathered": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        409,
+        691,
+        224,
+        98
+      ],
+      "asset_slot": "coast/dock",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        191,
+        121,
+        224,
+        98
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_dock_edge_e_weathered": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        668,
+        703,
+        191,
+        89
+      ],
+      "asset_slot": "coast/dock",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        140,
+        222,
+        191,
+        89
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_cliff_n": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        121,
+        842,
+        189,
+        97
+      ],
+      "asset_slot": "coast/cliff",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        1060,
+        121,
+        189,
+        97
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_cliff_e": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        329,
+        841,
+        168,
+        98
+      ],
+      "asset_slot": "coast/cliff",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        417,
+        121,
+        168,
+        98
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_cliff_s": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        546,
+        843,
+        189,
+        96
+      ],
+      "asset_slot": "coast/cliff",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        1251,
+        121,
+        189,
+        96
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_cliff_w": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        770,
+        843,
+        194,
+        96
+      ],
+      "asset_slot": "coast/cliff",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        1442,
+        121,
+        194,
+        96
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_cliff_n_weathered": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        121,
+        950,
+        189,
+        99
+      ],
+      "asset_slot": "coast/cliff",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        0,
+        121,
+        189,
+        99
+      ],
+      "visual_rect": "curated"
+    },
+    "coast_cliff_e_weathered": {
+      "source_sheet": "coastal",
+      "pixel_rect": [
+        329,
+        949,
+        168,
+        100
+      ],
+      "asset_slot": "coast/cliff",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "coastal.atlas.png",
+      "atlas_rect": [
+        1631,
+        0,
+        168,
+        100
+      ],
+      "visual_rect": "curated"
+    },
+    "road_diag_ne_sw": {
+      "source_sheet": "road_diagonals",
+      "pixel_rect": [
+        138,
+        104,
+        178,
+        183
+      ],
+      "asset_slot": "street/road",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "road_diagonals.atlas.png",
+      "atlas_rect": [
+        0,
+        192,
+        178,
+        183
+      ],
+      "visual_rect": "curated"
+    },
+    "road_diag_ne_sw_weathered": {
+      "source_sheet": "road_diagonals",
+      "pixel_rect": [
+        138,
+        295,
+        177,
+        183
+      ],
+      "asset_slot": "street/road",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "road_diagonals.atlas.png",
+      "atlas_rect": [
+        180,
+        192,
+        177,
+        183
+      ],
+      "visual_rect": "curated"
+    },
+    "road_diag_nw_se": {
+      "source_sheet": "road_diagonals",
+      "pixel_rect": [
+        323,
+        104,
+        177,
+        183
+      ],
+      "asset_slot": "street/road",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "road_diagonals.atlas.png",
+      "atlas_rect": [
+        359,
+        192,
+        177,
+        183
+      ],
+      "visual_rect": "curated"
+    },
+    "road_diag_nw_se_weathered": {
+      "source_sheet": "road_diagonals",
+      "pixel_rect": [
+        323,
+        295,
+        177,
+        184
+      ],
+      "asset_slot": "street/road",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "road_diagonals.atlas.png",
+      "atlas_rect": [
+        1429,
+        0,
+        177,
+        184
+      ],
+      "visual_rect": "curated"
+    },
+    "road_diag_t_ne": {
+      "source_sheet": "road_diagonals",
+      "pixel_rect": [
+        508,
+        102,
+        176,
+        189
+      ],
+      "asset_slot": "street/road",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "road_diagonals.atlas.png",
+      "atlas_rect": [
+        180,
+        0,
+        176,
+        189
+      ],
+      "visual_rect": "curated"
+    },
+    "road_diag_t_ne_weathered": {
+      "source_sheet": "road_diagonals",
+      "pixel_rect": [
+        508,
+        294,
+        176,
+        189
+      ],
+      "asset_slot": "street/road",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "road_diagonals.atlas.png",
+      "atlas_rect": [
+        358,
+        0,
+        176,
+        189
+      ],
+      "visual_rect": "curated"
+    },
+    "road_diag_t_nw": {
+      "source_sheet": "road_diagonals",
+      "pixel_rect": [
+        689,
+        102,
+        178,
+        189
+      ],
+      "asset_slot": "street/road",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "road_diagonals.atlas.png",
+      "atlas_rect": [
+        536,
+        0,
+        178,
+        189
+      ],
+      "visual_rect": "curated"
+    },
+    "road_diag_t_nw_weathered": {
+      "source_sheet": "road_diagonals",
+      "pixel_rect": [
+        689,
+        294,
+        178,
+        190
+      ],
+      "asset_slot": "street/road",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "road_diagonals.atlas.png",
+      "atlas_rect": [
+        0,
+        0,
+        178,
+        190
+      ],
+      "visual_rect": "curated"
+    },
+    "road_diag_x": {
+      "source_sheet": "road_diagonals",
+      "pixel_rect": [
+        877,
+        102,
+        179,
+        184
+      ],
+      "asset_slot": "street/road",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "road_diagonals.atlas.png",
+      "atlas_rect": [
+        1608,
+        0,
+        179,
+        184
+      ],
+      "visual_rect": "curated"
+    },
+    "road_diag_x_weathered": {
+      "source_sheet": "road_diagonals",
+      "pixel_rect": [
+        877,
+        294,
+        179,
+        184
+      ],
+      "asset_slot": "street/road",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "road_diagonals.atlas.png",
+      "atlas_rect": [
+        1789,
+        0,
+        179,
+        184
+      ],
+      "visual_rect": "curated"
+    },
+    "road_diag_sw_corner": {
+      "source_sheet": "road_diagonals",
+      "pixel_rect": [
+        1069,
+        104,
+        175,
+        187
+      ],
+      "asset_slot": "street/road",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "road_diagonals.atlas.png",
+      "atlas_rect": [
+        716,
+        0,
+        175,
+        187
+      ],
+      "visual_rect": "curated"
+    },
+    "road_diag_sw_corner_weathered": {
+      "source_sheet": "road_diagonals",
+      "pixel_rect": [
+        1069,
+        296,
+        176,
+        186
+      ],
+      "asset_slot": "street/road",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "road_diagonals.atlas.png",
+      "atlas_rect": [
+        1072,
+        0,
+        176,
+        186
+      ],
+      "visual_rect": "curated"
+    },
+    "sw_diag_ne_sw": {
+      "source_sheet": "road_diagonals",
+      "pixel_rect": [
+        138,
+        502,
+        177,
+        180
+      ],
+      "asset_slot": "street/sidewalk",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "road_diagonals.atlas.png",
+      "atlas_rect": [
+        716,
+        192,
+        177,
+        180
+      ],
+      "visual_rect": "curated"
+    },
+    "sw_diag_nw_se": {
+      "source_sheet": "road_diagonals",
+      "pixel_rect": [
+        138,
+        687,
+        177,
+        187
+      ],
+      "asset_slot": "street/sidewalk",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "road_diagonals.atlas.png",
+      "atlas_rect": [
+        893,
+        0,
+        177,
+        187
+      ],
+      "visual_rect": "curated"
+    },
+    "sw_diag_ne_sw_weathered": {
+      "source_sheet": "road_diagonals",
+      "pixel_rect": [
+        138,
+        859,
+        177,
+        186
+      ],
+      "asset_slot": "street/sidewalk",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "road_diagonals.atlas.png",
+      "atlas_rect": [
+        1250,
+        0,
+        177,
+        186
+      ],
+      "visual_rect": "curated"
+    },
+    "sw_diag_nw_se_weathered": {
+      "source_sheet": "road_diagonals",
+      "pixel_rect": [
+        138,
+        1048,
+        176,
+        183
+      ],
+      "asset_slot": "street/sidewalk",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "road_diagonals.atlas.png",
+      "atlas_rect": [
+        538,
+        192,
+        176,
+        183
+      ],
+      "visual_rect": "curated"
+    },
+    "park_tree_deciduous_a": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        57,
+        39,
+        134,
+        206
+      ],
+      "asset_slot": "landscape/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        1263,
+        0,
+        134,
+        206
+      ],
+      "visual_rect": "curated"
+    },
+    "park_tree_deciduous_b": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        232,
+        42,
+        144,
+        203
+      ],
+      "asset_slot": "landscape/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        1399,
+        0,
+        144,
+        203
+      ],
+      "visual_rect": "curated"
+    },
+    "park_tree_deciduous_c": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        397,
+        46,
+        129,
+        199
+      ],
+      "asset_slot": "landscape/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        1545,
+        0,
+        129,
+        199
+      ],
+      "visual_rect": "curated"
+    },
+    "park_tree_evergreen_a": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        619,
+        31,
+        127,
+        219
+      ],
+      "asset_slot": "landscape/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        405,
+        0,
+        127,
+        219
+      ],
+      "visual_rect": "curated"
+    },
+    "park_tree_palm_a": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        940,
+        31,
+        121,
+        219
+      ],
+      "asset_slot": "landscape/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        534,
+        0,
+        121,
+        219
+      ],
+      "visual_rect": "curated"
+    },
+    "park_tree_palm_b": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        1090,
+        31,
+        125,
+        219
+      ],
+      "asset_slot": "landscape/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        657,
+        0,
+        125,
+        219
+      ],
+      "visual_rect": "curated"
+    },
+    "park_bush_a": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        66,
+        271,
+        124,
+        119
+      ],
+      "asset_slot": "landscape/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        785,
+        420,
+        124,
+        119
+      ],
+      "visual_rect": "curated"
+    },
+    "park_bush_b": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        234,
+        276,
+        124,
+        114
+      ],
+      "asset_slot": "landscape/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        1291,
+        420,
+        124,
+        114
+      ],
+      "visual_rect": "curated"
+    },
+    "park_bush_c": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        399,
+        273,
+        120,
+        117
+      ],
+      "asset_slot": "landscape/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        911,
+        420,
+        120,
+        117
+      ],
+      "visual_rect": "curated"
+    },
+    "park_bush_d": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        581,
+        285,
+        149,
+        113
+      ],
+      "asset_slot": "landscape/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        1417,
+        420,
+        149,
+        113
+      ],
+      "visual_rect": "curated"
+    },
+    "park_bush_e": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        765,
+        274,
+        143,
+        124
+      ],
+      "asset_slot": "landscape/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        518,
+        420,
+        143,
+        124
+      ],
+      "visual_rect": "curated"
+    },
+    "park_bush_f": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        939,
+        278,
+        125,
+        117
+      ],
+      "asset_slot": "landscape/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        1033,
+        420,
+        125,
+        117
+      ],
+      "visual_rect": "curated"
+    },
+    "park_bush_g": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        1093,
+        275,
+        120,
+        120
+      ],
+      "asset_slot": "landscape/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        663,
+        420,
+        120,
+        120
+      ],
+      "visual_rect": "curated"
+    },
+    "park_bench_a": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        65,
+        414,
+        165,
+        147
+      ],
+      "asset_slot": "prop/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        1612,
+        229,
+        165,
+        147
+      ],
+      "visual_rect": "curated"
+    },
+    "park_bench_b": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        349,
+        416,
+        164,
+        145
+      ],
+      "asset_slot": "prop/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        1779,
+        229,
+        164,
+        145
+      ],
+      "visual_rect": "curated"
+    },
+    "park_fountain_a": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        77,
+        578,
+        172,
+        156
+      ],
+      "asset_slot": "prop/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        1438,
+        229,
+        172,
+        156
+      ],
+      "visual_rect": "curated"
+    },
+    "park_fountain_lg": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        590,
+        538,
+        261,
+        210
+      ],
+      "asset_slot": "prop/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        784,
+        0,
+        261,
+        210
+      ],
+      "visual_rect": "curated"
+    },
+    "park_path_ns": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        79,
+        763,
+        106,
+        208
+      ],
+      "asset_slot": "landscape/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        1155,
+        0,
+        106,
+        208
+      ],
+      "visual_rect": "curated"
+    },
+    "park_path_ew": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        344,
+        772,
+        270,
+        89
+      ],
+      "asset_slot": "landscape/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        0,
+        554,
+        270,
+        89
+      ],
+      "visual_rect": "curated"
+    },
+    "park_path_corner_ne": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        642,
+        774,
+        129,
+        116
+      ],
+      "asset_slot": "landscape/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        1160,
+        420,
+        129,
+        116
+      ],
+      "visual_rect": "curated"
+    },
+    "park_path_corner_nw": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        784,
+        780,
+        108,
+        98
+      ],
+      "asset_slot": "landscape/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        1696,
+        420,
+        108,
+        98
+      ],
+      "visual_rect": "curated"
+    },
+    "park_path_corner_se": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        936,
+        779,
+        97,
+        98
+      ],
+      "asset_slot": "landscape/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        1806,
+        420,
+        97,
+        98
+      ],
+      "visual_rect": "curated"
+    },
+    "park_path_corner_sw": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        1083,
+        779,
+        99,
+        98
+      ],
+      "asset_slot": "landscape/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        1905,
+        420,
+        99,
+        98
+      ],
+      "visual_rect": "curated"
+    },
+    "park_bench_stone_a": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        624,
+        425,
+        255,
+        128
+      ],
+      "asset_slot": "prop/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        261,
+        420,
+        255,
+        128
+      ],
+      "visual_rect": "curated"
+    },
+    "park_bench_stone_b": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        936,
+        423,
+        259,
+        132
+      ],
+      "asset_slot": "prop/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        0,
+        420,
+        259,
+        132
+      ],
+      "visual_rect": "curated"
+    },
+    "park_wall_a": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        203,
+        763,
+        106,
+        209
+      ],
+      "asset_slot": "prop/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        1047,
+        0,
+        106,
+        209
+      ],
+      "visual_rect": "curated"
+    },
+    "park_playground_a": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        47,
+        1014,
+        166,
+        180
+      ],
+      "asset_slot": "prop/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        1105,
+        229,
+        166,
+        180
+      ],
+      "visual_rect": "curated"
+    },
+    "park_playground_b": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        232,
+        1015,
+        163,
+        179
+      ],
+      "asset_slot": "prop/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        1273,
+        229,
+        163,
+        179
+      ],
+      "visual_rect": "curated"
+    },
+    "park_playground_c": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        403,
+        986,
+        199,
+        224
+      ],
+      "asset_slot": "prop/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        204,
+        0,
+        199,
+        224
+      ],
+      "visual_rect": "curated"
+    },
+    "park_wall_b": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        344,
+        877,
+        270,
+        89
+      ],
+      "asset_slot": "prop/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        272,
+        554,
+        270,
+        89
+      ],
+      "visual_rect": "curated"
+    },
+    "park_playground_d": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        608,
+        987,
+        202,
+        227
+      ],
+      "asset_slot": "prop/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        0,
+        0,
+        202,
+        227
+      ],
+      "visual_rect": "curated"
+    },
+    "park_playground_e": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        642,
+        888,
+        126,
+        113
+      ],
+      "asset_slot": "prop/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        1568,
+        420,
+        126,
+        113
+      ],
+      "visual_rect": "curated"
+    },
+    "park_lamp_a": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        868,
+        1011,
+        55,
+        193
+      ],
+      "asset_slot": "prop/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        1676,
+        0,
+        55,
+        193
+      ],
+      "visual_rect": "curated"
+    },
+    "park_lamp_b": {
+      "source_sheet": "park_objects",
+      "pixel_rect": [
+        1032,
+        1012,
+        55,
+        192
+      ],
+      "asset_slot": "prop/park",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "park.atlas.png",
+      "atlas_rect": [
+        1733,
+        0,
+        55,
+        192
+      ],
+      "visual_rect": "curated"
+    },
+    "roof_flat_a": {
+      "source_sheet": "roofs",
+      "pixel_rect": [
+        21,
+        27,
+        191,
+        146
+      ],
+      "asset_slot": "building/roof",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "roofs.atlas.png",
+      "atlas_rect": [
+        1201,
+        0,
+        191,
+        146
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "roof_flat_b": {
+      "source_sheet": "roofs",
+      "pixel_rect": [
+        404,
+        28,
+        196,
+        149
+      ],
+      "asset_slot": "building/roof",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "roofs.atlas.png",
+      "atlas_rect": [
+        813,
+        0,
+        196,
+        149
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "roof_flat_a_corner": {
+      "source_sheet": "roofs",
+      "pixel_rect": [
+        212,
+        28,
+        188,
+        145
+      ],
+      "asset_slot": "building/roof",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "roofs.atlas.png",
+      "atlas_rect": [
+        1394,
+        0,
+        188,
+        145
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "roof_flat_b_corner": {
+      "source_sheet": "roofs",
+      "pixel_rect": [
+        602,
+        31,
+        167,
+        138
+      ],
+      "asset_slot": "building/roof",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "roofs.atlas.png",
+      "atlas_rect": [
+        1584,
+        0,
+        167,
+        138
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "roof_mansard_a": {
+      "source_sheet": "roofs",
+      "pixel_rect": [
+        783,
+        33,
+        154,
+        132
+      ],
+      "asset_slot": "building/roof",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "paris_haussmann",
+      "atlas_file": "roofs.atlas.png",
+      "atlas_rect": [
+        0,
+        360,
+        154,
+        132
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "roof_mansard_a_corner": {
+      "source_sheet": "roofs",
+      "pixel_rect": [
+        944,
+        35,
+        143,
+        105
+      ],
+      "asset_slot": "building/roof",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "paris_haussmann",
+      "atlas_file": "roofs.atlas.png",
+      "atlas_rect": [
+        737,
+        360,
+        143,
+        105
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "roof_terracotta_a": {
+      "source_sheet": "roofs",
+      "pixel_rect": [
+        1098,
+        36,
+        138,
+        128
+      ],
+      "asset_slot": "building/roof",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "barcelona_eixample",
+      "atlas_file": "roofs.atlas.png",
+      "atlas_rect": [
+        452,
+        360,
+        138,
+        128
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "roof_rowhouse_parapet": {
+      "source_sheet": "roofs",
+      "pixel_rect": [
+        602,
+        188,
+        167,
+        138
+      ],
+      "asset_slot": "building/roof",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "manhattan",
+      "atlas_file": "roofs.atlas.png",
+      "atlas_rect": [
+        1753,
+        0,
+        167,
+        138
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "roof_glass_tower": {
+      "source_sheet": "roofs",
+      "pixel_rect": [
+        212,
+        182,
+        188,
+        147
+      ],
+      "asset_slot": "building/roof",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "roofs.atlas.png",
+      "atlas_rect": [
+        1011,
+        0,
+        188,
+        147
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "roof_glass_tower_corner": {
+      "source_sheet": "roofs",
+      "pixel_rect": [
+        404,
+        182,
+        196,
+        152
+      ],
+      "asset_slot": "building/roof",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "roofs.atlas.png",
+      "atlas_rect": [
+        615,
+        0,
+        196,
+        152
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "roof_peaked_a": {
+      "source_sheet": "roofs",
+      "pixel_rect": [
+        944,
+        187,
+        143,
+        106
+      ],
+      "asset_slot": "building/roof",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "roofs.atlas.png",
+      "atlas_rect": [
+        592,
+        360,
+        143,
+        106
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "roof_peaked_b": {
+      "source_sheet": "roofs",
+      "pixel_rect": [
+        17,
+        312,
+        211,
+        358
+      ],
+      "asset_slot": "building/roof",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "roofs.atlas.png",
+      "atlas_rect": [
+        0,
+        0,
+        211,
+        358
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "kit_mhtn_fire_escape_a": {
+      "source_sheet": "city_profile_kits",
+      "pixel_rect": [
+        31,
+        40,
+        186,
+        265
+      ],
+      "asset_slot": "prop/facade_kit",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "manhattan",
+      "atlas_file": "kits.atlas.png",
+      "atlas_rect": [
+        715,
+        0,
+        186,
+        265
+      ],
+      "visual_rect": "curated"
+    },
+    "kit_mhtn_fire_escape_b": {
+      "source_sheet": "city_profile_kits",
+      "pixel_rect": [
+        272,
+        34,
+        175,
+        269
+      ],
+      "asset_slot": "prop/facade_kit",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "manhattan",
+      "atlas_file": "kits.atlas.png",
+      "atlas_rect": [
+        538,
+        0,
+        175,
+        269
+      ],
+      "visual_rect": "curated"
+    },
+    "kit_mhtn_water_tower": {
+      "source_sheet": "city_profile_kits",
+      "pixel_rect": [
+        537,
+        38,
+        163,
+        272
+      ],
+      "asset_slot": "prop/facade_kit",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "manhattan",
+      "atlas_file": "kits.atlas.png",
+      "atlas_rect": [
+        207,
+        0,
+        163,
+        272
+      ],
+      "visual_rect": "curated"
+    },
+    "kit_mhtn_brownstone_stoop": {
+      "source_sheet": "city_profile_kits",
+      "pixel_rect": [
+        762,
+        22,
+        205,
+        288
+      ],
+      "asset_slot": "prop/facade_kit",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "manhattan",
+      "atlas_file": "kits.atlas.png",
+      "atlas_rect": [
+        0,
+        0,
+        205,
+        288
+      ],
+      "visual_rect": "curated"
+    },
+    "kit_mhtn_cornice_a": {
+      "source_sheet": "city_profile_kits",
+      "pixel_rect": [
+        1010,
+        91,
+        220,
+        214
+      ],
+      "asset_slot": "prop/facade_kit",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "manhattan",
+      "atlas_file": "kits.atlas.png",
+      "atlas_rect": [
+        1021,
+        290,
+        220,
+        214
+      ],
+      "visual_rect": "curated"
+    },
+    "kit_bcn_balcony_a": {
+      "source_sheet": "city_profile_kits",
+      "pixel_rect": [
+        30,
+        344,
+        187,
+        264
+      ],
+      "asset_slot": "prop/facade_kit",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "barcelona_eixample",
+      "atlas_file": "kits.atlas.png",
+      "atlas_rect": [
+        903,
+        0,
+        187,
+        264
+      ],
+      "visual_rect": "curated"
+    },
+    "kit_bcn_balcony_b": {
+      "source_sheet": "city_profile_kits",
+      "pixel_rect": [
+        272,
+        340,
+        164,
+        271
+      ],
+      "asset_slot": "prop/facade_kit",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "barcelona_eixample",
+      "atlas_file": "kits.atlas.png",
+      "atlas_rect": [
+        372,
+        0,
+        164,
+        271
+      ],
+      "visual_rect": "curated"
+    },
+    "kit_bcn_chamfer_corner": {
+      "source_sheet": "city_profile_kits",
+      "pixel_rect": [
+        516,
+        375,
+        182,
+        232
+      ],
+      "asset_slot": "prop/facade_kit",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "barcelona_eixample",
+      "atlas_file": "kits.atlas.png",
+      "atlas_rect": [
+        837,
+        290,
+        182,
+        232
+      ],
+      "visual_rect": "curated"
+    },
+    "kit_bcn_awning_a": {
+      "source_sheet": "city_profile_kits",
+      "pixel_rect": [
+        742,
+        408,
+        231,
+        190
+      ],
+      "asset_slot": "prop/facade_kit",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "barcelona_eixample",
+      "atlas_file": "kits.atlas.png",
+      "atlas_rect": [
+        1452,
+        290,
+        231,
+        190
+      ],
+      "visual_rect": "curated"
+    },
+    "kit_bcn_courtyard_gate": {
+      "source_sheet": "city_profile_kits",
+      "pixel_rect": [
+        1047,
+        344,
+        152,
+        264
+      ],
+      "asset_slot": "prop/facade_kit",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "barcelona_eixample",
+      "atlas_file": "kits.atlas.png",
+      "atlas_rect": [
+        1092,
+        0,
+        152,
+        264
+      ],
+      "visual_rect": "curated"
+    },
+    "kit_paris_balcony_ironwork": {
+      "source_sheet": "city_profile_kits",
+      "pixel_rect": [
+        22,
+        656,
+        205,
+        236
+      ],
+      "asset_slot": "prop/facade_kit",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "paris_haussmann",
+      "atlas_file": "kits.atlas.png",
+      "atlas_rect": [
+        324,
+        290,
+        205,
+        236
+      ],
+      "visual_rect": "curated"
+    },
+    "kit_paris_mansard_dormer": {
+      "source_sheet": "city_profile_kits",
+      "pixel_rect": [
+        260,
+        674,
+        207,
+        214
+      ],
+      "asset_slot": "prop/facade_kit",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "paris_haussmann",
+      "atlas_file": "kits.atlas.png",
+      "atlas_rect": [
+        1243,
+        290,
+        207,
+        214
+      ],
+      "visual_rect": "curated"
+    },
+    "kit_paris_storefront_boul": {
+      "source_sheet": "city_profile_kits",
+      "pixel_rect": [
+        499,
+        653,
+        235,
+        234
+      ],
+      "asset_slot": "prop/facade_kit",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "paris_haussmann",
+      "atlas_file": "kits.atlas.png",
+      "atlas_rect": [
+        531,
+        290,
+        235,
+        234
+      ],
+      "visual_rect": "curated"
+    },
+    "kit_paris_lamp_post": {
+      "source_sheet": "city_profile_kits",
+      "pixel_rect": [
+        826,
+        649,
+        67,
+        234
+      ],
+      "asset_slot": "prop/facade_kit",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "paris_haussmann",
+      "atlas_file": "kits.atlas.png",
+      "atlas_rect": [
+        768,
+        290,
+        67,
+        234
+      ],
+      "visual_rect": "curated"
+    },
+    "kit_paris_arcade_pillar": {
+      "source_sheet": "city_profile_kits",
+      "pixel_rect": [
+        1036,
+        650,
+        139,
+        238
+      ],
+      "asset_slot": "prop/facade_kit",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "paris_haussmann",
+      "atlas_file": "kits.atlas.png",
+      "atlas_rect": [
+        183,
+        290,
+        139,
+        238
+      ],
+      "visual_rect": "curated"
+    },
+    "kit_ldn_sash_window_a": {
+      "source_sheet": "city_profile_kits",
+      "pixel_rect": [
+        47,
+        931,
+        144,
+        259
+      ],
+      "asset_slot": "prop/facade_kit",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "london_organic",
+      "atlas_file": "kits.atlas.png",
+      "atlas_rect": [
+        1394,
+        0,
+        144,
+        259
+      ],
+      "visual_rect": "curated"
+    },
+    "kit_ldn_bay_window_a": {
+      "source_sheet": "city_profile_kits",
+      "pixel_rect": [
+        286,
+        926,
+        168,
+        249
+      ],
+      "asset_slot": "prop/facade_kit",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "london_organic",
+      "atlas_file": "kits.atlas.png",
+      "atlas_rect": [
+        1755,
+        0,
+        168,
+        249
+      ],
+      "visual_rect": "curated"
+    },
+    "kit_ldn_chimney_pot_a": {
+      "source_sheet": "city_profile_kits",
+      "pixel_rect": [
+        520,
+        945,
+        181,
+        245
+      ],
+      "asset_slot": "prop/facade_kit",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "london_organic",
+      "atlas_file": "kits.atlas.png",
+      "atlas_rect": [
+        0,
+        290,
+        181,
+        245
+      ],
+      "visual_rect": "curated"
+    },
+    "kit_ldn_shopfront_a": {
+      "source_sheet": "city_profile_kits",
+      "pixel_rect": [
+        752,
+        933,
+        213,
+        255
+      ],
+      "asset_slot": "prop/facade_kit",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "london_organic",
+      "atlas_file": "kits.atlas.png",
+      "atlas_rect": [
+        1540,
+        0,
+        213,
+        255
+      ],
+      "visual_rect": "curated"
+    },
+    "kit_ldn_fanlight_door": {
+      "source_sheet": "city_profile_kits",
+      "pixel_rect": [
+        1041,
+        926,
+        146,
+        262
+      ],
+      "asset_slot": "prop/facade_kit",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "city_profile": "london_organic",
+      "atlas_file": "kits.atlas.png",
+      "atlas_rect": [
+        1246,
+        0,
+        146,
+        262
+      ],
+      "visual_rect": "curated"
+    },
+    "prop_traffic_light_ns": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        35,
+        38,
+        70,
+        256
+      ],
+      "asset_slot": "prop/street",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        883,
+        0,
+        70,
+        256
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_traffic_light_ew": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        321,
+        41,
+        68,
+        253
+      ],
+      "asset_slot": "prop/street",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        1026,
+        0,
+        68,
+        253
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_traffic_light_ns_w": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        432,
+        42,
+        69,
+        255
+      ],
+      "asset_slot": "prop/street",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        955,
+        0,
+        69,
+        255
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_traffic_light_arm": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        537,
+        50,
+        168,
+        248
+      ],
+      "asset_slot": "prop/street",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        1096,
+        0,
+        168,
+        248
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_traffic_light_arm_b": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        714,
+        64,
+        171,
+        234
+      ],
+      "asset_slot": "prop/street",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        1449,
+        0,
+        171,
+        234
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_traffic_light_arm_w": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        913,
+        64,
+        181,
+        234
+      ],
+      "asset_slot": "prop/street",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        1622,
+        0,
+        181,
+        234
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_traffic_light_arm_c": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        1054,
+        64,
+        181,
+        238
+      ],
+      "asset_slot": "prop/street",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        1266,
+        0,
+        181,
+        238
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_street_sign_post": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        37,
+        313,
+        90,
+        201
+      ],
+      "asset_slot": "prop/street",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        811,
+        523,
+        90,
+        201
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_street_sign_cross": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        143,
+        313,
+        271,
+        201
+      ],
+      "asset_slot": "prop/street",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        903,
+        523,
+        271,
+        201
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_bus_stop_a": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        440,
+        316,
+        809,
+        204
+      ],
+      "asset_slot": "prop/street",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        0,
+        523,
+        809,
+        204
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_phone_booth_a": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        33,
+        537,
+        92,
+        146
+      ],
+      "asset_slot": "prop/street",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        1176,
+        523,
+        92,
+        146
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_phone_booth_b": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        165,
+        541,
+        87,
+        143
+      ],
+      "asset_slot": "prop/street",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        1270,
+        523,
+        87,
+        143
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_news_box_a": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        302,
+        541,
+        86,
+        143
+      ],
+      "asset_slot": "prop/street",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        1359,
+        523,
+        86,
+        143
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_phone_booth_c": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        434,
+        542,
+        87,
+        143
+      ],
+      "asset_slot": "prop/street",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        1447,
+        523,
+        87,
+        143
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_phone_booth_d": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        617,
+        545,
+        87,
+        139
+      ],
+      "asset_slot": "prop/street",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        1536,
+        523,
+        87,
+        139
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_phone_booth_e": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        776,
+        548,
+        86,
+        138
+      ],
+      "asset_slot": "prop/street",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        1625,
+        523,
+        86,
+        138
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_phone_booth_f": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        921,
+        549,
+        86,
+        138
+      ],
+      "asset_slot": "prop/street",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        1713,
+        523,
+        86,
+        138
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_phone_booth_g": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        1071,
+        551,
+        86,
+        137
+      ],
+      "asset_slot": "prop/street",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        1801,
+        523,
+        86,
+        137
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_hydrant_a": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        29,
+        698,
+        108,
+        521
+      ],
+      "asset_slot": "prop/street",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        0,
+        0,
+        108,
+        521
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_hydrant_b": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        165,
+        701,
+        110,
+        518
+      ],
+      "asset_slot": "prop/street",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        459,
+        0,
+        110,
+        518
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_hydrant_c": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        295,
+        700,
+        116,
+        519
+      ],
+      "asset_slot": "prop/street",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        110,
+        0,
+        116,
+        519
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_hydrant_d": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        431,
+        700,
+        120,
+        519
+      ],
+      "asset_slot": "prop/street",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        228,
+        0,
+        120,
+        519
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_hydrant_e": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        601,
+        700,
+        107,
+        519
+      ],
+      "asset_slot": "prop/street",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        350,
+        0,
+        107,
+        519
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_newspaper_pile": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        739,
+        701,
+        67,
+        112
+      ],
+      "asset_slot": "prop/street",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        1889,
+        523,
+        67,
+        112
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_newspaper_pile_b": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        867,
+        703,
+        67,
+        110
+      ],
+      "asset_slot": "prop/street",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        1958,
+        523,
+        67,
+        110
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_atm_a": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        758,
+        823,
+        116,
+        396
+      ],
+      "asset_slot": "prop/street",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        571,
+        0,
+        116,
+        396
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_atm_b": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        926,
+        821,
+        95,
+        306
+      ],
+      "asset_slot": "prop/street",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        689,
+        0,
+        95,
+        306
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "prop_atm_c": {
+      "source_sheet": "street_props",
+      "pixel_rect": [
+        1077,
+        823,
+        95,
+        304
+      ],
+      "asset_slot": "prop/street",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "props.atlas.png",
+      "atlas_rect": [
+        786,
+        0,
+        95,
+        304
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "overlay_window_lit_warm": {
+      "source_sheet": "night_overlays",
+      "pixel_rect": [
+        45,
+        71,
+        248,
+        143
+      ],
+      "asset_slot": "overlay/lighting",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "overlays.atlas.png",
+      "atlas_rect": [
+        0,
+        618,
+        248,
+        143
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "overlay_window_lit_warm_b": {
+      "source_sheet": "night_overlays",
+      "pixel_rect": [
+        45,
+        228,
+        247,
+        141
+      ],
+      "asset_slot": "overlay/lighting",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "overlays.atlas.png",
+      "atlas_rect": [
+        250,
+        618,
+        247,
+        141
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "overlay_window_lit_warm_c": {
+      "source_sheet": "night_overlays",
+      "pixel_rect": [
+        45,
+        387,
+        249,
+        133
+      ],
+      "asset_slot": "overlay/lighting",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "overlays.atlas.png",
+      "atlas_rect": [
+        731,
+        618,
+        249,
+        133
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "overlay_window_lit_warm_d": {
+      "source_sheet": "night_overlays",
+      "pixel_rect": [
+        47,
+        549,
+        246,
+        120
+      ],
+      "asset_slot": "overlay/lighting",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "overlays.atlas.png",
+      "atlas_rect": [
+        1354,
+        618,
+        246,
+        120
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "overlay_window_lit_cold": {
+      "source_sheet": "night_overlays",
+      "pixel_rect": [
+        353,
+        74,
+        230,
+        138
+      ],
+      "asset_slot": "overlay/lighting",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "overlays.atlas.png",
+      "atlas_rect": [
+        499,
+        618,
+        230,
+        138
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "overlay_window_lit_cold_b": {
+      "source_sheet": "night_overlays",
+      "pixel_rect": [
+        354,
+        235,
+        228,
+        131
+      ],
+      "asset_slot": "overlay/lighting",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "overlays.atlas.png",
+      "atlas_rect": [
+        982,
+        618,
+        228,
+        131
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "overlay_window_lit_cold_c": {
+      "source_sheet": "night_overlays",
+      "pixel_rect": [
+        355,
+        395,
+        228,
+        119
+      ],
+      "asset_slot": "overlay/lighting",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "overlays.atlas.png",
+      "atlas_rect": [
+        1602,
+        618,
+        228,
+        119
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "overlay_window_lit_cold_d": {
+      "source_sheet": "night_overlays",
+      "pixel_rect": [
+        356,
+        558,
+        229,
+        105
+      ],
+      "asset_slot": "overlay/lighting",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "overlays.atlas.png",
+      "atlas_rect": [
+        406,
+        763,
+        229,
+        105
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "overlay_lamp_cone_a": {
+      "source_sheet": "night_overlays",
+      "pixel_rect": [
+        655,
+        74,
+        148,
+        298
+      ],
+      "asset_slot": "overlay/lighting",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "overlays.atlas.png",
+      "atlas_rect": [
+        226,
+        0,
+        148,
+        298
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "overlay_lamp_cone_b": {
+      "source_sheet": "night_overlays",
+      "pixel_rect": [
+        687,
+        398,
+        87,
+        119
+      ],
+      "asset_slot": "overlay/lighting",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "overlays.atlas.png",
+      "atlas_rect": [
+        1832,
+        618,
+        87,
+        119
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "overlay_lamp_cone_c": {
+      "source_sheet": "night_overlays",
+      "pixel_rect": [
+        693,
+        562,
+        69,
+        96
+      ],
+      "asset_slot": "overlay/lighting",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "overlays.atlas.png",
+      "atlas_rect": [
+        637,
+        763,
+        69,
+        96
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "overlay_sign_neon_a": {
+      "source_sheet": "night_overlays",
+      "pixel_rect": [
+        881,
+        76,
+        140,
+        129
+      ],
+      "asset_slot": "overlay/lighting",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "overlays.atlas.png",
+      "atlas_rect": [
+        1212,
+        618,
+        140,
+        129
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "overlay_sign_neon_b": {
+      "source_sheet": "night_overlays",
+      "pixel_rect": [
+        1122,
+        73,
+        74,
+        616
+      ],
+      "asset_slot": "overlay/lighting",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "overlays.atlas.png",
+      "atlas_rect": [
+        0,
+        0,
+        74,
+        616
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "overlay_sign_neon_c": {
+      "source_sheet": "night_overlays",
+      "pixel_rect": [
+        884,
+        401,
+        131,
+        119
+      ],
+      "asset_slot": "overlay/lighting",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "overlays.atlas.png",
+      "atlas_rect": [
+        0,
+        763,
+        131,
+        119
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "overlay_sign_neon_d": {
+      "source_sheet": "night_overlays",
+      "pixel_rect": [
+        888,
+        564,
+        120,
+        106
+      ],
+      "asset_slot": "overlay/lighting",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "overlays.atlas.png",
+      "atlas_rect": [
+        284,
+        763,
+        120,
+        106
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "shadow_bldg_2x2": {
+      "source_sheet": "building_overlays",
+      "pixel_rect": [
+        737,
+        241,
+        442,
+        264
+      ],
+      "asset_slot": "overlay/shadow",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "overlays.atlas.png",
+      "atlas_rect": [
+        957,
+        0,
+        442,
+        264
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "shadow_bldg_2x1": {
+      "source_sheet": "building_overlays",
+      "pixel_rect": [
+        349,
+        312,
+        296,
+        171
+      ],
+      "asset_slot": "overlay/shadow",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "overlays.atlas.png",
+      "atlas_rect": [
+        1401,
+        0,
+        296,
+        171
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "shadow_bldg_1x1": {
+      "source_sheet": "building_overlays",
+      "pixel_rect": [
+        83,
+        350,
+        149,
+        110
+      ],
+      "asset_slot": "overlay/shadow",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "overlays.atlas.png",
+      "atlas_rect": [
+        133,
+        763,
+        149,
+        110
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "overlay_bldg_graffiti_a": {
+      "source_sheet": "building_overlays",
+      "pixel_rect": [
+        63,
+        709,
+        181,
+        165
+      ],
+      "asset_slot": "overlay/weathering",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "overlays.atlas.png",
+      "atlas_rect": [
+        1699,
+        0,
+        181,
+        165
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "overlay_bldg_graffiti_b": {
+      "source_sheet": "building_overlays",
+      "pixel_rect": [
+        321,
+        594,
+        180,
+        287
+      ],
+      "asset_slot": "overlay/weathering",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "overlays.atlas.png",
+      "atlas_rect": [
+        579,
+        0,
+        180,
+        287
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "overlay_bldg_stain_a": {
+      "source_sheet": "building_overlays",
+      "pixel_rect": [
+        553,
+        566,
+        148,
+        312
+      ],
+      "asset_slot": "overlay/weathering",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "overlays.atlas.png",
+      "atlas_rect": [
+        76,
+        0,
+        148,
+        312
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "overlay_bldg_moss_a": {
+      "source_sheet": "building_overlays",
+      "pixel_rect": [
+        760,
+        599,
+        201,
+        288
+      ],
+      "asset_slot": "overlay/weathering",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "overlays.atlas.png",
+      "atlas_rect": [
+        376,
+        0,
+        201,
+        288
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "overlay_bldg_damage_a": {
+      "source_sheet": "building_overlays",
+      "pixel_rect": [
+        1001,
+        617,
+        194,
+        283
+      ],
+      "asset_slot": "overlay/weathering",
+      "condition": "weathered",
+      "runtime_status": "exported",
+      "atlas_file": "overlays.atlas.png",
+      "atlas_rect": [
+        761,
+        0,
+        194,
+        283
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_park_monument_d": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        467,
+        1041,
+        112,
+        182
+      ],
+      "asset_slot": "landmark/park_monument",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        1627,
+        531,
+        112,
+        182
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_park_monument_e": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        643,
+        1040,
+        116,
+        184
+      ],
+      "asset_slot": "landmark/park_monument",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        1509,
+        531,
+        116,
+        184
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_park_monument_f": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        785,
+        1043,
+        114,
+        181
+      ],
+      "asset_slot": "landmark/park_monument",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        1856,
+        531,
+        114,
+        181
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_park_monument_g": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        928,
+        1039,
+        113,
+        186
+      ],
+      "asset_slot": "landmark/park_monument",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        1266,
+        531,
+        113,
+        186
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "landmark_park_monument_h": {
+      "source_sheet": "landmarks",
+      "pixel_rect": [
+        1070,
+        1043,
+        113,
+        182
+      ],
+      "asset_slot": "landmark/park_monument",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "landmarks.atlas.png",
+      "atlas_rect": [
+        1741,
+        531,
+        113,
+        182
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "roof_terracotta_a_corner": {
+      "source_sheet": "roofs",
+      "pixel_rect": [
+        21,
+        182,
+        190,
+        163
+      ],
+      "asset_slot": "building/roof",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "roofs.atlas.png",
+      "atlas_rect": [
+        423,
+        0,
+        190,
+        163
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "roof_rowhouse_parapet_corner": {
+      "source_sheet": "roofs",
+      "pixel_rect": [
+        783,
+        188,
+        154,
+        132
+      ],
+      "asset_slot": "building/roof",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "roofs.atlas.png",
+      "atlas_rect": [
+        156,
+        360,
+        154,
+        132
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "roof_peaked_a_corner": {
+      "source_sheet": "roofs",
+      "pixel_rect": [
+        1098,
+        188,
+        138,
+        129
+      ],
+      "asset_slot": "building/roof",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "roofs.atlas.png",
+      "atlas_rect": [
+        312,
+        360,
+        138,
+        129
+      ],
+      "visual_rect": "alpha_trimmed"
+    },
+    "roof_peaked_b_corner": {
+      "source_sheet": "roofs",
+      "pixel_rect": [
+        196,
+        329,
+        208,
+        178
+      ],
+      "asset_slot": "building/roof",
+      "condition": "clean",
+      "runtime_status": "exported",
+      "atlas_file": "roofs.atlas.png",
+      "atlas_rect": [
+        213,
+        0,
+        208,
+        178
+      ],
+      "visual_rect": "alpha_trimmed"
+    }
+  }
+}

@@ -21,5 +21,8 @@ endif()
 add_executable(mapping_algorithm_demo examples/demo.cpp)
 target_link_libraries(mapping_algorithm_demo PRIVATE mapping_algorithm)
 
+add_executable(mapping_city_exporter tools/city_exporter.cpp)
+target_link_libraries(mapping_city_exporter PRIVATE mapping_algorithm)
+
 add_executable(mapping_algorithm_smoke tests/smoke.cpp)
 target_link_libraries(mapping_algorithm_smoke PRIVATE mapping_algorithm)

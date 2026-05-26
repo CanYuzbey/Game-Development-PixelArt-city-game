@@ -1,0 +1,240 @@
+{
+  "schema": "atlas_manifest.v1",
+  "atlas_id": "park",
+  "file": "runtime/park.atlas.png",
+  "size": [
+    2048,
+    643
+  ],
+  "sprite_count": 38,
+  "sprites": {
+    "park_playground_d": [
+      0,
+      0,
+      202,
+      227
+    ],
+    "park_playground_c": [
+      204,
+      0,
+      199,
+      224
+    ],
+    "park_tree_evergreen_a": [
+      405,
+      0,
+      127,
+      219
+    ],
+    "park_tree_palm_a": [
+      534,
+      0,
+      121,
+      219
+    ],
+    "park_tree_palm_b": [
+      657,
+      0,
+      125,
+      219
+    ],
+    "park_fountain_lg": [
+      784,
+      0,
+      261,
+      210
+    ],
+    "park_wall_a": [
+      1047,
+      0,
+      106,
+      209
+    ],
+    "park_path_ns": [
+      1155,
+      0,
+      106,
+      208
+    ],
+    "park_tree_deciduous_a": [
+      1263,
+      0,
+      134,
+      206
+    ],
+    "park_tree_deciduous_b": [
+      1399,
+      0,
+      144,
+      203
+    ],
+    "park_tree_deciduous_c": [
+      1545,
+      0,
+      129,
+      199
+    ],
+    "park_lamp_a": [
+      1676,
+      0,
+      55,
+      193
+    ],
+    "park_lamp_b": [
+      1733,
+      0,
+      55,
+      192
+    ],
+    "ground_park_grass": [
+      0,
+      229,
+      276,
+      189
+    ],
+    "ground_park_grass_weathered": [
+      278,
+      229,
+      274,
+      189
+    ],
+    "ground_park_grass_b": [
+      554,
+      229,
+      273,
+      188
+    ],
+    "ground_park_grass_b_weathered": [
+      829,
+      229,
+      274,
+      188
+    ],
+    "park_playground_a": [
+      1105,
+      229,
+      166,
+      180
+    ],
+    "park_playground_b": [
+      1273,
+      229,
+      163,
+      179
+    ],
+    "park_fountain_a": [
+      1438,
+      229,
+      172,
+      156
+    ],
+    "park_bench_a": [
+      1612,
+      229,
+      165,
+      147
+    ],
+    "park_bench_b": [
+      1779,
+      229,
+      164,
+      145
+    ],
+    "park_bench_stone_b": [
+      0,
+      420,
+      259,
+      132
+    ],
+    "park_bench_stone_a": [
+      261,
+      420,
+      255,
+      128
+    ],
+    "park_bush_e": [
+      518,
+      420,
+      143,
+      124
+    ],
+    "park_bush_g": [
+      663,
+      420,
+      120,
+      120
+    ],
+    "park_bush_a": [
+      785,
+      420,
+      124,
+      119
+    ],
+    "park_bush_c": [
+      911,
+      420,
+      120,
+      117
+    ],
+    "park_bush_f": [
+      1033,
+      420,
+      125,
+      117
+    ],
+    "park_path_corner_ne": [
+      1160,
+      420,
+      129,
+      116
+    ],
+    "park_bush_b": [
+      1291,
+      420,
+      124,
+      114
+    ],
+    "park_bush_d": [
+      1417,
+      420,
+      149,
+      113
+    ],
+    "park_playground_e": [
+      1568,
+      420,
+      126,
+      113
+    ],
+    "park_path_corner_nw": [
+      1696,
+      420,
+      108,
+      98
+    ],
+    "park_path_corner_se": [
+      1806,
+      420,
+      97,
+      98
+    ],
+    "park_path_corner_sw": [
+      1905,
+      420,
+      99,
+      98
+    ],
+    "park_path_ew": [
+      0,
+      554,
+      270,
+      89
+    ],
+    "park_wall_b": [
+      272,
+      554,
+      270,
+      89
+    ]
+  }
+}

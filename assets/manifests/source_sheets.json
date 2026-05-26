@@ -1,0 +1,173 @@
+{
+  "schema": "source_sheets.v1",
+  "note": "All source sheets are 1254x1254 RGB PNG. Checkerboard backgrounds are visual only — no true alpha channel. All sheets require alpha conversion and sprite slicing before runtime use.",
+  "sheets": [
+    {
+      "id": "terrain_ground",
+      "file": "source/terrain_ground.png",
+      "size": [1254, 1254],
+      "mode": "RGB",
+      "description": "Ground and terrain base tiles (20 sprites, 4x5 grid)",
+      "asset_slots": ["terrain/exterior", "terrain/water", "landscape/park"],
+      "detection_quality": "clean",
+      "sprites_detected": 20,
+      "needs_manual_slice": false
+    },
+    {
+      "id": "buildings",
+      "file": "source/buildings.png",
+      "size": [1254, 1254],
+      "mode": "RGB",
+      "description": "All building types: CBD, mid-rise, residential, commercial (22 sprites in 5 rows)",
+      "asset_slots": [
+        "building/office", "building/apartment", "building/house",
+        "building/shop", "building/restaurant", "building/market",
+        "building/bank", "building/civic"
+      ],
+      "detection_quality": "merged_rows",
+      "sprites_detected": 13,
+      "needs_manual_slice": true,
+      "merge_note": "Rows 2-5 partially merged by dilation. CBD row (5 sprites) cleanly detected individually."
+    },
+    {
+      "id": "landmarks",
+      "file": "source/landmarks.png",
+      "size": [1254, 1254],
+      "mode": "RGB",
+      "description": "Landmark buildings with 4 variants each: town_hall, school, hospital, police, station, park_monument",
+      "asset_slots": [
+        "landmark/town_hall", "landmark/school", "landmark/hospital",
+        "landmark/police", "landmark/station", "landmark/park_monument"
+      ],
+      "detection_quality": "merged_rows",
+      "sprites_detected": 5,
+      "needs_manual_slice": true,
+      "merge_note": "Rows 2-5 fully merged into one region. Town hall row (4 variants) and monument row (3 statues) cleanly detected."
+    },
+    {
+      "id": "coastal",
+      "file": "source/coastal.png",
+      "size": [1254, 1254],
+      "mode": "RGB",
+      "description": "Coastal transition tiles: beach edges+corners, seawall edges+corners, dock planks+edges, cliff edges",
+      "asset_slots": ["coast/beach", "coast/seawall", "coast/dock", "coast/cliff"],
+      "detection_quality": "partial",
+      "sprites_detected": 26,
+      "needs_manual_slice": true,
+      "merge_note": "Section header text labels detected as separate regions. Some tile groups merged."
+    },
+    {
+      "id": "road_diagonals",
+      "file": "source/road_diagonals.png",
+      "size": [1254, 1254],
+      "mode": "RGB",
+      "description": "Diagonal road tiles (6 types, clean+weathered) and diagonal sidewalk tiles (NE-SW and NW-SE, clean+weathered)",
+      "asset_slots": ["street/road", "street/sidewalk"],
+      "detection_quality": "merged_rows",
+      "sprites_detected": 14,
+      "needs_manual_slice": true,
+      "merge_note": "Column header labels detected separately. Road row and sidewalk rows merged by dilation."
+    },
+    {
+      "id": "park_objects",
+      "file": "source/park_objects.png",
+      "size": [1254, 1254],
+      "mode": "RGB",
+      "description": "Park and landscape props: trees, bushes, benches, fountains, paths, playground, lamps",
+      "asset_slots": ["landscape/park", "prop/park"],
+      "detection_quality": "clean",
+      "sprites_detected": 31,
+      "needs_manual_slice": false
+    },
+    {
+      "id": "roofs",
+      "file": "source/roofs.png",
+      "size": [1254, 1254],
+      "mode": "RGB",
+      "description": "Roof variants with corner pieces: flat (AC+clean), mansard, terracotta, glass tower, rowhouse parapet, peaked",
+      "asset_slots": ["building/roof"],
+      "detection_quality": "partial",
+      "sprites_detected": 11,
+      "needs_manual_slice": true,
+      "merge_note": "Top section (flat roof rows) merged into one large region."
+    },
+    {
+      "id": "city_profile_kits",
+      "file": "source/city_profile_kits.png",
+      "size": [1254, 1254],
+      "mode": "RGB",
+      "description": "Facade overlay kits for 4 city profiles: Manhattan (fire escapes, water tower, stoop, cornice), Barcelona (balconies, chamfer, awning, gate), Paris (balcony, dormer, storefront, lamp, arcade), London (sash window, bay window, chimney, shopfront, fanlight door)",
+      "asset_slots": ["prop/facade_kit"],
+      "city_profiles": ["manhattan", "barcelona_eixample", "paris_haussmann", "london_organic"],
+      "detection_quality": "partial",
+      "sprites_detected": 13,
+      "needs_manual_slice": true,
+      "merge_note": "Some kit items within the same profile are merged. 20 named sprites across 13 detected regions."
+    },
+    {
+      "id": "street_props",
+      "file": "source/street_props.png",
+      "size": [1254, 1254],
+      "mode": "RGB",
+      "description": "Street furniture and signage: traffic lights, sign posts, bus shelters, phone booths, fire hydrants, ATMs, newspaper piles",
+      "asset_slots": ["prop/street"],
+      "detection_quality": "clean",
+      "sprites_detected": 30,
+      "needs_manual_slice": false
+    },
+    {
+      "id": "night_overlays",
+      "file": "source/night_overlays.png",
+      "size": [1254, 1254],
+      "mode": "RGB",
+      "description": "Night and lighting overlays at multiple intensity steps: warm window glow, cold window glow, lamp cone, neon sign (2 colours)",
+      "asset_slots": ["overlay/lighting"],
+      "detection_quality": "clean",
+      "sprites_detected": 38,
+      "needs_manual_slice": false
+    },
+    {
+      "id": "building_overlays",
+      "file": "source/building_overlays.png",
+      "size": [1254, 1254],
+      "mode": "RGB",
+      "description": "Building shadow/AO overlays (3 sizes: 1x1, 2x1, 2x2) and weathering overlays (graffiti tag, throw-up, rust stain, moss, structural damage)",
+      "asset_slots": ["overlay/shadow", "overlay/weathering"],
+      "detection_quality": "clean",
+      "sprites_detected": 8,
+      "needs_manual_slice": false
+    },
+    {
+      "id": "civic_columns",
+      "file": "source/civic_columns.png",
+      "size": [1254, 1254],
+      "mode": "RGB",
+      "description": "Simpler 3-storey civic building with column portico (2 variants: standard width and compact)",
+      "asset_slots": ["building/civic"],
+      "detection_quality": "merged",
+      "sprites_detected": 1,
+      "needs_manual_slice": true,
+      "merge_note": "Both building variants merged into one region. Split approximately at x midpoint."
+    }
+  ],
+  "runtime_sheets": [
+    {
+      "id": "roads",
+      "file": "runtime/roads.png",
+      "size": [1448, 1086],
+      "mode": "RGB",
+      "description": "Runtime road tile atlas: connectivity bitmask tiles, highway variants, surface conditions, markings, roundabouts, props",
+      "status": "calibrated",
+      "registry": "see tile_registry.py in map_builder module"
+    },
+    {
+      "id": "sidewalks",
+      "file": "runtime/sidewalks.png",
+      "size": [1448, 1086],
+      "mode": "RGB",
+      "description": "Runtime sidewalk tile atlas: connectivity tiles, surface variants, tactile paving, overlays, props",
+      "status": "calibrated",
+      "registry": "see tile_registry.py in map_builder module"
+    }
+  ]
+}
