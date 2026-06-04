@@ -5,14 +5,14 @@ deployable JSON map for a single seed and configuration.
 
 ## Command
 
-```bash
-mapping_city_exporter \
-  --seed 42 \
-  --width 96 \
-  --height 72 \
-  --profile manhattan \
-  --coast random \
-  --out exports/city_seed_42.json
+```powershell
+.\build\mapping_algorithm\cpp\Release\mapping_city_exporter.exe `
+  --seed 42 `
+  --width 96 `
+  --height 72 `
+  --profile manhattan `
+  --coast random `
+  --out exports\city_seed_42.json
 ```
 
 Supported coast values:
@@ -34,7 +34,7 @@ Supported profile ids:
 
 ## Output Schema
 
-The output file uses `deployable_city_map.v1` and contains:
+The output file uses `deployable_city_map.v2` and contains:
 
 - `algorithm_version`
 - `resolved_coast_side`
@@ -50,8 +50,9 @@ The output file uses `deployable_city_map.v1` and contains:
 - `cells`
 
 The `cells` array is intentionally complete so a developer can inspect any
-coordinate and see terrain, zone, road category, block id, lot id, building
-type, landmark type, footprint style, density, elevation, and encounter chance.
+coordinate and see terrain, zone, road category, bridge flag, damaged-sidewalk
+flag, block id, lot id, building type, landmark type, footprint style, density,
+elevation, and encounter chance.
 
 ## Renderer Binding
 

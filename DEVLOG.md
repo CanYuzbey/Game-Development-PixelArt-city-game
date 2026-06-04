@@ -1,8 +1,40 @@
 # Development Log
 
-## C++-Only Migration And City Assembly
+## Unity C# Runtime Port
 
-The project has been migrated to a native C++17 source tree.
+The project now has a Unity-ready C# runtime under
+`unity/Assets/Scripts/Mapping`.
+
+### Current State
+
+- `MapTypes.cs` owns Unity-serializable config, cell, stats, blueprint, building,
+  and sprite assignment contracts.
+- `MappingStrings.cs` owns stable profile and serialized string conversions.
+- `MapGenerationPhase.cs` exposes the production phase order:
+  land/sea, highways, roads, bridges/turns, buildings.
+- `MapGenerator.cs` ports the deterministic procedural city generator to C#.
+- `WorldGenerator.cs` owns open-world chunk planning and canonical chunk seed
+  derivation for Unity streaming.
+- `CityMapJsonExporter.cs` exports `deployable_city_map.v2` JSON without native
+  tooling.
+- `UnityCityChunkBehaviour.cs` provides an inspector-friendly generation bridge.
+- `unity/Smoke/MappingAlgorithmSmoke.cs` verifies the C# runtime outside Unity.
+
+### C# Quality Gate
+
+- Compiled with Visual Studio Roslyn `csc.exe` using `/langversion:7.3`.
+- Smoke result: `mapping_algorithm_csharp_smoke PASS=78 FAIL=0`.
+
+### Management Direction
+
+Unity gameplay should integrate through the C# runtime. Native C++ remains
+available as a reference implementation and for asset preparation/validation
+until Unity-side rendering and import workflows fully replace those duties.
+
+## Previous Native C++ Migration And City Assembly
+
+Before the Unity C# runtime port, the project had been migrated to a native
+C++17 source tree.
 
 ### Current State
 
@@ -46,19 +78,20 @@ The project has been migrated to a native C++17 source tree.
 The generation pipeline is implemented inside `mapping_algorithm::MapGenerator`:
 
 1. coastline,
-2. elevation,
-3. zones,
-4. highways,
-5. connectors,
-6. sidewalks,
-7. blocks,
-8. civic anchor,
-9. parks,
-10. lots,
-11. density,
-12. lot-level building assembly and gameplay metadata,
-13. district names,
-14. stats.
+2. inland river and bridge crossings,
+3. elevation,
+4. zones,
+5. highways,
+6. connectors,
+7. sidewalks,
+8. blocks,
+9. civic anchor,
+10. parks,
+11. lots,
+12. density,
+13. lot-level building assembly and gameplay metadata,
+14. district names,
+15. stats.
 
 ### Next Engineering Targets
 

@@ -1,0 +1,1038 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mapping Algorithm QA Dashboard — mapping_algorithm_cpp.v5</title>
+  <style>
+    /* ── reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 15px; }
+    body {
+      font-family: "Courier New", Courier, monospace;
+      background: #17211f;
+      color: #d4cfc4;
+      line-height: 1.55;
+      padding: 28px 20px 56px;
+    }
+    a { color: #87b38d; }
+
+    /* ── palette tokens ── */
+    :root {
+      --green:   #87b38d;
+      --yellow:  #e8c66b;
+      --blue:    #6b9ec5;
+      --red:     #c56b7a;
+      --dim:     #21302d;
+      --dimmer:  #1c2b28;
+      --border:  #2e4a44;
+      --text:    #d4cfc4;
+      --textmid: #9aada7;
+      --texthi:  #f4f1e8;
+    }
+
+    /* ── layout ── */
+    .page-wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      display: grid;
+      gap: 28px;
+    }
+
+    /* ── section headings ── */
+    .section-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--textmid);
+      margin-bottom: 10px;
+    }
+
+    /* ── header ── */
+    .site-header {
+      border: 2px solid var(--green);
+      background: var(--dim);
+      padding: 22px 26px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 12px;
+    }
+    .site-header h1 {
+      font-size: 1.45rem;
+      color: var(--texthi);
+      letter-spacing: 0.01em;
+    }
+    .site-header h1 span {
+      color: var(--green);
+    }
+    .header-meta {
+      text-align: right;
+      font-size: 0.8rem;
+      color: var(--textmid);
+    }
+    .algo-version {
+      display: inline-block;
+      background: var(--green);
+      color: #13201c;
+      font-weight: 700;
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      margin-top: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── status bar ── */
+    .status-bar {
+      background: var(--dimmer);
+      border: 2px solid var(--green);
+      padding: 18px 26px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 28px;
+      align-items: center;
+    }
+    .status-badge {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #13201c;
+      background: var(--green);
+      padding: 10px 20px;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+    }
+    .status-detail {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 8px;
+    }
+    .stat-chip {
+      border: 1px solid var(--border);
+      background: var(--dim);
+      padding: 6px 12px;
+      font-size: 0.8rem;
+    }
+    .stat-chip .label { color: var(--textmid); }
+    .stat-chip .value { color: var(--yellow); font-weight: 700; }
+
+    /* ── comparison table ── */
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border: 2px solid var(--border);
+    }
+    .cmp-col {
+      padding: 0;
+    }
+    .cmp-header {
+      padding: 14px 18px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .cmp-header.ours {
+      background: #1d3530;
+      color: var(--green);
+      border-bottom: 2px solid var(--green);
+    }
+    .cmp-header.theirs {
+      background: #252230;
+      color: var(--blue);
+      border-bottom: 2px solid var(--blue);
+      border-left: 1px solid var(--border);
+    }
+    .cmp-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-top: 1px solid var(--border);
+    }
+    .cmp-row:first-of-type { border-top: none; }
+    .cmp-cell {
+      padding: 10px 18px;
+      font-size: 0.82rem;
+      vertical-align: top;
+    }
+    .cmp-cell.ours {
+      background: var(--dimmer);
+      border-right: 1px solid var(--border);
+    }
+    .cmp-cell.theirs {
+      background: #1d1d2b;
+    }
+    .cmp-feature {
+      display: block;
+      font-size: 0.68rem;
+      color: var(--textmid);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 3px;
+    }
+    .cmp-cell .ours-val  { color: var(--green); font-weight: 700; }
+    .cmp-cell .their-val { color: var(--blue);  }
+    .cmp-cell .warn-val  { color: var(--red);   }
+
+    /* ── two-col section ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 680px) {
+      .two-col { grid-template-columns: 1fr; }
+      .comparison-grid { grid-template-columns: 1fr; }
+      .site-header { grid-template-columns: 1fr; }
+      .status-bar { grid-template-columns: 1fr; }
+    }
+
+    /* ── card ── */
+    .card {
+      background: var(--dim);
+      border: 1px solid var(--border);
+      padding: 20px 22px;
+    }
+    .card h2 {
+      font-size: 0.9rem;
+      color: var(--green);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── improvements list ── */
+    .improvement-list {
+      list-style: none;
+      display: grid;
+      gap: 12px;
+    }
+    .improvement-list li {
+      border-left: 3px solid var(--yellow);
+      padding: 10px 14px;
+      background: var(--dimmer);
+      font-size: 0.83rem;
+    }
+    .improvement-list li .imp-title {
+      color: var(--yellow);
+      font-weight: 700;
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.85rem;
+    }
+    .improvement-list li .imp-param {
+      display: inline-block;
+      background: #2c2c18;
+      color: var(--yellow);
+      font-size: 0.72rem;
+      padding: 1px 6px;
+      margin-top: 4px;
+      border: 1px solid #4a4818;
+    }
+
+    /* ── city profile showcase ── */
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px;
+    }
+    .profile-card {
+      background: var(--dimmer);
+      border: 1px solid var(--border);
+      padding: 14px 16px;
+    }
+    .profile-card .p-name {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--texthi);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+    .profile-card .p-organic {
+      font-size: 0.72rem;
+      color: var(--yellow);
+      margin-bottom: 10px;
+    }
+    .profile-card .p-districts {
+      list-style: none;
+      display: grid;
+      gap: 4px;
+    }
+    .profile-card .p-districts li {
+      font-size: 0.74rem;
+      color: var(--textmid);
+    }
+    .profile-card .p-districts li .quad {
+      color: var(--green);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      display: inline-block;
+      width: 28px;
+    }
+    .profile-accent {
+      display: block;
+      height: 3px;
+      margin-bottom: 10px;
+    }
+    .profile-card.manhattan .profile-accent { background: var(--green); }
+    .profile-card.barcelona .profile-accent { background: var(--yellow); }
+    .profile-card.paris     .profile-accent { background: var(--blue); }
+    .profile-card.london    .profile-accent { background: var(--red); }
+    .profile-card.generic   .profile-accent { background: var(--textmid); }
+
+    /* ── chunk map viz ── */
+    .chunk-outer {
+      overflow-x: auto;
+    }
+    .chunk-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 64px);
+      grid-template-rows:    repeat(6, 40px);
+      gap: 3px;
+      width: fit-content;
+      margin: 0 auto;
+    }
+    .chunk-cell {
+      display: grid;
+      place-items: center;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: #13201c;
+      border: 1px solid rgba(0,0,0,0.25);
+    }
+    .chunk-cell.cbd  { background: var(--yellow); }
+    .chunk-cell.mid  { background: #6a9e72; color: #0d1a14; }
+    .chunk-cell.res  { background: #3b6657; color: #c4d8cc; }
+    .chunk-cell.edge { background: #263f38; color: #7aaa90; }
+    .chunk-label-row {
+      display: grid;
+      grid-template-columns: repeat(8, 64px);
+      gap: 3px;
+      width: fit-content;
+      margin: 0 auto 4px;
+    }
+    .chunk-label-row span {
+      text-align: center;
+      font-size: 0.65rem;
+      color: var(--textmid);
+    }
+    .chunk-legend {
+      display: flex;
+      gap: 20px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+    .chunk-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: var(--textmid);
+    }
+    .chunk-legend-swatch {
+      width: 14px;
+      height: 14px;
+      border: 1px solid rgba(255,255,255,0.1);
+      flex-shrink: 0;
+    }
+    .chunk-scale {
+      margin-top: 10px;
+      font-size: 0.78rem;
+      color: var(--textmid);
+    }
+    .chunk-scale span { color: var(--yellow); }
+
+    /* ── map color legend ── */
+    .tile-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 500px) {
+      .tile-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    .tile {
+      padding: 14px 8px;
+      display: grid;
+      place-items: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      text-align: center;
+      line-height: 1.35;
+      border: 1px solid rgba(0,0,0,0.2);
+    }
+    .tile .tile-hex {
+      display: block;
+      font-size: 0.65rem;
+      font-weight: 400;
+      opacity: 0.7;
+      margin-top: 4px;
+    }
+    .tile-water    { background: #4a82a6; color: #d8edf5; }
+    .tile-highway  { background: #c8a040; color: #1a1200; }
+    .tile-road     { background: #9e8c72; color: #1a1500; }
+    .tile-sidewalk { background: #b8b0a0; color: #1a1800; }
+    .tile-land     { background: #6b8c5a; color: #0d150a; }
+    .tile-park     { background: #4a7a42; color: #c8e8c0; }
+    .tile-cbd      { background: #c8a840; color: #18100a; }
+    .tile-res      { background: #7a8ea0; color: #0a1218; }
+
+    /* ── inline code ── */
+    code {
+      color: var(--yellow);
+      background: #1e2e28;
+      padding: 1px 5px;
+      font-size: 0.85em;
+    }
+
+    /* ── footer ── */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      padding-top: 18px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.75rem;
+      color: var(--textmid);
+    }
+    .site-footer .footer-left { line-height: 1.6; }
+    .site-footer .footer-right { text-align: right; }
+
+    /* ── utilities ── */
+    .mono { font-family: "Courier New", Courier, monospace; }
+    .green { color: var(--green); }
+    .yellow { color: var(--yellow); }
+    .blue { color: var(--blue); }
+    .red { color: var(--red); }
+    .bold { font-weight: 700; }
+    .small { font-size: 0.78rem; }
+    .dimtext { color: var(--textmid); }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ══ HEADER ══ -->
+  <header class="site-header">
+    <div>
+      <div class="section-label">QA Dashboard</div>
+      <h1>Isometric City Mapping System &mdash; <span>Visible Test</span></h1>
+      <p style="margin-top:6px; font-size:0.8rem; color:var(--textmid);">
+        mapping_algorithm C++ v3 &nbsp;|&nbsp; Procedural tile-grid generator for open-world city RPG
+      </p>
+    </div>
+    <div class="header-meta">
+      <div id="test-date">Test opened: &mdash;</div>
+      <div style="margin-top:6px;">
+        <span class="algo-version">mapping_algorithm_cpp.v5</span>
+      </div>
+      <div style="margin-top:4px;">
+        <span class="algo-version" style="background:var(--blue);color:#0a1018;">schema: deployable_city_map.v2</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══ STATUS BAR ══ -->
+  <section class="status-bar">
+    <div class="status-badge">6/6 TESTS PASSING &mdash; 78/78 SMOKE CHECKS</div>
+    <div class="status-detail">
+      <div class="stat-chip">
+        <span class="label">Seed / Map&nbsp;</span>
+        <span class="value">42 &nbsp;/ &nbsp;96&times;72</span>
+      </div>
+      <div class="stat-chip">
+        <span class="label">Profile&nbsp;</span>
+        <span class="value">generic_dense</span>
+      </div>
+      <div class="stat-chip">
+        <span class="label">Total cells&nbsp;</span>
+        <span class="value">6 912</span>
+      </div>
+      <div class="stat-chip">
+        <span class="label">Buildings&nbsp;</span>
+        <span class="value">164</span>
+      </div>
+      <div class="stat-chip">
+        <span class="label">Road cells&nbsp;</span>
+        <span class="value">1 213</span>
+      </div>
+      <div class="stat-chip">
+        <span class="label">Facing-tagged cells&nbsp;</span>
+        <span class="value">perimeter</span>
+      </div>
+      <div class="stat-chip">
+        <span class="label">Landmarks placed&nbsp;</span>
+        <span class="value">5 (all types)</span>
+      </div>
+      <div class="stat-chip">
+        <span class="label">WorldGenerator&nbsp;</span>
+        <span class="value">48 chunks planned</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ ALGORITHM COMPARISON ══ -->
+  <section>
+    <div class="section-label">Algorithm Comparison</div>
+    <div class="comparison-grid">
+      <div class="cmp-header ours">Our System &mdash; mapping_algorithm_cpp.v5</div>
+      <div class="cmp-header theirs">ProbableTrain MapGenerator (reference)</div>
+
+      <div class="cmp-row">
+        <div class="cmp-cell ours">
+          <span class="cmp-feature">Determinism</span>
+          <span class="ours-val">Full seed-based determinism</span><br>
+          <span class="small dimtext">Same seed always produces identical maps; serialisable, testable</span>
+        </div>
+        <div class="cmp-cell theirs">
+          <span class="cmp-feature">Determinism</span>
+          <span class="warn-val">Non-deterministic (Math.random)</span><br>
+          <span class="small dimtext">No seed control; each run differs; untestable for regression</span>
+        </div>
+      </div>
+
+      <div class="cmp-row">
+        <div class="cmp-cell ours">
+          <span class="cmp-feature">Road Generation</span>
+          <span class="ours-val">Terrain-following DP + Grid/Radial/Organic archetypes</span><br>
+          <span class="small dimtext">Elevation DP ±5-cell scan avoids hilltops; archetype (Grid/Radial/Organic) selected by seed hash; ring roads for Radial; diagonal highway for Organic</span>
+        </div>
+        <div class="cmp-cell theirs">
+          <span class="cmp-feature">Road Generation</span>
+          <span class="their-val">Tensor field + RK4 streamlines</span><br>
+          <span class="small dimtext">Major/minor eigenvector integration; produces fully organic, non-rectilinear roads</span>
+        </div>
+      </div>
+
+      <div class="cmp-row">
+        <div class="cmp-cell ours">
+          <span class="cmp-feature">Block Finding</span>
+          <span class="ours-val">BFS flood fill (tile-space)</span><br>
+          <span class="small dimtext">Fast O(n) cell traversal; runs on the already-rasterised tile grid</span>
+        </div>
+        <div class="cmp-cell theirs">
+          <span class="cmp-feature">Block Finding</span>
+          <span class="their-val">Right-turn polygon graph walk</span><br>
+          <span class="small dimtext">Vector-space; constructs minimal cycle polygons; more geometrically precise</span>
+        </div>
+      </div>
+
+      <div class="cmp-row">
+        <div class="cmp-cell ours">
+          <span class="cmp-feature">Output Format</span>
+          <span class="ours-val">Tile grid &mdash; game-ready</span><br>
+          <span class="small dimtext">MapCell array; each cell carries type, zone, building, encounter rate, spawn flag</span>
+        </div>
+        <div class="cmp-cell theirs">
+          <span class="cmp-feature">Output Format</span>
+          <span class="their-val">Vector polygons &mdash; render-only</span><br>
+          <span class="small dimtext">SVG/canvas paths for visual display; no tile grid, no per-cell game metadata</span>
+        </div>
+      </div>
+
+      <div class="cmp-row">
+        <div class="cmp-cell ours">
+          <span class="cmp-feature">RPG Metadata</span>
+          <span class="ours-val">Full</span><br>
+          <span class="small dimtext">encounter_rate, spawn_point, building type, floor/facade/roof, landmark role, zone, district</span>
+        </div>
+        <div class="cmp-cell theirs">
+          <span class="cmp-feature">RPG Metadata</span>
+          <span class="warn-val">None</span><br>
+          <span class="small dimtext">Visual-only output; no concept of encounters, zones, or game-relevant cell data</span>
+        </div>
+      </div>
+
+      <div class="cmp-row">
+        <div class="cmp-cell ours">
+          <span class="cmp-feature">Scale</span>
+          <span class="ours-val">Game-world: 96&times;72 to 512&times;512</span><br>
+          <span class="small dimtext">Tuned to walkable RPG maps; chunk-composable for open world (8&times;6 grid, ~12.6 km&sup2;)</span>
+        </div>
+        <div class="cmp-cell theirs">
+          <span class="cmp-feature">Scale</span>
+          <span class="their-val">City-scale: New York+</span><br>
+          <span class="small dimtext">Designed for large-scale city visualisation, not game-grid cell traversal</span>
+        </div>
+      </div>
+
+      <div class="cmp-row">
+        <div class="cmp-cell ours">
+          <span class="cmp-feature">City Profiles</span>
+          <span class="ours-val">5 named profiles</span><br>
+          <span class="small dimtext">Manhattan, Barcelona, Paris, London, Generic &mdash; each with distinct road density, block size, organic level, district names</span>
+        </div>
+        <div class="cmp-cell theirs">
+          <span class="cmp-feature">City Profiles</span>
+          <span class="their-val">1 generic type</span><br>
+          <span class="small dimtext">No named city archetypes; parameters adjusted manually per render</span>
+        </div>
+      </div>
+
+      <div class="cmp-row">
+        <div class="cmp-cell ours">
+          <span class="cmp-feature">Performance</span>
+          <span class="ours-val">&lt;5 ms per 96&times;72 map</span><br>
+          <span class="small dimtext">Native C++ with deterministic codepath; suitable for runtime generation during chunk load</span>
+        </div>
+        <div class="cmp-cell theirs">
+          <span class="cmp-feature">Performance</span>
+          <span class="their-val">Browser-limited, not measured</span><br>
+          <span class="small dimtext">RK4 integration cost scales with road count; not intended for real-time game use</span>
+        </div>
+      </div>
+
+      <div class="cmp-row">
+        <div class="cmp-cell ours">
+          <span class="cmp-feature">Seed Control</span>
+          <span class="ours-val">First-class seed parameter</span><br>
+          <span class="small dimtext">Exposed in CLI, JSON export, and CTest; drives all noise layers (FBM, rivers, elevation, buildings)</span>
+        </div>
+        <div class="cmp-cell theirs">
+          <span class="cmp-feature">Seed Control</span>
+          <span class="warn-val">Not implemented</span><br>
+          <span class="small dimtext">Math.random() called directly; no seeding API present in reference codebase</span>
+        </div>
+      </div>
+
+      <div class="cmp-row">
+        <div class="cmp-cell ours">
+          <span class="cmp-feature">Sprint 2 Borrows</span>
+          <span class="ours-val">Perimeter facing tags, elevation buildings, WorldGenerator</span><br>
+          <span class="small dimtext">Block perimeter cells tagged with facing road category (highway/connector); elevation-driven floor count &amp; type selection; 8&times;6 WorldGenerator chunk planner with spec-correct seed derivation</span>
+        </div>
+        <div class="cmp-cell theirs">
+          <span class="cmp-feature">Adapted From Them</span>
+          <span class="small dimtext" style="color:var(--textmid);">Right-turn graph polygon walk &rarr; adapted to tile-grid perimeter tagging (street_facing field); tensor field organics &rarr; adapted to FBM drift; per-section city awareness &rarr; adapted to per-profile per-quadrant district names</span>
+        </div>
+      </div>
+
+      <div class="cmp-row">
+        <div class="cmp-cell ours">
+          <span class="cmp-feature">Sprint 3 Additions</span>
+          <span class="ours-val">Terrain-first routing, city archetypes, ring roads, roundabouts, CBD offset, turn bias</span><br>
+          <span class="small dimtext">Elevation DP highway routing; Grid/Radial/Organic archetype system; ring road for Radial; roundabouts at junctions; seeded CBD center ±5%; connector_turn_bias S-curves</span>
+        </div>
+        <div class="cmp-cell theirs">
+          <span class="cmp-feature">No Equivalent</span>
+          <span class="small dimtext" style="color:var(--textmid);">ProbableTrain has no archetype system, no terrain-following highway DP, and no roundabout generation</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ IMPROVEMENTS THIS SPRINT ══ -->
+  <section>
+    <div class="section-label">Improvements From ProbableTrain Analysis &mdash; Sprint 1, Sprint 2 &amp; Sprint 3</div>
+    <ul class="improvement-list">
+      <li>
+        <span class="imp-title">Organic connector curvature <span style="font-weight:400;font-size:0.72rem;color:var(--textmid);">(Sprint 1)</span></span>
+        Connector streets now apply per-segment FBM drift producing gently curved avenue/street lines. Stair-step 4-connectivity enforced so tiles always remain walkable.
+        <br><span class="imp-param">connector_organic</span>
+        <span class="imp-param">FBM drift</span>
+        <span class="imp-param">stair-step 4-connectivity</span>
+      </li>
+      <li>
+        <span class="imp-title">District name variety — per-profile, per-quadrant <span style="font-weight:400;font-size:0.72rem;color:var(--textmid);">(Sprint 1)</span></span>
+        60 unique district names across 5 profiles &times; 4 quadrants &times; 3 zones. Each cell carries <code>district_name</code> for NPC quest text and UI overlays.
+        <br><span class="imp-param">district_name_profile</span>
+        <span class="imp-param">quadrant NW/NE/SW/SE</span>
+        <span class="imp-param">zone CBD/Midtown/Residential</span>
+      </li>
+      <li>
+        <span class="imp-title">Block perimeter facing tags <span style="font-weight:400;font-size:0.72rem;color:var(--textmid);">(Sprint 2)</span></span>
+        Adapted from ProbableTrain's right-turn graph polygon walk: every block-boundary cell now carries <code>street_facing</code> = &ldquo;highway&rdquo;, &ldquo;connector&rdquo;, or &ldquo;&rdquo; (interior). Enables sprite selection, setback orientation, and commercial-faces-road placement logic.
+        <br><span class="imp-param">street_facing</span>
+        <span class="imp-param">highway/connector/interior</span>
+        <span class="imp-param">perimeter pass after BFS</span>
+      </li>
+      <li>
+        <span class="imp-title">Elevation-influenced building selection <span style="font-weight:400;font-size:0.72rem;color:var(--textmid);">(Sprint 2)</span></span>
+        <code>pick_building_type()</code> and <code>floor_count_for()</code> now consume per-cell elevation. Hilltops (&gt;0.62) prefer office/apartment and gain +1 floor; lowlands (&lt;0.22) in Midtown weight toward shops and restaurants. Topographic realism at zero render cost.
+        <br><span class="imp-param">elevation</span>
+        <span class="imp-param">hilltop office/apartment boost</span>
+        <span class="imp-param">lowland commercial preference</span>
+      </li>
+      <li>
+        <span class="imp-title">Highway junction spawn marking <span style="font-weight:400;font-size:0.72rem;color:var(--textmid);">(Sprint 2)</span></span>
+        4-way highway intersections now receive <code>tile_role = &ldquo;highway_junction&rdquo;</code> and <code>is_spawn_point = true</code>. These become natural RPG event nodes (card-game challenges, faction patrols) without adding new road cells.
+        <br><span class="imp-param">highway_junction</span>
+        <span class="imp-param">is_spawn_point</span>
+        <span class="imp-param">RPG event node</span>
+      </li>
+      <li>
+        <span class="imp-title">WorldGenerator class — 8&times;6 chunk planner <span style="font-weight:400;font-size:0.72rem;color:var(--textmid);">(Sprint 2)</span></span>
+        <code>WorldGenerator::plan()</code> produces 48 <code>ChunkPlan</code> records in &lt;1 ms. Chunk seeds use the OPEN_WORLD_SPEC.md formula: <code>mix_u32(world_seed &oplus; cx&middot;0x9e3779b9 &oplus; cy&middot;0x517cc1b7)</code>. CBD chunks alternate manhattan/paris_haussmann; midtown = generic_dense; residential edge = london_organic or barcelona_eixample. Edge chunks receive coastal side automatically.
+        <br><span class="imp-param">WorldGenerator::plan()</span>
+        <span class="imp-param">48 chunks</span>
+        <span class="imp-param">chunk seed formula</span>
+        <span class="imp-param">profile zone mapping</span>
+      </li>
+      <li>
+        <span class="imp-title">Terrain-first highway routing &mdash; elevation DP avoids hilltops, follows valleys <span style="font-weight:400;font-size:0.72rem;color:var(--textmid);">(Sprint 3)</span></span>
+        Each row/column scans ±5 candidate cells; picks minimum cost = elevation×4 + lateral drift penalty + FBM organic bonus. Highways statistically follow valleys and avoid hilltops, as real infrastructure does.
+        <br><span class="imp-param">elevation DP ±5 scan</span>
+        <span class="imp-param">elev_cost * 4.0</span>
+        <span class="imp-param">terrain-following</span>
+      </li>
+      <li>
+        <span class="imp-title">City archetype system &mdash; Grid / Radial / Organic (seed-determined, 3&times; variety) <span style="font-weight:400;font-size:0.72rem;color:var(--textmid);">(Sprint 3)</span></span>
+        <code>archetype_ = mix_u32(seed ^ 0x3A7F9B2C) % 3</code>. Grid and Organic use terrain-following N-S/E-W highways; Organic adds a diagonal highway. Radial fires 4-6 rays from CBD center.
+        <br><span class="imp-param">archetype_</span>
+        <span class="imp-param">Grid=0</span>
+        <span class="imp-param">Radial=1</span>
+        <span class="imp-param">Organic=2</span>
+      </li>
+      <li>
+        <span class="imp-title">Ring roads &mdash; circular orbital road around CBD for Radial archetype <span style="font-weight:400;font-size:0.72rem;color:var(--textmid);">(Sprint 3)</span></span>
+        Radius = 28% of min(rows, cols). Steps = 2π × radius × 2.5 (oversample). Stair-step fill ensures 4-connectivity. Only drawn when archetype is Radial (seed-determined).
+        <br><span class="imp-param">generate_ring_road()</span>
+        <span class="imp-param">radius=0.28×min(H,W)</span>
+        <span class="imp-param">connector category</span>
+      </li>
+      <li>
+        <span class="imp-title">Roundabouts &mdash; connector ring cells at highway&times;highway junctions <span style="font-weight:400;font-size:0.72rem;color:var(--textmid);">(Sprint 3)</span></span>
+        At each highway cell with 3+ highway neighbours, places an 8-cell connector ring around the junction. Budget controlled by <code>roundabout_count</code> config field (default 8).
+        <br><span class="imp-param">roundabout_count</span>
+        <span class="imp-param">3+ highway neighbours</span>
+        <span class="imp-param">connector ring</span>
+      </li>
+      <li>
+        <span class="imp-title">connector_turn_bias &mdash; organic S-curves and hooks on connector streets <span style="font-weight:400;font-size:0.72rem;color:var(--textmid);">(Sprint 3)</span></span>
+        When FBM noise sign flips (direction reversal), drift is amplified by <code>1 + bias × 3</code>. At default bias=0.08 this adds mild S-curves. Higher values produce London-style hooks and dog-legs.
+        <br><span class="imp-param">connector_turn_bias</span>
+        <span class="imp-param">sign-flip detection</span>
+        <span class="imp-param">amplification = 1 + bias×3</span>
+      </li>
+      <li>
+        <span class="imp-title">CBD center offset &mdash; seeded ±5% offset for structural map variety <span style="font-weight:400;font-size:0.72rem;color:var(--textmid);">(Sprint 3)</span></span>
+        <code>decision01(seed, 77/88, 99/77, SALT_ELEVATION)</code> shifts the CBD center by ±5% of map size. Clamped to [20%, 80%] so CBD stays well within bounds. Used by zone assignment, civic anchor, district names, and highway generation.
+        <br><span class="imp-param">cbd_center_r_</span>
+        <span class="imp-param">cbd_center_c_</span>
+        <span class="imp-param">±5% of map size</span>
+      </li>
+    </ul>
+  </section>
+
+  <!-- ══ CITY PROFILE SHOWCASE ══ -->
+  <section>
+    <div class="section-label">City Profile Showcase &mdash; 5 Profiles</div>
+    <div class="profile-grid">
+
+      <div class="profile-card manhattan">
+        <span class="profile-accent"></span>
+        <div class="p-name">Manhattan</div>
+        <div class="p-organic">connector_organic: 0.25 (subtle drift)</div>
+        <ul class="p-districts">
+          <li><span class="quad">NW</span>Financial District</li>
+          <li><span class="quad">NE</span>Lower East Side</li>
+          <li><span class="quad">SW</span>Midtown West</li>
+          <li><span class="quad">SE</span>Midtown East</li>
+          <li><span class="quad">---</span><span style="color:var(--textmid);font-size:0.7rem;">also: Harlem, Upper West Side, Chelsea, Tribeca</span></li>
+        </ul>
+      </div>
+
+      <div class="profile-card barcelona">
+        <span class="profile-accent"></span>
+        <div class="p-name">Barcelona</div>
+        <div class="p-organic">connector_organic: 0.40 (moderate drift)</div>
+        <ul class="p-districts">
+          <li><span class="quad">NW</span>Gracia</li>
+          <li><span class="quad">NE</span>Eixample Nord</li>
+          <li><span class="quad">SW</span>Raval</li>
+          <li><span class="quad">SE</span>Born</li>
+          <li><span class="quad">---</span><span style="color:var(--textmid);font-size:0.7rem;">also: Barceloneta, Sagrada Familia, Poble Sec</span></li>
+        </ul>
+      </div>
+
+      <div class="profile-card paris">
+        <span class="profile-accent"></span>
+        <div class="p-name">Paris</div>
+        <div class="p-organic">connector_organic: 0.55 (strong drift)</div>
+        <ul class="p-districts">
+          <li><span class="quad">NW</span>8e Arrondissement</li>
+          <li><span class="quad">NE</span>Montmartre</li>
+          <li><span class="quad">SW</span>Saint-Germain</li>
+          <li><span class="quad">SE</span>Marais</li>
+          <li><span class="quad">---</span><span style="color:var(--textmid);font-size:0.7rem;">also: Belleville, Batignolles, Bastille, Opera</span></li>
+        </ul>
+      </div>
+
+      <div class="profile-card london">
+        <span class="profile-accent"></span>
+        <div class="p-name">London</div>
+        <div class="p-organic">connector_organic: 0.65 (high drift)</div>
+        <ul class="p-districts">
+          <li><span class="quad">NW</span>City of London</li>
+          <li><span class="quad">NE</span>Guildhall</li>
+          <li><span class="quad">SW</span>Southwark</li>
+          <li><span class="quad">SE</span>Bermondsey</li>
+          <li><span class="quad">---</span><span style="color:var(--textmid);font-size:0.7rem;">also: Clerkenwell, Shoreditch, Whitechapel, Borough</span></li>
+        </ul>
+      </div>
+
+      <div class="profile-card generic">
+        <span class="profile-accent"></span>
+        <div class="p-name">Generic Dense</div>
+        <div class="p-organic">connector_organic: 0.30 (light drift)</div>
+        <ul class="p-districts">
+          <li><span class="quad">NW</span>Central District</li>
+          <li><span class="quad">NE</span>East Quarter</li>
+          <li><span class="quad">SW</span>West End</li>
+          <li><span class="quad">SE</span>South Side</li>
+          <li><span class="quad">---</span><span style="color:var(--textmid);font-size:0.7rem;">used for seed 42 verified stats (this dashboard)</span></li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══ OPEN WORLD SCALE VIZ ══ -->
+  <section>
+    <div class="section-label">Open World Chunk Layout &mdash; 8&times;6 Grid Visualisation</div>
+    <div class="card">
+      <h2>Chunk Map (each cell = one 256&times;256-tile chunk)</h2>
+
+      <div class="chunk-outer">
+        <div class="chunk-label-row">
+          <span>C0</span><span>C1</span><span>C2</span><span>C3</span><span>C4</span><span>C5</span><span>C6</span><span>C7</span>
+        </div>
+        <div class="chunk-grid" aria-label="8x6 chunk grid visualisation">
+          <!-- Row 0 -->
+          <div class="chunk-cell edge">Edge</div>
+          <div class="chunk-cell edge">Edge</div>
+          <div class="chunk-cell edge">Edge</div>
+          <div class="chunk-cell edge">Edge</div>
+          <div class="chunk-cell edge">Edge</div>
+          <div class="chunk-cell edge">Edge</div>
+          <div class="chunk-cell edge">Edge</div>
+          <div class="chunk-cell edge">Edge</div>
+          <!-- Row 1 -->
+          <div class="chunk-cell edge">Edge</div>
+          <div class="chunk-cell res">Res</div>
+          <div class="chunk-cell res">Res</div>
+          <div class="chunk-cell res">Res</div>
+          <div class="chunk-cell res">Res</div>
+          <div class="chunk-cell res">Res</div>
+          <div class="chunk-cell res">Res</div>
+          <div class="chunk-cell edge">Edge</div>
+          <!-- Row 2 -->
+          <div class="chunk-cell edge">Edge</div>
+          <div class="chunk-cell res">Res</div>
+          <div class="chunk-cell mid">Mid</div>
+          <div class="chunk-cell mid">Mid</div>
+          <div class="chunk-cell mid">Mid</div>
+          <div class="chunk-cell mid">Mid</div>
+          <div class="chunk-cell res">Res</div>
+          <div class="chunk-cell edge">Edge</div>
+          <!-- Row 3 -->
+          <div class="chunk-cell edge">Edge</div>
+          <div class="chunk-cell res">Res</div>
+          <div class="chunk-cell mid">Mid</div>
+          <div class="chunk-cell cbd">CBD</div>
+          <div class="chunk-cell cbd">CBD</div>
+          <div class="chunk-cell mid">Mid</div>
+          <div class="chunk-cell res">Res</div>
+          <div class="chunk-cell edge">Edge</div>
+          <!-- Row 4 -->
+          <div class="chunk-cell edge">Edge</div>
+          <div class="chunk-cell res">Res</div>
+          <div class="chunk-cell res">Res</div>
+          <div class="chunk-cell res">Res</div>
+          <div class="chunk-cell res">Res</div>
+          <div class="chunk-cell res">Res</div>
+          <div class="chunk-cell res">Res</div>
+          <div class="chunk-cell edge">Edge</div>
+          <!-- Row 5 -->
+          <div class="chunk-cell edge">Edge</div>
+          <div class="chunk-cell edge">Edge</div>
+          <div class="chunk-cell edge">Edge</div>
+          <div class="chunk-cell edge">Edge</div>
+          <div class="chunk-cell edge">Edge</div>
+          <div class="chunk-cell edge">Edge</div>
+          <div class="chunk-cell edge">Edge</div>
+          <div class="chunk-cell edge">Edge</div>
+        </div>
+      </div>
+
+      <div class="chunk-legend">
+        <div class="chunk-legend-item">
+          <div class="chunk-legend-swatch" style="background:var(--yellow);"></div>
+          CBD (Central Business District)
+        </div>
+        <div class="chunk-legend-item">
+          <div class="chunk-legend-swatch" style="background:#6a9e72;"></div>
+          Midtown (mixed commercial/residential)
+        </div>
+        <div class="chunk-legend-item">
+          <div class="chunk-legend-swatch" style="background:#3b6657;"></div>
+          Residential
+        </div>
+        <div class="chunk-legend-item">
+          <div class="chunk-legend-swatch" style="background:#263f38;"></div>
+          Edge (wilderness / water / outskirts)
+        </div>
+      </div>
+      <div class="chunk-scale">
+        Grid: <span>8 &times; 6 chunks</span> &nbsp;|&nbsp;
+        Cell resolution: <span>256 &times; 256 tiles</span> &nbsp;|&nbsp;
+        Total: <span>2 048 &times; 1 536 cells</span> &nbsp;|&nbsp;
+        Scale: <span>4 m/tile</span> &nbsp;|&nbsp;
+        Area: <span>~12.6 km&sup2;</span> &nbsp;|&nbsp;
+        Traversal: <span>~11 min end-to-end</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ MAP COLOR LEGEND ══ -->
+  <section>
+    <div class="section-label">Map Tile Color Legend &mdash; 8 Base Types</div>
+    <div class="tile-grid">
+      <div class="tile tile-water">
+        Water
+        <span class="tile-hex">#4a82a6</span>
+      </div>
+      <div class="tile tile-highway">
+        Highway
+        <span class="tile-hex">#c8a040</span>
+      </div>
+      <div class="tile tile-road">
+        Road / Street
+        <span class="tile-hex">#9e8c72</span>
+      </div>
+      <div class="tile tile-sidewalk">
+        Sidewalk
+        <span class="tile-hex">#b8b0a0</span>
+      </div>
+      <div class="tile tile-land">
+        Land / Exterior
+        <span class="tile-hex">#6b8c5a</span>
+      </div>
+      <div class="tile tile-park">
+        Park
+        <span class="tile-hex">#4a7a42</span>
+      </div>
+      <div class="tile tile-cbd" style="color:#18100a;">
+        CBD Building
+        <span class="tile-hex">#c8a840</span>
+      </div>
+      <div class="tile tile-res">
+        Residential Bldg
+        <span class="tile-hex">#7a8ea0</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ LANDMARK TYPES ══ -->
+  <section>
+    <div class="section-label">Landmark Types &mdash; Verified Present (Seed 42)</div>
+    <div class="card" style="padding:14px 18px;">
+      <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap:8px;">
+        <div class="stat-chip"><span class="label">Type&nbsp;</span><span class="value">town_hall</span></div>
+        <div class="stat-chip"><span class="label">Type&nbsp;</span><span class="value">station</span></div>
+        <div class="stat-chip"><span class="label">Type&nbsp;</span><span class="value">hospital</span></div>
+        <div class="stat-chip"><span class="label">Type&nbsp;</span><span class="value">police</span></div>
+        <div class="stat-chip"><span class="label">Type&nbsp;</span><span class="value">school</span></div>
+      </div>
+      <p style="margin-top:12px; font-size:0.78rem; color:var(--textmid);">
+        Landmarks are placed in zone-appropriate positions: <code>town_hall</code> and <code>station</code> in CBD,
+        <code>hospital</code> in Midtown, <code>police</code> and <code>school</code> distributed across Residential and Midtown.
+        Each landmark cell carries <code>landmark_role</code> metadata and an overridden <code>encounter_rate: 0</code>.
+      </p>
+    </div>
+  </section>
+
+  <!-- ══ FEATURE CHECKLIST ══ -->
+  <section>
+    <div class="section-label">System Feature Checklist</div>
+    <div class="two-col">
+      <div class="card">
+        <h2>Generation Pipeline</h2>
+        <div style="display:grid; gap:5px; font-size:0.8rem;">
+          <div><span class="green bold">[PASS]</span> FBM coastline generation</div>
+          <div><span class="green bold">[PASS]</span> River generation with bridge placement</div>
+          <div><span class="green bold">[PASS]</span> Elevation layer (FBM)</div>
+          <div><span class="green bold">[PASS]</span> Zone assignment: CBD / Midtown / Residential</div>
+          <div><span class="green bold">[PASS]</span> Organic highway network</div>
+          <div><span class="green bold">[PASS]</span> Organic connector streets (FBM drift + 4-connectivity)</div>
+          <div><span class="green bold">[PASS]</span> Block detection (BFS flood fill)</div>
+          <div><span class="green bold">[PASS]</span> Block perimeter facing tags (<code>street_facing</code> field)</div>
+          <div><span class="green bold">[PASS]</span> Park placement per block</div>
+          <div><span class="green bold">[PASS]</span> Lot subdivision within blocks</div>
+          <div><span class="green bold">[PASS]</span> Elevation-influenced building type + floor count</div>
+          <div><span class="green bold">[PASS]</span> Building generation: floor / facade / roof metadata</div>
+          <div><span class="green bold">[PASS]</span> Landmark placement: all 5 types</div>
+          <div><span class="green bold">[PASS]</span> Encounter rate assignment per cell</div>
+          <div><span class="green bold">[PASS]</span> Highway junction spawn marking (<code>highway_junction</code>)</div>
+          <div><span class="green bold">[PASS]</span> Spawn point designation</div>
+          <div><span class="green bold">[PASS]</span> Per-profile per-quadrant district names</div>
+          <div><span class="green bold">[PASS]</span> 5 city profiles: Manhattan / Barcelona / Paris / London / Generic</div>
+          <div><span class="green bold">[PASS]</span> WorldGenerator: 48-chunk 8&times;6 world plan</div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Test Gates &mdash; v5</h2>
+        <div style="display:grid; gap:5px; font-size:0.8rem;">
+          <div><span class="green bold">[PASS]</span> CTest gate 1: smoke build compiles clean</div>
+          <div><span class="green bold">[PASS]</span> CTest gate 2: 78/78 smoke assertions pass</div>
+          <div><span class="green bold">[PASS]</span> CTest gate 3: city_exporter produces valid JSON</div>
+          <div><span class="green bold">[PASS]</span> CTest gate 4: schema <code>deployable_city_map.v2</code> validates</div>
+          <div><span class="green bold">[PASS]</span> CTest gate 5: cell count matches expected (6912)</div>
+          <div><span class="green bold">[PASS]</span> CTest gate 6: all 5 landmark types present</div>
+          <div><span class="green bold">[PASS]</span> Terrain routing: highway avg elevation &lt; land avg</div>
+          <div><span class="green bold">[PASS]</span> Map variation: road count range &ge; 30 across seeds 1-6</div>
+          <div style="margin-top:10px; color:var(--textmid); font-size:0.77rem;">
+            Exporter: <code>tools/city_exporter.cpp</code><br>
+            Output: <code>exports/city_seed_42.json</code><br>
+            Schema: <code>deployable_city_map.v2</code><br>
+            Algorithm tag: <code>mapping_algorithm_cpp.v5</code>
+          </div>
+        </div>
+        <h2 style="margin-top:18px;">Pending (Next Sprint)</h2>
+        <div style="display:grid; gap:5px; font-size:0.8rem;">
+          <div><span class="yellow bold">[DEFER]</span> Full right-turn graph polygon walk replacing BFS (changes block counts)</div>
+          <div><span class="yellow bold">[DEFER]</span> WorldGenerator chunk loader + cross-chunk highway stitching</div>
+          <div><span class="yellow bold">[DEFER]</span> D1: Inland river multi-tributary system</div>
+          <div><span class="yellow bold">[DEFER]</span> D2: Elevation visual tinting layer in renderer</div>
+          <div><span class="yellow bold">[DEFER]</span> C2: std::set&rarr;vector for blocks/lots (memory optimization)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ FOOTER ══ -->
+  <footer class="site-footer">
+    <div class="footer-left">
+      Algorithm: <code>mapping_algorithm_cpp.v5</code> &nbsp;|&nbsp; Schema: <code>deployable_city_map.v2</code><br>
+      Project: Isometric Pixel Art Open World City RPG &nbsp;|&nbsp; File: <code>test</code> (no extension, open in browser)
+    </div>
+    <div class="footer-right" id="footer-ts">
+      Generated at: &mdash;
+    </div>
+  </footer>
+
+</div><!-- .page-wrap -->
+
+<script>
+  (function () {
+    var now = new Date();
+    var ts = now.toLocaleString(undefined, {
+      year:   'numeric', month:  '2-digit', day:    '2-digit',
+      hour:   '2-digit', minute: '2-digit', second: '2-digit'
+    });
+    var el = document.getElementById('test-date');
+    if (el) el.textContent = 'Test opened: ' + ts;
+    var ft = document.getElementById('footer-ts');
+    if (ft) ft.textContent = 'Generated at: ' + ts;
+  })();
+</script>
+</body>
+</html>

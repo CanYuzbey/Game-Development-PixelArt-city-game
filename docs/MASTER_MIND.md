@@ -61,7 +61,7 @@ Seed export gate: `mapping_city_exporter`.
 
 Required result:
 
-- one seed and map config produce a `deployable_city_map.v1` JSON file,
+- one seed and map config produce a `deployable_city_map.v2` JSON file,
 - JSON includes stats, roads, blocks, lots, landmarks, buildings, sprite
   assignments, and cells.
 

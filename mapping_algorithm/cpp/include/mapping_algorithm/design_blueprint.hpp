@@ -86,9 +86,9 @@ struct SpriteAssignmentRecord {
 };
 
 struct DesignBlueprint {
-    std::string schema = "city_design_blueprint.v1";
+    std::string schema = "city_design_blueprint.v2";
     std::uint32_t seed = 0;
-    std::string algorithm_version = "mapping_algorithm_cpp.v2";
+    std::string algorithm_version = "mapping_algorithm_cpp.v3";
     std::string resolved_coast_side;
     CityProfile profile;
     int width = 0;

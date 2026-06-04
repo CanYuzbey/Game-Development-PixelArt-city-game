@@ -29,6 +29,7 @@ public:
 
 private:
     void generate_coastline();
+    void generate_river();
     void generate_elevation();
     void generate_zones();
     void generate_civic_anchor();
@@ -46,6 +47,7 @@ private:
     void validate_config() const;
     void set_road(int row, int col, RoadCategory category);
     bool can_place_road(int row, int col) const;
+    void generate_ring_road();
 
     MapConfig config_;
     MapGrid grid_;
@@ -55,11 +57,15 @@ private:
     std::vector<BuildingAssemblyRecord> buildings_;
     std::pair<int, int> civic_anchor_{-1, -1};
     CoastSide resolved_coast_side_ = CoastSide::None;
+    double cbd_center_r_ = 0.0;
+    double cbd_center_c_ = 0.0;
+    int archetype_ = 0;  // 0=Grid, 1=Radial, 2=Organic
 };
 
 std::string to_string(CoastSide side);
 std::string to_string(ZoneId zone);
 std::string to_string(RoadCategory category);
+bool is_valid_city_profile(const std::string& id);
 CoastSide coast_side_from_string(const std::string& value);
 
 } // namespace mapping_algorithm

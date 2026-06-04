@@ -50,7 +50,9 @@ std::string default_output_name(std::uint32_t seed) {
 
 void print_usage() {
     std::cerr << "usage: mapping_city_exporter [--seed N] [--width W] [--height H]\n"
-              << "                             [--profile ID] [--coast SIDE] [--out FILE]\n";
+              << "                             [--profile ID] [--coast SIDE] [--out FILE]\n"
+              << "       profiles: generic_dense, manhattan, barcelona_eixample, paris_haussmann, london_organic\n"
+              << "       coast: none, north, south, east, west, random\n";
 }
 
 MapConfig parse_args(int argc, char** argv, fs::path& output_path) {
@@ -77,9 +79,17 @@ MapConfig parse_args(int argc, char** argv, fs::path& output_path) {
         } else if (key == "--height") {
             config.height = std::stoi(require_value("--height"));
         } else if (key == "--profile") {
-            config.city_profile = require_value("--profile");
+            const std::string profile = require_value("--profile");
+            if (profile.empty() || !is_valid_city_profile(profile)) {
+                throw std::invalid_argument("unknown profile: " + profile);
+            }
+            config.city_profile = profile;
         } else if (key == "--coast") {
-            config.coast_side = coast_side_from_string(require_value("--coast"));
+            const std::string coast = require_value("--coast");
+            config.coast_side = coast_side_from_string(coast);
+            if (config.coast_side == CoastSide::None && coast != "none") {
+                throw std::invalid_argument("unknown coast side: " + coast);
+            }
         } else if (key == "--out") {
             output_path = require_value("--out");
             explicit_output = true;
@@ -250,6 +260,8 @@ void write_cells(std::ostream& out, const MapGrid& grid) {
                 << ", \"park\": " << (cell.is_park ? "true" : "false")
                 << ", \"setback\": " << (cell.is_setback ? "true" : "false")
                 << ", \"spawn\": " << (cell.is_spawn_point ? "true" : "false")
+                << ", \"damaged\": " << (cell.is_damaged ? "true" : "false")
+                << ", \"bridge\": " << (cell.is_bridge ? "true" : "false")
                 << ", \"coast\": \"" << escape_json(cell.coast_type)
                 << "\", \"building_type\": \"" << escape_json(cell.building_type)
                 << "\", \"landmark_type\": \"" << escape_json(cell.landmark_type)
@@ -274,7 +286,7 @@ void write_city_json(const fs::path& path, const MapGenerator& generator, const 
     }
 
     out << "{\n"
-        << "  \"schema\": \"deployable_city_map.v1\",\n"
+        << "  \"schema\": \"deployable_city_map.v2\",\n"
         << "  \"algorithm_version\": \"" << escape_json(blueprint.algorithm_version) << "\",\n"
         << "  \"resolved_coast_side\": \"" << escape_json(blueprint.resolved_coast_side) << "\",\n";
     write_stats(out, generator.stats());

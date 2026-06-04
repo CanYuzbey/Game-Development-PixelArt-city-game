@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(mapping_design_cpp VERSION 0.1.0 LANGUAGES CXX)
 
+enable_testing()
+
 add_executable(mapping_asset_validator tools/asset_validator.cpp)
 target_compile_features(mapping_asset_validator PRIVATE cxx_std_17)
 
@@ -22,3 +24,16 @@ else()
     target_compile_options(mapping_runtime_asset_validator PRIVATE -Wall -Wextra -Wpedantic)
     target_compile_options(mapping_runtime_asset_preparer PRIVATE -Wall -Wextra -Wpedantic)
 endif()
+
+get_filename_component(MAPPING_DESIGN_ASSET_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../assets" ABSOLUTE)
+get_filename_component(MAPPING_RUNTIME_ASSET_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../assets" ABSOLUTE)
+
+add_test(
+    NAME mapping_asset_validator
+    COMMAND $<TARGET_FILE:mapping_asset_validator> "${MAPPING_DESIGN_ASSET_ROOT}"
+)
+
+add_test(
+    NAME mapping_runtime_asset_validator
+    COMMAND $<TARGET_FILE:mapping_runtime_asset_validator> "${MAPPING_RUNTIME_ASSET_ROOT}"
+)

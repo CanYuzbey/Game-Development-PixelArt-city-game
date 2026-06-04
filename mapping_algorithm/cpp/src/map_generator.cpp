@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <functional>
 #include <limits>
 #include <map>
 #include <numeric>
@@ -14,11 +15,13 @@ namespace mapping_algorithm {
 namespace {
 
 constexpr std::uint32_t SALT_COAST = 0xAB1234;
+constexpr std::uint32_t SALT_RIVER = 0xC0A57EA7;
 constexpr std::uint32_t SALT_ELEVATION = 0xE1E2E3E4;
 constexpr std::uint32_t SALT_HIGHWAY = 0xCD5678;
 constexpr std::uint32_t SALT_CONNECTOR = 0xEF9ABC;
 constexpr std::uint32_t SALT_PARKS = 0xA1B2C3;
 constexpr std::uint32_t SALT_BUILDINGS = 0xB1C2D3;
+constexpr int MAX_MAP_DIMENSION = 512;
 
 using Point = std::pair<int, int>;
 
@@ -28,8 +31,11 @@ struct ProfileRules {
     double connector_density = 0.65;
     int diagonal_streets = 2;
     double highway_organic = 0.3;
+    double connector_organic = 0.08;
     int park_min_area = 18;
     int park_max_area = 140;
+    double cbd_radius = 0.45;
+    double midtown_radius = 0.72;
 };
 
 struct Bounds {
@@ -68,6 +74,33 @@ int decision_range(std::uint32_t seed, int a, int b, std::uint32_t salt, int min
     return min_value + static_cast<int>(decision_hash(seed, a, b, salt) % span);
 }
 
+bool is_known_city_profile_id(const std::string& id) {
+    const std::string key = id.empty() ? "generic_dense" : id;
+    return key == "generic_dense" ||
+           key == "manhattan" ||
+           key == "barcelona_eixample" ||
+           key == "paris_haussmann" ||
+           key == "london_organic";
+}
+
+bool is_valid_coast_side(CoastSide side) {
+    switch (side) {
+        case CoastSide::None:
+        case CoastSide::North:
+        case CoastSide::South:
+        case CoastSide::East:
+        case CoastSide::West:
+        case CoastSide::Random:
+            return true;
+        default:
+            return false;
+    }
+}
+
+int safe_initial_grid_dimension(int value) {
+    return value > 0 && value <= MAX_MAP_DIMENSION ? value : 1;
+}
+
 ProfileRules rules_for_profile(const std::string& id, const MapConfig& config) {
     ProfileRules rules;
     rules.avenue_spacing = config.avenue_spacing;
@@ -75,6 +108,7 @@ ProfileRules rules_for_profile(const std::string& id, const MapConfig& config) {
     rules.connector_density = config.connector_density;
     rules.diagonal_streets = config.diagonal_streets;
     rules.highway_organic = config.highway_organic;
+    rules.connector_organic = config.connector_organic;
 
     if (id == "manhattan") {
         rules.avenue_spacing = std::max(8, config.avenue_spacing - 5);
@@ -82,26 +116,50 @@ ProfileRules rules_for_profile(const std::string& id, const MapConfig& config) {
         rules.connector_density = std::max(config.connector_density, 0.78);
         rules.diagonal_streets = std::max(config.diagonal_streets, 2);
         rules.highway_organic = std::min(config.highway_organic, 0.22);
+        rules.connector_organic = std::min(config.connector_organic, 0.04);
     } else if (id == "barcelona_eixample") {
         rules.avenue_spacing = std::max(8, config.avenue_spacing - 6);
         rules.connector_spacing = std::max(8, config.connector_spacing + 1);
         rules.connector_density = std::max(config.connector_density, 0.86);
         rules.diagonal_streets = 0;
         rules.highway_organic = std::min(config.highway_organic, 0.12);
+        rules.connector_organic = std::min(config.connector_organic, 0.02);
     } else if (id == "paris_haussmann") {
         rules.avenue_spacing = std::max(10, config.avenue_spacing - 3);
         rules.connector_spacing = std::max(7, config.connector_spacing);
         rules.connector_density = std::max(config.connector_density, 0.72);
         rules.diagonal_streets = std::max(config.diagonal_streets, 4);
         rules.highway_organic = std::max(config.highway_organic, 0.24);
+        rules.connector_organic = std::max(config.connector_organic, 0.12);
     } else if (id == "london_organic") {
         rules.avenue_spacing = std::max(9, config.avenue_spacing - 4);
         rules.connector_spacing = std::max(7, config.connector_spacing + 1);
         rules.connector_density = std::min(config.connector_density, 0.62);
         rules.diagonal_streets = std::max(1, config.diagonal_streets);
         rules.highway_organic = std::max(config.highway_organic, 0.52);
+        rules.connector_organic = std::max(config.connector_organic, 0.18);
         rules.park_min_area = 10;
         rules.park_max_area = 110;
+        // Small but game-playable CBD: ~10% of map area vs. Manhattan's ~16%.
+        // Real City of London is ~1% of Greater London, but game maps show the centre.
+        // 0.36 ensures CBD stays >5% even when a West/East coast intersects the circle.
+        rules.cbd_radius = 0.36;
+        rules.midtown_radius = 0.66;
+    }
+
+    // Profile-specific zone radii for all other profiles
+    if (id == "manhattan") {
+        rules.cbd_radius = 0.40;
+        rules.midtown_radius = 0.68;
+    } else if (id == "barcelona_eixample") {
+        rules.cbd_radius = 0.52;
+        rules.midtown_radius = 0.76;
+    } else if (id == "paris_haussmann") {
+        rules.cbd_radius = 0.48;
+        rules.midtown_radius = 0.72;
+    } else if (id == "generic_dense") {
+        rules.cbd_radius = 0.45;
+        rules.midtown_radius = 0.72;
     }
 
     return rules;
@@ -201,6 +259,34 @@ std::vector<Point> neighbours4(int r, int c) {
     return {{r - 1, c}, {r + 1, c}, {r, c - 1}, {r, c + 1}};
 }
 
+// Single BFS from all water cells simultaneously — O(n) water distance for every cell.
+std::vector<std::vector<int>> bfs_water_distance(const MapGrid& grid) {
+    const int rows = grid.height();
+    const int cols = grid.width();
+    constexpr int INF = std::numeric_limits<int>::max();
+    std::vector<std::vector<int>> dist(rows, std::vector<int>(cols, INF));
+    std::queue<Point> q;
+    for (int r = 0; r < rows; ++r) {
+        for (int c = 0; c < cols; ++c) {
+            if (grid.at(r, c).is_water) {
+                dist[r][c] = 0;
+                q.push({r, c});
+            }
+        }
+    }
+    while (!q.empty()) {
+        const auto [r, c] = q.front();
+        q.pop();
+        for (const auto [nr, nc] : neighbours4(r, c)) {
+            if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && dist[nr][nc] == INF) {
+                dist[nr][nc] = dist[r][c] + 1;
+                q.push({nr, nc});
+            }
+        }
+    }
+    return dist;
+}
+
 int cheb(Point a, Point b) {
     return std::max(std::abs(a.first - b.first), std::abs(a.second - b.second));
 }
@@ -294,7 +380,11 @@ bool touches_waterfront(const std::set<Point>& points, const MapGrid& grid) {
     return false;
 }
 
-std::string pick_building_type(ZoneId zone, double roll, bool waterfront) {
+std::string pick_building_type(ZoneId zone, double roll, bool waterfront, double elevation) {
+    // High elevation hilltop → office/apartment preferred; low elevation → commercial
+    const bool hilltop = elevation > 0.62;
+    const bool lowland = elevation < 0.22;
+
     if (waterfront) {
         if (roll < 0.35) return "restaurant";
         if (roll < 0.60) return "market";
@@ -302,14 +392,26 @@ std::string pick_building_type(ZoneId zone, double roll, bool waterfront) {
         return "empty";
     }
     if (zone == ZoneId::CBD) {
-        if (roll < 0.64) return "office";
+        const double office_threshold = hilltop ? 0.75 : 0.64;
+        if (roll < office_threshold) return "office";
         if (roll < 0.82) return "bank";
         return "civic";
     }
     if (zone == ZoneId::Midtown) {
+        if (lowland) {
+            if (roll < 0.30) return "apartment";
+            if (roll < 0.65) return "shop";
+            return "restaurant";
+        }
         if (roll < 0.46) return "apartment";
         if (roll < 0.76) return "shop";
         return "restaurant";
+    }
+    // Residential (fallback)
+    if (hilltop) {
+        if (roll < 0.62) return "house";
+        if (roll < 0.88) return "apartment";
+        return "shop";
     }
     if (roll < 0.78) return "house";
     if (roll < 0.92) return "apartment";
@@ -337,13 +439,14 @@ std::string asset_slot_for_building_record(const std::string& type, const std::s
     return asset_slot_for_building(type);
 }
 
-int floor_count_for(ZoneId zone, const std::string& type, std::uint32_t seed, int lot_id) {
-    if (type == "office") return decision_range(seed, lot_id, 10, SALT_BUILDINGS, 7, 16);
+int floor_count_for(ZoneId zone, const std::string& type, std::uint32_t seed, int lot_id, double elevation) {
+    const int elev_bonus = elevation > 0.62 ? 1 : 0; // hilltop buildings stand taller
+    if (type == "office") return decision_range(seed, lot_id, 10, SALT_BUILDINGS, 7, 16) + elev_bonus;
     if (type == "bank" || type == "civic") return decision_range(seed, lot_id, 11, SALT_BUILDINGS, 3, 5);
     if (type == "hospital" || type == "police" || type == "station") return decision_range(seed, lot_id, 16, SALT_BUILDINGS, 2, 4);
     if (type == "apartment") return zone == ZoneId::CBD
-        ? decision_range(seed, lot_id, 12, SALT_BUILDINGS, 5, 9)
-        : decision_range(seed, lot_id, 13, SALT_BUILDINGS, 3, 6);
+        ? decision_range(seed, lot_id, 12, SALT_BUILDINGS, 5, 9) + elev_bonus
+        : decision_range(seed, lot_id, 13, SALT_BUILDINGS, 3, 6) + elev_bonus;
     if (type == "shop" || type == "restaurant" || type == "market") return decision_range(seed, lot_id, 14, SALT_BUILDINGS, 1, 3);
     if (type == "house" || type == "school") return decision_range(seed, lot_id, 15, SALT_BUILDINGS, 1, 3);
     return 1;
@@ -464,6 +567,10 @@ std::vector<std::string> sprite_stack_for(const std::string& profile_id,
 
 } // namespace
 
+bool is_valid_city_profile(const std::string& id) {
+    return is_known_city_profile_id(id);
+}
+
 MapGrid::MapGrid(int width, int height)
     : width_(width), height_(height) {
     if (width <= 0 || height <= 0) {
@@ -522,7 +629,11 @@ int MapGrid::sidewalk_count() const {
 }
 
 MapGenerator::MapGenerator(MapConfig config)
-    : config_(std::move(config)), grid_(config_.width, config_.height) {}
+    : config_(std::move(config)),
+      grid_(safe_initial_grid_dimension(config_.width),
+            safe_initial_grid_dimension(config_.height)) {
+    validate_config();
+}
 
 void MapGenerator::generate() {
     validate_config();
@@ -535,6 +646,7 @@ void MapGenerator::generate() {
     resolved_coast_side_ = CoastSide::None;
 
     generate_coastline();
+    generate_river();
     generate_elevation();
     generate_zones();
     generate_highways();
@@ -554,22 +666,70 @@ void MapGenerator::validate_config() const {
     if (config_.width <= 0 || config_.height <= 0) {
         throw std::invalid_argument("MapConfig dimensions must be positive");
     }
-    if (config_.width > 512 || config_.height > 512) {
+    if (config_.width > MAX_MAP_DIMENSION || config_.height > MAX_MAP_DIMENSION) {
         throw std::invalid_argument("MapConfig dimensions exceed supported 512x512 guard rail");
+    }
+    if (!is_valid_coast_side(config_.coast_side)) {
+        throw std::invalid_argument("MapConfig coast_side is invalid");
+    }
+    if (!is_valid_city_profile(config_.city_profile)) {
+        throw std::invalid_argument("MapConfig city_profile is unknown");
     }
     if (config_.connector_spacing <= 0 || config_.avenue_spacing <= 0) {
         throw std::invalid_argument("MapConfig road spacing must be positive");
+    }
+    if (config_.min_block_depth <= 0) {
+        throw std::invalid_argument("MapConfig min_block_depth must be positive");
+    }
+    if (config_.coast_smoothing_passes < 0) {
+        throw std::invalid_argument("MapConfig coast_smoothing_passes must be non-negative");
+    }
+    if (config_.coast_smoothing_passes > std::max(config_.width, config_.height)) {
+        throw std::invalid_argument("MapConfig coast_smoothing_passes exceeds map dimensions");
     }
     if (config_.highway_ns_min < 0 || config_.highway_ew_min < 0 ||
         config_.highway_ns_max < config_.highway_ns_min ||
         config_.highway_ew_max < config_.highway_ew_min) {
         throw std::invalid_argument("MapConfig highway ranges are invalid");
     }
-    if (config_.coast_coverage < 0.0 || config_.coast_coverage > 0.75) {
+    if (config_.highway_ns_max > config_.width || config_.highway_ew_max > config_.height) {
+        throw std::invalid_argument("MapConfig highway ranges exceed map dimensions");
+    }
+    if (!std::isfinite(config_.coast_coverage) ||
+        config_.coast_coverage < 0.0 || config_.coast_coverage > 0.75) {
         throw std::invalid_argument("MapConfig coast_coverage must be in [0.0, 0.75]");
     }
-    if (config_.coast_noise_scale <= 0.0) {
+    if (!std::isfinite(config_.coast_noise_scale) || config_.coast_noise_scale <= 0.0) {
         throw std::invalid_argument("MapConfig coast_noise_scale must be positive");
+    }
+    if (!std::isfinite(config_.highway_organic) ||
+        config_.highway_organic < 0.0 || config_.highway_organic > 1.0) {
+        throw std::invalid_argument("MapConfig highway_organic must be in [0.0, 1.0]");
+    }
+    if (!std::isfinite(config_.connector_organic) ||
+        config_.connector_organic < 0.0 || config_.connector_organic > 0.5) {
+        throw std::invalid_argument("MapConfig connector_organic must be in [0.0, 0.5]");
+    }
+    if (!std::isfinite(config_.connector_density) ||
+        config_.connector_density < 0.0 || config_.connector_density > 1.0) {
+        throw std::invalid_argument("MapConfig connector_density must be in [0.0, 1.0]");
+    }
+    if (!std::isfinite(config_.connector_turn_bias) ||
+        config_.connector_turn_bias < 0.0 || config_.connector_turn_bias > 1.0) {
+        throw std::invalid_argument("MapConfig connector_turn_bias must be in [0.0, 1.0]");
+    }
+    if (config_.roundabout_count < 0 || config_.diagonal_streets < 0 || config_.sidewalk_depth < 0) {
+        throw std::invalid_argument("MapConfig generated feature counts must be non-negative");
+    }
+    if (config_.diagonal_streets > std::max(config_.width, config_.height)) {
+        throw std::invalid_argument("MapConfig diagonal_streets exceeds map dimensions");
+    }
+    if (config_.sidewalk_depth > std::min(config_.width, config_.height)) {
+        throw std::invalid_argument("MapConfig sidewalk_depth exceeds map dimensions");
+    }
+    if (!std::isfinite(config_.sidewalk_damage_rate) ||
+        config_.sidewalk_damage_rate < 0.0 || config_.sidewalk_damage_rate > 1.0) {
+        throw std::invalid_argument("MapConfig sidewalk_damage_rate must be in [0.0, 1.0]");
     }
 }
 
@@ -607,7 +767,7 @@ void MapGenerator::generate_coastline() {
             const double ny = static_cast<double>(r) / rows * config_.coast_noise_scale;
             const double noise = fbm(nx, ny, config_.master_seed ^ SALT_COAST, 4);
             const double bias = directional_gradient(r, c, rows, cols, side);
-            raw[r][c] = noise * 0.55 + bias * 0.45;
+            raw[r][c] = noise * 0.72 + bias * 0.28;
             flat.push_back(raw[r][c]);
         }
     }
@@ -633,6 +793,8 @@ void MapGenerator::generate_coastline() {
         }
     }
 
+    // Segment-based coast type assignment: every ~6 diagonal cells share a type,
+    // producing natural contiguous cliff, beach, and dock sections.
     for (int r = 0; r < rows; ++r) {
         for (int c = 0; c < cols; ++c) {
             auto& cell = grid_.at(r, c);
@@ -647,7 +809,98 @@ void MapGenerator::generate_coastline() {
                 }
             }
             if (shoreline) {
-                const double roll = decision01(config_.master_seed, r, c, SALT_COAST);
+                const int segment_id = (r + c) / 6;
+                const double roll = decision01(config_.master_seed, segment_id, 0x7CE, SALT_COAST);
+                cell.coast_type = roll < 0.35 ? "cliff" : (roll < 0.80 ? "beach" : "dock");
+            }
+        }
+    }
+}
+
+void MapGenerator::generate_river() {
+    if (resolved_coast_side_ != CoastSide::None) {
+        return;
+    }
+    if (decision01(config_.master_seed, 0x4A, 0x3B, SALT_RIVER) >= 0.40) {
+        return;
+    }
+
+    const int rows = grid_.height();
+    const int cols = grid_.width();
+
+    // N-S river walks every row; E-W walks every column.
+    const bool ns = decision01(config_.master_seed, 0x7C, 0x2E, SALT_RIVER) < 0.50;
+    const double amplitude = (ns ? cols : rows) / 8.0;
+
+    // Starting position biased to the middle half of the perpendicular axis.
+    const int perp_range = ns ? cols : rows;
+    const int start_pos = perp_range / 4 +
+        static_cast<int>(decision01(config_.master_seed, 0x1A, 0x5F, SALT_RIVER) *
+                         (perp_range / 2.0));
+
+    const int travel = ns ? rows : cols;
+    std::vector<Point> river_cells;
+    river_cells.reserve(static_cast<std::size_t>(travel));
+    for (int i = 0; i < travel; ++i) {
+        const double t = static_cast<double>(i) / std::max(travel - 1, 1);
+        const double noise = (fbm(t * 3.0, 0.0, config_.master_seed ^ SALT_RIVER, 4) - 0.5) * 2.0;
+        const int pos = static_cast<int>(std::round(start_pos + noise * amplitude));
+        const int r = ns ? i : std::clamp(pos, 0, rows - 1);
+        const int c = ns ? std::clamp(pos, 0, cols - 1) : i;
+        auto& cell = grid_.at(r, c);
+        cell.is_water = true;
+        cell.is_land = false;
+        cell.coast_type.clear();
+        river_cells.push_back({r, c});
+    }
+
+    // Add simple bridge breaks so a river does not hard-split inland maps.
+    // Roads generated later can occupy these cells because they are land.
+    const int crossing_spacing = std::max(6, ns ? config_.connector_spacing : config_.avenue_spacing);
+    bool placed_bridge = false;
+    auto mark_bridge = [&](Point p) {
+        auto& cell = grid_.at(p.first, p.second);
+        cell.is_water = false;
+        cell.is_land = true;
+        cell.is_bridge = true;
+        cell.coast_type.clear();
+        set_road(p.first, p.second, RoadCategory::Connector);
+        const std::vector<Point> approaches = ns ?
+            std::vector<Point>{{p.first, p.second - 1}, {p.first, p.second + 1}} :
+            std::vector<Point>{{p.first - 1, p.second}, {p.first + 1, p.second}};
+        for (const auto approach : approaches) {
+            set_road(approach.first, approach.second, RoadCategory::Connector);
+        }
+        placed_bridge = true;
+    };
+    for (const auto [r, c] : river_cells) {
+        const int axis = ns ? r : c;
+        if (axis > 0 && axis < travel - 1 && axis % crossing_spacing == 0) {
+            mark_bridge({r, c});
+        }
+    }
+    if (!placed_bridge && !river_cells.empty()) {
+        mark_bridge(river_cells[river_cells.size() / 2]);
+    }
+
+    // Shoreline pass: assign coast_type to land cells adjacent to river water,
+    // matching the segment-based style used for ocean coasts.
+    for (int r = 0; r < rows; ++r) {
+        for (int c = 0; c < cols; ++c) {
+            auto& cell = grid_.at(r, c);
+            if (!cell.is_land) {
+                continue;
+            }
+            bool shoreline = false;
+            for (const auto [nr, nc] : neighbours4(r, c)) {
+                if (grid_.in_bounds(nr, nc) && grid_.at(nr, nc).is_water) {
+                    shoreline = true;
+                    break;
+                }
+            }
+            if (shoreline) {
+                const int segment_id = (r + c) / 6;
+                const double roll = decision01(config_.master_seed, segment_id, 0x7CF, SALT_RIVER);
                 cell.coast_type = roll < 0.35 ? "cliff" : (roll < 0.80 ? "beach" : "dock");
             }
         }
@@ -668,6 +921,7 @@ void MapGenerator::generate_elevation() {
 }
 
 void MapGenerator::generate_zones() {
+    const auto rules = rules_for_profile(config_.city_profile, config_);
     const int rows = grid_.height();
     const int cols = grid_.width();
     double center_r = rows / 2.0;
@@ -677,6 +931,18 @@ void MapGenerator::generate_zones() {
     if (resolved_coast_side_ == CoastSide::North) center_r = rows * 0.60;
     if (resolved_coast_side_ == CoastSide::South) center_r = rows * 0.40;
 
+    // Seeded CBD center offset for map variation (±5% of map size)
+    const double offset_r = (decision01(config_.master_seed, 77, 99, SALT_ELEVATION) - 0.5) * 0.10 * rows;
+    const double offset_c = (decision01(config_.master_seed, 88, 77, SALT_ELEVATION) - 0.5) * 0.10 * cols;
+    center_r = std::clamp(center_r + offset_r, rows * 0.20, rows * 0.80);
+    center_c = std::clamp(center_c + offset_c, cols * 0.20, cols * 0.80);
+    // Store CBD center for use by generate_highways() and generate_ring_road()
+    cbd_center_r_ = center_r;
+    cbd_center_c_ = center_c;
+
+    const double cbd_r = rules.cbd_radius;
+    const double mid_r = rules.midtown_radius;
+
     for (int r = 0; r < rows; ++r) {
         for (int c = 0; c < cols; ++c) {
             auto& cell = grid_.at(r, c);
@@ -685,13 +951,15 @@ void MapGenerator::generate_zones() {
             }
             const double dr = std::abs(r - center_r) / (rows / 2.0);
             const double dc = std::abs(c - center_c) / (cols / 2.0);
-            const double dist = std::max(dr, dc);
-            cell.zone_id = dist < 0.45 ? ZoneId::CBD : (dist < 0.72 ? ZoneId::Midtown : ZoneId::Residential);
+            // Euclidean distance gives circular zones rather than square rings.
+            const double dist = std::hypot(dr, dc);
+            cell.zone_id = dist < cbd_r ? ZoneId::CBD : (dist < mid_r ? ZoneId::Midtown : ZoneId::Residential);
 
+            // Stochastic zone boundary softening
             const double transition = decision01(config_.master_seed, r, c, SALT_ELEVATION);
-            if (dist >= 0.42 && dist < 0.50 && transition < 0.40) {
+            if (dist >= cbd_r - 0.04 && dist < cbd_r + 0.08 && transition < 0.40) {
                 cell.zone_id = ZoneId::Midtown;
-            } else if (dist >= 0.69 && dist < 0.77 && transition < 0.35) {
+            } else if (dist >= mid_r - 0.04 && dist < mid_r + 0.08 && transition < 0.35) {
                 cell.zone_id = ZoneId::Residential;
             }
         }
@@ -699,6 +967,9 @@ void MapGenerator::generate_zones() {
 }
 
 void MapGenerator::generate_civic_anchor() {
+    // O(n) multi-source BFS gives exact water distance for every cell.
+    const auto water_dist = bfs_water_distance(grid_);
+
     double best_score = -1.0;
     Point best{-1, -1};
     for (int r = 0; r < grid_.height(); ++r) {
@@ -707,16 +978,9 @@ void MapGenerator::generate_civic_anchor() {
             if (!cell.is_land || cell.is_water || cell.is_road() || cell.zone_id != ZoneId::CBD || cell.block_id < 0) {
                 continue;
             }
-            int water_dist = 999;
-            for (int rr = 0; rr < grid_.height(); ++rr) {
-                for (int cc = 0; cc < grid_.width(); ++cc) {
-                    if (grid_.at(rr, cc).is_water) {
-                        water_dist = std::min(water_dist, cheb({r, c}, {rr, cc}));
-                    }
-                }
-            }
-            const double center_score = -std::hypot(r - grid_.height() / 2.0, c - grid_.width() / 2.0);
-            const double score = water_dist * 4.0 + center_score;
+            const int wd = (water_dist[r][c] == std::numeric_limits<int>::max()) ? 999 : water_dist[r][c];
+            const double center_score = -std::hypot(r - cbd_center_r_, c - cbd_center_c_);
+            const double score = wd * 4.0 + center_score;
             if (score > best_score) {
                 best_score = score;
                 best = {r, c};
@@ -742,59 +1006,357 @@ void MapGenerator::set_road(int row, int col, RoadCategory category) {
 }
 
 void MapGenerator::generate_highways() {
+    constexpr double kPi = 3.14159265358979323846;
     const auto rules = rules_for_profile(config_.city_profile, config_);
-    const int ns_count = decision_range(config_.master_seed, 3, 5, SALT_HIGHWAY, config_.highway_ns_min, config_.highway_ns_max);
-    const int ew_count = decision_range(config_.master_seed, 7, 11, SALT_HIGHWAY, config_.highway_ew_min, config_.highway_ew_max);
-    for (int i = 0; i < ns_count; ++i) {
-        const int c = (i + 1) * grid_.width() / (ns_count + 1);
-        for (int r = 0; r < grid_.height(); ++r) {
-            const int drift = static_cast<int>(std::round((fbm(r / 20.0, i, config_.master_seed ^ SALT_HIGHWAY) - 0.5) * 2.0 * rules.highway_organic * 3.0));
-            set_road(r, std::clamp(c + drift, 0, grid_.width() - 1), RoadCategory::Highway);
+    const int rows = grid_.height();
+    const int cols = grid_.width();
+
+    // City archetype: 0=Grid, 1=Radial, 2=Organic (selected by seed hash)
+    archetype_ = static_cast<int>(mix_u32(config_.master_seed ^ 0x3A7F9B2CU) % 3U);
+
+    // Terrain-following route: NS highway at target column.
+    // At each row, scans ±5 cells for minimum cost (low elevation + near-target).
+    auto route_ns = [&](int target_c, int i_salt) -> std::vector<Point> {
+        std::vector<Point> path;
+        path.reserve(static_cast<std::size_t>(rows));
+        int cur_c = target_c;
+        for (int r = 0; r < rows; ++r) {
+            double best_cost = 1e18;
+            int best_c = std::clamp(cur_c, 0, cols - 1);
+            for (int dc = -5; dc <= 5; ++dc) {
+                const int cand = std::clamp(cur_c + dc, 0, cols - 1);
+                if (grid_.at(r, cand).is_water) continue;
+                const double elev_cost = grid_.at(r, cand).elevation * 4.0;
+                const double lateral = std::abs(dc) * 0.25;
+                const double drift_pen = std::abs(cand - target_c) * 0.04;
+                // FBM bonus: mild organic drift on top of terrain preference
+                const double fbm_bonus = -(fbm(r / 20.0, static_cast<double>(i_salt),
+                    config_.master_seed ^ SALT_HIGHWAY) - 0.5) * rules.highway_organic * 1.5;
+                const double cost = elev_cost + lateral + drift_pen + fbm_bonus;
+                if (cost < best_cost) { best_cost = cost; best_c = cand; }
+            }
+            path.push_back({r, best_c});
+            cur_c = best_c;
+        }
+        return path;
+    };
+
+    // Terrain-following route: EW highway at target row.
+    auto route_ew = [&](int target_r, int i_salt) -> std::vector<Point> {
+        std::vector<Point> path;
+        path.reserve(static_cast<std::size_t>(cols));
+        int cur_r = target_r;
+        for (int c = 0; c < cols; ++c) {
+            double best_cost = 1e18;
+            int best_r = std::clamp(cur_r, 0, rows - 1);
+            for (int dr = -5; dr <= 5; ++dr) {
+                const int cand = std::clamp(cur_r + dr, 0, rows - 1);
+                if (grid_.at(cand, c).is_water) continue;
+                const double elev_cost = grid_.at(cand, c).elevation * 4.0;
+                const double lateral = std::abs(dr) * 0.25;
+                const double drift_pen = std::abs(cand - target_r) * 0.04;
+                const double fbm_bonus = -(fbm(c / 20.0, static_cast<double>(i_salt + 99),
+                    config_.master_seed ^ SALT_HIGHWAY) - 0.5) * rules.highway_organic * 1.5;
+                const double cost = elev_cost + lateral + drift_pen + fbm_bonus;
+                if (cost < best_cost) { best_cost = cost; best_r = cand; }
+            }
+            path.push_back({best_r, c});
+            cur_r = best_r;
+        }
+        return path;
+    };
+
+    // Draw a path with stair-step 4-connectivity fill.
+    auto draw_path = [&](const std::vector<Point>& path, RoadCategory cat) {
+        int prev_r = -1, prev_c = -1;
+        for (const auto [r, c] : path) {
+            set_road(r, c, cat);
+            if (prev_r >= 0 && (r != prev_r && c != prev_c)) {
+                // Diagonal step — fill stair-step cell
+                set_road(r, prev_c, cat);
+            }
+            prev_r = r; prev_c = c;
+        }
+    };
+
+    if (archetype_ == 1) {
+        // RADIAL: highways radiate from CBD center
+        const int num_radial = 4 + static_cast<int>(mix_u32(config_.master_seed ^ 0xF1E2D3C4U) % 3U); // 4-6
+        for (int i = 0; i < num_radial; ++i) {
+            const double base_angle = kPi * 2.0 * i / num_radial;
+            const double angle_noise = (decision01(config_.master_seed, i, 7, SALT_HIGHWAY) - 0.5) * 0.4;
+            const double angle = base_angle + angle_noise;
+            const double step_r = std::sin(angle);
+            const double step_c = std::cos(angle);
+            double cur_r = cbd_center_r_, cur_c = cbd_center_c_;
+            int prev_gr = -1, prev_gc = -1;
+            while (true) {
+                const int gr = static_cast<int>(std::round(cur_r));
+                const int gc = static_cast<int>(std::round(cur_c));
+                if (!grid_.in_bounds(gr, gc)) break;
+                if (!grid_.at(gr, gc).is_water) set_road(gr, gc, RoadCategory::Highway);
+                if (prev_gr >= 0 && (std::abs(gr - prev_gr) + std::abs(gc - prev_gc)) > 1) {
+                    if (grid_.in_bounds(gr, prev_gc) && !grid_.at(gr, prev_gc).is_water)
+                        set_road(gr, prev_gc, RoadCategory::Highway);
+                }
+                prev_gr = gr; prev_gc = gc;
+                cur_r += step_r; cur_c += step_c;
+            }
+        }
+        generate_ring_road();
+
+    } else {
+        // GRID or ORGANIC: terrain-routed N-S + E-W highways
+        const int ns_count = decision_range(config_.master_seed, 3, 5, SALT_HIGHWAY,
+                                            config_.highway_ns_min, config_.highway_ns_max);
+        const int ew_count = decision_range(config_.master_seed, 7, 11, SALT_HIGHWAY,
+                                            config_.highway_ew_min, config_.highway_ew_max);
+        for (int i = 0; i < ns_count; ++i) {
+            draw_path(route_ns((i + 1) * cols / (ns_count + 1), i), RoadCategory::Highway);
+        }
+        for (int i = 0; i < ew_count; ++i) {
+            draw_path(route_ew((i + 1) * rows / (ew_count + 1), i), RoadCategory::Highway);
+        }
+
+        // ORGANIC adds one diagonal highway following terrain diagonally
+        if (archetype_ == 2) {
+            const int diag_start_c = cols / 4;
+            const int diag_end_c   = (cols * 3) / 4;
+            int prev_c = diag_start_c;
+            for (int r = 0; r < rows; ++r) {
+                const double t = static_cast<double>(r) / std::max(rows - 1, 1);
+                const int tgt = static_cast<int>(std::round(diag_start_c + t * (diag_end_c - diag_start_c)));
+                int best_c = tgt;
+                double best_elev = 1e18;
+                for (int dc = -3; dc <= 3; ++dc) {
+                    const int cand = std::clamp(tgt + dc, 0, cols - 1);
+                    if (!grid_.at(r, cand).is_water && grid_.at(r, cand).elevation < best_elev) {
+                        best_elev = grid_.at(r, cand).elevation;
+                        best_c = cand;
+                    }
+                }
+                if (!grid_.at(r, best_c).is_road()) set_road(r, best_c, RoadCategory::Highway);
+                if (best_c != prev_c) set_road(r, prev_c, RoadCategory::Highway); // stair-step
+                prev_c = best_c;
+            }
         }
     }
-    for (int i = 0; i < ew_count; ++i) {
-        const int r = (i + 1) * grid_.height() / (ew_count + 1);
-        for (int c = 0; c < grid_.width(); ++c) {
-            const int drift = static_cast<int>(std::round((fbm(c / 20.0, i + 99, config_.master_seed ^ SALT_HIGHWAY) - 0.5) * 2.0 * rules.highway_organic * 3.0));
-            set_road(std::clamp(r + drift, 0, grid_.height() - 1), c, RoadCategory::Highway);
+
+    // Roundabouts at highway junctions (uses roundabout_count config field)
+    if (config_.roundabout_count > 0) {
+        int placed = 0;
+        for (int r = 2; r < rows - 2 && placed < config_.roundabout_count; ++r) {
+            for (int c = 2; c < cols - 2 && placed < config_.roundabout_count; ++c) {
+                if (grid_.at(r, c).road_category != RoadCategory::Highway) continue;
+                int hw_nb = 0;
+                for (const auto [nr, nc] : neighbours4(r, c)) {
+                    if (grid_.in_bounds(nr, nc) &&
+                        grid_.at(nr, nc).road_category == RoadCategory::Highway) ++hw_nb;
+                }
+                if (hw_nb >= 3) {
+                    // Place connector ring around junction
+                    const std::vector<Point> ring = {
+                        {r-1, c-1}, {r-1, c}, {r-1, c+1},
+                        {r,   c-1},            {r,   c+1},
+                        {r+1, c-1}, {r+1, c}, {r+1, c+1}
+                    };
+                    for (const auto [nr, nc] : ring) {
+                        if (grid_.in_bounds(nr, nc) && !grid_.at(nr, nc).is_water &&
+                            grid_.at(nr, nc).road_category == RoadCategory::None) {
+                            set_road(nr, nc, RoadCategory::Connector);
+                        }
+                    }
+                    ++placed;
+                }
+            }
         }
+    }
+}
+
+void MapGenerator::generate_ring_road() {
+    constexpr double kPi = 3.14159265358979323846;
+    const int rows = grid_.height();
+    const int cols = grid_.width();
+    const int radius = static_cast<int>(std::round(std::min(rows, cols) * 0.28));
+    if (radius < 4) return;
+    const int steps = static_cast<int>(2.0 * kPi * radius * 2.5); // oversample for fill
+    int prev_r = -1, prev_c = -1;
+    for (int step = 0; step <= steps; ++step) {
+        const double theta = 2.0 * kPi * step / steps;
+        const int r = static_cast<int>(std::round(cbd_center_r_ + radius * std::sin(theta)));
+        const int c = static_cast<int>(std::round(cbd_center_c_ + radius * std::cos(theta)));
+        if (!grid_.in_bounds(r, c) || grid_.at(r, c).is_water) {
+            prev_r = r; prev_c = c;
+            continue;
+        }
+        if (!grid_.at(r, c).is_road()) set_road(r, c, RoadCategory::Connector);
+        if (prev_r >= 0 && grid_.in_bounds(prev_r, prev_c)) {
+            if (std::abs(r - prev_r) + std::abs(c - prev_c) > 1) {
+                // Fill stair-step gap
+                if (grid_.in_bounds(r, prev_c) && !grid_.at(r, prev_c).is_water &&
+                    !grid_.at(r, prev_c).is_road())
+                    set_road(r, prev_c, RoadCategory::Connector);
+                else if (grid_.in_bounds(prev_r, c) && !grid_.at(prev_r, c).is_water &&
+                         !grid_.at(prev_r, c).is_road())
+                    set_road(prev_r, c, RoadCategory::Connector);
+            }
+        }
+        prev_r = r; prev_c = c;
     }
 }
 
 void MapGenerator::generate_connectors() {
     const auto rules = rules_for_profile(config_.city_profile, config_);
+    // NEW: vertical avenues with organic drift
     for (int c = rules.avenue_spacing; c < grid_.width(); c += rules.avenue_spacing) {
         if (decision01(config_.master_seed, c, 17, SALT_CONNECTOR) > rules.connector_density) {
             continue;
         }
+        const int max_drift = static_cast<int>(std::round(
+            rules.connector_organic * (grid_.width() / 12.0)));
+        int prev_col = c;
+        double prev_noise_val_v = 0.5;
         for (int r = 0; r < grid_.height(); ++r) {
-            if (!grid_.at(r, c).is_road()) {
-                set_road(r, c, RoadCategory::Connector);
+            const double noise_val = fbm(r / 28.0,
+                static_cast<double>(c) / std::max(grid_.width(), 1) * 8.0,
+                config_.master_seed ^ SALT_CONNECTOR ^ 0xC0D1U, 3);
+            const int raw_drift = static_cast<int>(std::round(
+                (noise_val - 0.5) * 2.0 * max_drift));
+            int amplified_drift = raw_drift;
+            if (config_.connector_turn_bias > 0.0) {
+                const double prev_c2 = prev_noise_val_v - 0.5;
+                const double curr_c2 = noise_val - 0.5;
+                if (prev_c2 * curr_c2 < 0.0) { // sign flip = turn
+                    const double bias_mult = 1.0 + config_.connector_turn_bias * 3.0;
+                    amplified_drift = static_cast<int>(std::round(raw_drift * bias_mult));
+                }
             }
+            prev_noise_val_v = noise_val;
+            const int drift = std::clamp(amplified_drift, -max_drift, max_drift);
+            const int col = std::clamp(c + drift, 0, grid_.width() - 1);
+            // Stair-step bridge for 4-connectivity when column changes
+            if (col != prev_col && r > 0) {
+                set_road(r, prev_col, RoadCategory::Connector);
+            }
+            if (!grid_.at(r, col).is_road()) {
+                set_road(r, col, RoadCategory::Connector);
+            }
+            prev_col = col;
         }
     }
+    // NEW: horizontal connectors with organic drift
     for (int r = rules.connector_spacing; r < grid_.height(); r += rules.connector_spacing) {
         if (decision01(config_.master_seed, 23, r, SALT_CONNECTOR) > rules.connector_density) {
             continue;
         }
+        const int max_drift = static_cast<int>(std::round(
+            rules.connector_organic * (grid_.height() / 12.0)));
+        int prev_row = r;
+        double prev_noise_val_h = 0.5;
         for (int c = 0; c < grid_.width(); ++c) {
-            if (!grid_.at(r, c).is_road()) {
-                set_road(r, c, RoadCategory::Connector);
+            const double noise_val = fbm(c / 28.0,
+                static_cast<double>(r) / std::max(grid_.height(), 1) * 8.0,
+                config_.master_seed ^ SALT_CONNECTOR ^ 0xC0D2U, 3);
+            const int raw_drift = static_cast<int>(std::round(
+                (noise_val - 0.5) * 2.0 * max_drift));
+            int amplified_drift = raw_drift;
+            if (config_.connector_turn_bias > 0.0) {
+                const double prev_h2 = prev_noise_val_h - 0.5;
+                const double curr_h2 = noise_val - 0.5;
+                if (prev_h2 * curr_h2 < 0.0) { // sign flip = turn
+                    const double bias_mult = 1.0 + config_.connector_turn_bias * 3.0;
+                    amplified_drift = static_cast<int>(std::round(raw_drift * bias_mult));
+                }
+            }
+            prev_noise_val_h = noise_val;
+            const int drift = std::clamp(amplified_drift, -max_drift, max_drift);
+            const int row = std::clamp(r + drift, 0, grid_.height() - 1);
+            // Stair-step bridge for 4-connectivity when row changes
+            if (row != prev_row && c > 0) {
+                set_road(prev_row, c, RoadCategory::Connector);
+            }
+            if (!grid_.at(row, c).is_road()) {
+                set_road(row, c, RoadCategory::Connector);
+            }
+            prev_row = row;
+        }
+    }
+    if (rules.diagonal_streets > 0) {
+        const int center_r = grid_.height() / 2;
+        const int center_c = grid_.width() / 2;
+
+        if (config_.city_profile == "paris_haussmann") {
+            // Haussmann: 4 stair-stepped diagonals radiating from map center.
+            // The stair-step keeps the road graph connected with 4-neighbour logic.
+            const std::vector<std::pair<int,int>> dirs = {{-1,-1},{-1,1},{1,-1},{1,1}};
+            const int diag_count = std::min(4, rules.diagonal_streets);
+            for (int d = 0; d < diag_count; ++d) {
+                int r = center_r, c = center_c;
+                const auto [dr, dc] = dirs[d];
+                while (grid_.in_bounds(r, c)) {
+                    if (!grid_.at(r, c).is_road()) set_road(r, c, RoadCategory::Connector);
+                    const int next_r = r + dr;
+                    if (grid_.in_bounds(next_r, c) && !grid_.at(next_r, c).is_road()) {
+                        set_road(next_r, c, RoadCategory::Connector);
+                    }
+                    r = next_r;
+                    c += dc;
+                }
+            }
+        } else if (config_.city_profile == "manhattan") {
+            // Broadway: one oblique N-S diagonal, starts ~40% from left, drifts eastward
+            int r = 0, c = grid_.width() * 2 / 5;
+            while (r < grid_.height() - 1) {
+                if (grid_.in_bounds(r, c) && !grid_.at(r, c).is_road()) {
+                    set_road(r, c, RoadCategory::Connector);
+                }
+                const int next_r = r + 1;
+                if (grid_.in_bounds(next_r, c) && !grid_.at(next_r, c).is_road()) {
+                    set_road(next_r, c, RoadCategory::Connector);
+                }
+                r = next_r;
+                if (r % 8 == 0 && c + 1 < grid_.width() - 1) {
+                    ++c;
+                }
+            }
+        } else {
+            // Generic / London: existing multi-SE diagonal behavior
+            for (int d = 0; d < rules.diagonal_streets; ++d) {
+                int r = std::max(1, grid_.height() / 8 + d * 5);
+                int c = std::max(1, grid_.width() / 8 + d * 7);
+                while (r < grid_.height() - 1 && c < grid_.width() - 1) {
+                    if (!grid_.at(r, c).is_road()) {
+                        set_road(r, c, RoadCategory::Connector);
+                    }
+                    if ((r + c + d) % 2 == 0) ++r; else ++c;
+                }
             }
         }
     }
-    for (int d = 0; d < rules.diagonal_streets; ++d) {
-        int r = std::max(1, grid_.height() / 8 + d * 5);
-        int c = std::max(1, grid_.width() / 8 + d * 7);
-        while (r < grid_.height() - 1 && c < grid_.width() - 1) {
-            if (!grid_.at(r, c).is_road()) {
-                set_road(r, c, RoadCategory::Connector);
+
+    bool removed_isolated = true;
+    while (removed_isolated) {
+        std::vector<Point> isolated;
+        for (int r = 0; r < grid_.height(); ++r) {
+            for (int c = 0; c < grid_.width(); ++c) {
+                if (!grid_.at(r, c).is_road()) {
+                    continue;
+                }
+                bool connected = false;
+                for (const auto [nr, nc] : neighbours4(r, c)) {
+                    if (grid_.in_bounds(nr, nc) && grid_.at(nr, nc).is_road()) {
+                        connected = true;
+                        break;
+                    }
+                }
+                if (!connected) {
+                    isolated.push_back({r, c});
+                }
             }
-            if ((r + c + d) % 2 == 0) {
-                ++r;
-            } else {
-                ++c;
-            }
+        }
+        removed_isolated = !isolated.empty();
+        for (const auto [r, c] : isolated) {
+            grid_.at(r, c).road_category = RoadCategory::None;
         }
     }
 }
@@ -816,7 +1378,11 @@ void MapGenerator::generate_sidewalks() {
         }
     }
     for (const auto [r, c] : sidewalks) {
-        grid_.at(r, c).tile_role = "sidewalk";
+        auto& cell = grid_.at(r, c);
+        cell.tile_role = "sidewalk";
+        if (decision01(config_.master_seed, r, c, SALT_CONNECTOR ^ 0xDAu) < config_.sidewalk_damage_rate) {
+            cell.is_damaged = true;
+        }
     }
 }
 
@@ -873,6 +1439,25 @@ void MapGenerator::generate_blocks() {
             }
         }
     }
+
+    // Tag block perimeter cells with facing road category
+    for (const auto& block : blocks_) {
+        for (const auto [r, c] : block) {
+            auto& cell = grid_.at(r, c);
+            for (const auto [nr, nc] : neighbours4(r, c)) {
+                if (!grid_.in_bounds(nr, nc)) continue;
+                const auto& nb = grid_.at(nr, nc);
+                if (!nb.is_road()) continue;
+                // Highway takes priority over connector
+                if (nb.road_category == RoadCategory::Highway) {
+                    cell.street_facing = "highway";
+                    break;
+                } else if (nb.road_category == RoadCategory::Connector && cell.street_facing.empty()) {
+                    cell.street_facing = "connector";
+                }
+            }
+        }
+    }
 }
 
 void MapGenerator::generate_parks() {
@@ -905,40 +1490,100 @@ void MapGenerator::generate_parks() {
             cell.tile_role = "park";
         }
     }
+
+    // Pocket parks: small blocks (4-8 cells) in non-CBD zones become plazas/pocket parks.
+    int pocket_budget = std::max(1, land_cells / 800);
+    for (std::size_t i = 0; i < blocks_.size() && pocket_budget > 0; ++i) {
+        const auto& block = blocks_[i];
+        if (block.size() < 4 || block.size() > 8) continue;
+        const bool contains_civic = std::any_of(block.begin(), block.end(), [&](Point p) {
+            return grid_.at(p.first, p.second).is_civic_anchor;
+        });
+        if (contains_civic) continue;
+        bool already_park = std::any_of(block.begin(), block.end(), [&](Point p) {
+            return grid_.at(p.first, p.second).is_park;
+        });
+        if (already_park) continue;
+        bool non_cbd = std::all_of(block.begin(), block.end(), [&](Point p) {
+            return grid_.at(p.first, p.second).zone_id != ZoneId::CBD;
+        });
+        if (!non_cbd) continue;
+        for (const auto [r, c] : block) {
+            auto& cell = grid_.at(r, c);
+            cell.is_park = true;
+            cell.tile_role = "park";
+        }
+        --pocket_budget;
+    }
 }
 
 void MapGenerator::generate_lots() {
     int lot_id = 0;
-    for (const auto& block : blocks_) {
-        if (block.empty()) {
-            continue;
+
+    auto components = [](const std::set<Point>& region) {
+        std::vector<std::set<Point>> result;
+        std::set<Point> remaining = region;
+        while (!remaining.empty()) {
+            std::set<Point> component;
+            std::queue<Point> q;
+            const Point start = *remaining.begin();
+            q.push(start);
+            remaining.erase(start);
+            while (!q.empty()) {
+                const Point p = q.front();
+                q.pop();
+                component.insert(p);
+                for (const auto np : neighbours4(p.first, p.second)) {
+                    const auto it = remaining.find(np);
+                    if (it != remaining.end()) {
+                        q.push(np);
+                        remaining.erase(it);
+                    }
+                }
+            }
+            result.push_back(std::move(component));
         }
-        const bool is_park = std::any_of(block.begin(), block.end(), [&](Point p) { return grid_.at(p.first, p.second).is_park; });
-        if (is_park) {
-            continue;
+        return result;
+    };
+
+    // Recursive binary subdivision: splits blocks along the longest axis until
+    // sub-regions are too small. Produces 3-5 lots per block vs. the previous 2,
+    // matching the lot density of real mid-rise urban blocks.
+    std::function<void(const std::set<Point>&)> subdivide = [&](const std::set<Point>& region) {
+        if (region.size() < 4) return;
+        if (region.size() < 12) {
+            // Too small to split further — assign as one lot
+            for (const auto [r, c] : region) grid_.at(r, c).lot_id = lot_id;
+            lots_.push_back(region);
+            ++lot_id;
+            return;
         }
         int r0 = grid_.height(), c0 = grid_.width(), r1 = 0, c1 = 0;
-        for (const auto [r, c] : block) {
+        for (const auto [r, c] : region) {
             r0 = std::min(r0, r); r1 = std::max(r1, r);
             c0 = std::min(c0, c); c1 = std::max(c1, c);
         }
         const bool split_by_col = (c1 - c0) >= (r1 - r0);
         const int midpoint = split_by_col ? (c0 + c1) / 2 : (r0 + r1) / 2;
-        std::set<Point> left;
-        std::set<Point> right;
-        for (const auto [r, c] : block) {
+        std::set<Point> left, right;
+        for (const auto [r, c] : region) {
             ((split_by_col ? c : r) <= midpoint ? left : right).insert({r, c});
         }
-        for (const auto& lot : {left, right}) {
-            if (lot.size() < 4) {
-                continue;
-            }
-            for (const auto [r, c] : lot) {
-                grid_.at(r, c).lot_id = lot_id;
-            }
-            lots_.push_back(lot);
-            ++lot_id;
+        for (const auto& piece : components(left)) {
+            subdivide(piece);
         }
+        for (const auto& piece : components(right)) {
+            subdivide(piece);
+        }
+    };
+
+    for (const auto& block : blocks_) {
+        if (block.empty()) continue;
+        const bool is_park = std::any_of(block.begin(), block.end(), [&](Point p) {
+            return grid_.at(p.first, p.second).is_park;
+        });
+        if (is_park) continue;
+        subdivide(block);
     }
 }
 
@@ -963,13 +1608,13 @@ void MapGenerator::generate_buildings() {
                 cell.tile_role = "water";
             } else if (cell.is_road()) {
                 cell.tile_role = cell.road_category == RoadCategory::Highway ? "highway" : "road";
-                cell.encounter_chance = cell.road_category == RoadCategory::Highway ? 0.08 : 0.12;
+                cell.encounter_chance = cell.road_category == RoadCategory::Highway ? 0.02 : 0.10;
             } else if (cell.is_park) {
                 cell.tile_role = "park";
                 cell.is_spawn_point = true;
-                cell.encounter_chance = 0.25;
+                cell.encounter_chance = 0.04;
             } else if (cell.tile_role == "sidewalk") {
-                cell.encounter_chance = 0.05;
+                cell.encounter_chance = 0.08;
             } else if (cell.lot_id >= 0) {
                 cell.tile_role = "lot";
             } else {
@@ -1056,7 +1701,7 @@ void MapGenerator::generate_buildings() {
         } else if (!landmark_type.empty()) {
             building_type = landmark_type;
         } else {
-            building_type = pick_building_type(zone, roll, waterfront);
+            building_type = pick_building_type(zone, roll, waterfront, grid_.at(lot_anchor.first, lot_anchor.second).elevation);
         }
         if (building_type == "empty") {
             for (const auto [r, c] : buildable) {
@@ -1079,7 +1724,7 @@ void MapGenerator::generate_buildings() {
             if (uses_setback && perimeter) {
                 cell.is_setback = true;
                 cell.tile_role = "setback";
-                cell.encounter_chance = 0.03;
+                cell.encounter_chance = 0.28;
                 continue;
             }
             footprint.insert({r, c});
@@ -1091,7 +1736,7 @@ void MapGenerator::generate_buildings() {
 
         const auto footprint_bounds = bounds_for(footprint);
         const auto anchor = representative_point(footprint);
-        const int floors = floor_count_for(zone, building_type, config_.master_seed, lot_id);
+        const int floors = floor_count_for(zone, building_type, config_.master_seed, lot_id, grid_.at(lot_anchor.first, lot_anchor.second).elevation);
         const std::string profile_id = profile_for(config_.city_profile).id;
         const std::string footprint_style = footprint_style_for(profile_id, zone, building_type, footprint_bounds);
         const std::string roof_type = landmark_type.empty() ? roof_for(profile_id, building_type, floors) : "";
@@ -1099,13 +1744,32 @@ void MapGenerator::generate_buildings() {
         const std::string tile_role = tile_role_for_building(zone, building_type, landmark_type);
         const std::string asset_slot = asset_slot_for_building_record(building_type, landmark_type);
 
+        // Encounter rates: commercial/retail hotspots highest; CBD offices lowest;
+        // civic landmarks moderate; residential streets quiet.
+        double enc = 0.06;
+        if (building_type == "market" || building_type == "restaurant" || building_type == "shop") {
+            enc = 0.18;
+        } else if (tile_role == "bldg_civic") {
+            enc = 0.14;
+        } else if (zone == ZoneId::CBD) {
+            enc = 0.05;
+        } else if (zone == ZoneId::Residential) {
+            enc = 0.08;
+        }
         for (const auto [r, c] : footprint) {
             auto& cell = grid_.at(r, c);
             cell.tile_role = tile_role;
             cell.building_type = building_type;
             cell.landmark_type = landmark_type;
             cell.footprint_style = footprint_style;
-            cell.encounter_chance = tile_role == "bldg_civic" ? 0.16 : (zone == ZoneId::CBD ? 0.10 : 0.06);
+            cell.encounter_chance = enc;
+        }
+
+        // Landmark cells are natural RPG event spawn points (card game challenges, quests)
+        if (!landmark_type.empty()) {
+            for (const auto [r, c] : footprint) {
+                grid_.at(r, c).is_spawn_point = true;
+            }
         }
 
         BuildingAssemblyRecord record;
@@ -1129,17 +1793,87 @@ void MapGenerator::generate_buildings() {
         record.sprite_stack = sprite_stack_for(profile_id, building_type, landmark_type, floors, config_.master_seed, lot_id);
         buildings_.push_back(std::move(record));
     }
-}
 
-void MapGenerator::generate_district_names() {
+    // Mark road intersections (3+ connected road neighbours) as spawn points —
+    // natural NPC meeting points and event triggers for a city RPG.
     for (int r = 0; r < grid_.height(); ++r) {
         for (int c = 0; c < grid_.width(); ++c) {
             auto& cell = grid_.at(r, c);
-            if (!cell.is_land) {
-                continue;
+            if (!cell.is_road()) continue;
+            const int bitmask = grid_.road_bitmask(r, c);
+            int connections = 0;
+            for (int bit = 0; bit < 4; ++bit) connections += (bitmask >> bit) & 1;
+            if (connections >= 3) {
+                cell.is_spawn_point = true;
+                if (cell.road_category == RoadCategory::Highway) {
+                    // Count highway-specific connections
+                    int hw_connections = 0;
+                    for (const auto [nr, nc] : neighbours4(r, c)) {
+                        if (grid_.in_bounds(nr, nc) && grid_.at(nr, nc).road_category == RoadCategory::Highway)
+                            ++hw_connections;
+                    }
+                    if (hw_connections >= 3) {
+                        cell.tile_role = "highway_junction";
+                    }
+                }
             }
-            cell.district_name = cell.zone_id == ZoneId::CBD ? "Civic Core" :
-                (cell.zone_id == ZoneId::Midtown ? "Midtown" : "Residential Quarter");
+        }
+    }
+}
+
+void MapGenerator::generate_district_names() {
+    // Per-profile district name sets, indexed by quadrant: [NW, NE, SW, SE]
+    static const char* cbd_names[5][4] = {
+        // generic_dense
+        {"Civic Core",          "Financial Quarter",  "Central District",   "City Hall Area"},
+        // manhattan
+        {"Financial District",  "Lower East Side",    "Wall Street",        "Battery Park"},
+        // barcelona_eixample
+        {"Eixample Centre",     "Dreta",              "Esquerra",           "Gracia"},
+        // paris_haussmann
+        {"1er Arrondissement",  "Marais",             "Ile de la Cite",     "Chatelet"},
+        // london_organic
+        {"City of London",      "Guildhall",          "Barbican",           "Monument"}
+    };
+    static const char* mid_names[5][4] = {
+        {"Midtown",             "Uptown",             "Commerce Row",       "Arts District"},
+        {"Midtown East",        "Midtown West",       "Chelsea",            "Murray Hill"},
+        {"Sagrada Familia",     "Pedralbes",          "Sant Gervasi",       "Horta"},
+        {"Saint-Germain",       "Montparnasse",       "Opera Quarter",      "Republique"},
+        {"Soho",                "Marylebone",         "Clerkenwell",        "Islington"}
+    };
+    static const char* resi_names[5][4] = {
+        {"Residential Quarter", "Westside",           "Eastside",           "Old Town"},
+        {"Upper West Side",     "Harlem",             "Washington Heights",  "Inwood"},
+        {"Sarria",              "Les Corts",          "Sants",              "Poblenou"},
+        {"Belleville",          "Nation",             "Montmartre",         "Batignolles"},
+        {"Hackney",             "Peckham",            "Brixton",            "Dalston"}
+    };
+
+    // Profile index lookup
+    const std::string& prof = config_.city_profile;
+    int pi = 0; // generic_dense
+    if      (prof == "manhattan")          pi = 1;
+    else if (prof == "barcelona_eixample") pi = 2;
+    else if (prof == "paris_haussmann")    pi = 3;
+    else if (prof == "london_organic")     pi = 4;
+
+    const double center_r = cbd_center_r_;
+    const double center_c = cbd_center_c_;
+
+    for (int r = 0; r < grid_.height(); ++r) {
+        for (int c = 0; c < grid_.width(); ++c) {
+            auto& cell = grid_.at(r, c);
+            if (!cell.is_land) continue;
+            // Quadrant: 0=NW, 1=NE, 2=SW, 3=SE
+            const int quad = (r < center_r ? 0 : 2) + (c >= center_c ? 1 : 0);
+            if (cell.zone_id == ZoneId::CBD) {
+                cell.district_name = cbd_names[pi][quad];
+            } else if (cell.zone_id == ZoneId::Midtown) {
+                cell.district_name = mid_names[pi][quad];
+            } else {
+                cell.district_name = resi_names[pi][quad];
+            }
         }
     }
 }
@@ -1283,12 +2017,13 @@ std::string to_string(RoadCategory category) {
 }
 
 CoastSide coast_side_from_string(const std::string& value) {
+    if (value == "none") return CoastSide::None;
     if (value == "north") return CoastSide::North;
     if (value == "south") return CoastSide::South;
     if (value == "east") return CoastSide::East;
     if (value == "west") return CoastSide::West;
     if (value == "random") return CoastSide::Random;
-    return CoastSide::None;
+    throw std::invalid_argument("unknown coast side: " + value);
 }
 
 } // namespace mapping_algorithm

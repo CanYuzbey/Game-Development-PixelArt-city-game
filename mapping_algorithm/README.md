@@ -24,7 +24,7 @@ From the repository root:
 
 ```bash
 cmake -S . -B build
-cmake --build build
+cmake --build build --config Release
 ```
 
 Or build this module alone:
@@ -46,7 +46,8 @@ cmake --build build/mapping_algorithm
 - road-density guard rails.
 - blueprint checks for roads, blocks, lots, buildings, sprite assignments,
   normalized asset slots, and profile identity.
-- invalid-config rejection checks.
+- road local-connectivity, lot-contiguity, river-bridge, large-map, and
+  invalid-config rejection checks.
 
 ## Export Tool
 
@@ -56,8 +57,9 @@ cmake --build build/mapping_algorithm
 mapping_city_exporter --seed 7 --profile manhattan --coast west --out exports/seed_7.json
 ```
 
-The JSON includes the resolved city design, every assembled building, every
-sprite assignment, and every cell's gameplay/design metadata.
+The `deployable_city_map.v2` JSON includes the resolved city design, every
+assembled building, every sprite assignment, and every cell's gameplay/design
+metadata, including damaged sidewalk and bridge flags.
 
 ## API Example
 
@@ -84,8 +86,8 @@ DesignBlueprint blueprint = generator.to_design_blueprint();
 ## Native Data Types
 
 - `MapConfig`: generation inputs and tuning knobs.
-- `MapCell`: per-cell terrain, road, zone, lot, building, encounter, and design
-  metadata.
+- `MapCell`: per-cell terrain, road, bridge, zone, lot, building, encounter, and
+  design metadata.
 - `MapGrid`: fixed-size city grid with road and sidewalk helpers.
 - `MapStats`: generation summary, including building count.
 - `BuildingAssemblyRecord`: lot-level building result with footprint, floors,

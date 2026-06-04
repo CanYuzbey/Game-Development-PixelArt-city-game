@@ -35,7 +35,7 @@ struct MapConfig {
     std::string city_profile = "generic_dense";
 
     CoastSide coast_side = CoastSide::None;
-    double coast_coverage = 0.28;
+    double coast_coverage = 0.24;
     double coast_noise_scale = 3.5;
     int coast_smoothing_passes = 2;
 
@@ -44,6 +44,7 @@ struct MapConfig {
     int highway_ew_min = 0;
     int highway_ew_max = 3;
     double highway_organic = 0.3;
+    double connector_organic = 0.08;
 
     double connector_density = 0.65;
     int connector_spacing = 8;
@@ -67,6 +68,8 @@ struct MapCell {
     bool is_park = false;
     bool is_civic_anchor = false;
     bool is_setback = false;
+    bool is_damaged = false;
+    bool is_bridge = false;
     std::string coast_type;
     std::string tile_role;
     std::string building_type;
@@ -76,6 +79,7 @@ struct MapCell {
     double elevation = 0.0;
     std::string footprint_style;
     std::string district_name;
+    std::string street_facing; // "highway", "connector", or "" (interior)
 
     bool is_road() const noexcept {
         return road_category != RoadCategory::None;
